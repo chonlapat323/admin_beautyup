@@ -4,60 +4,60 @@ export type NavItem = {
 };
 
 export const navigationItems: NavItem[] = [
-  { label: "Overview", href: "/" },
-  { label: "Categories", href: "/categories" },
-  { label: "Products", href: "/products" },
-  { label: "Members", href: "/members" },
-  { label: "Admin Users", href: "/admin-users" },
-  { label: "Roles", href: "/roles" },
-  { label: "Orders", href: "/orders" },
-  { label: "Payments", href: "/payments" },
-  { label: "Reports", href: "/reports" },
-  { label: "Settings", href: "/settings" },
+  { label: "ภาพรวม", href: "/" },
+  { label: "หมวดหมู่", href: "/categories" },
+  { label: "สินค้า", href: "/products" },
+  { label: "สมาชิก", href: "/members" },
+  { label: "ผู้ดูแลระบบ", href: "/admin-users" },
+  { label: "สิทธิ์การใช้งาน", href: "/roles" },
+  { label: "คำสั่งซื้อ", href: "/orders" },
+  { label: "การชำระเงิน", href: "/payments" },
+  { label: "รายงาน", href: "/reports" },
+  { label: "ตั้งค่า", href: "/settings" },
 ];
 
 export const summaryMetrics = [
-  { label: "Total Sales", value: "THB 128,400", hint: "+12.4% this month" },
-  { label: "Orders", value: "324", hint: "18 awaiting review" },
-  { label: "Members", value: "1,286", hint: "42 new this week" },
-  { label: "Low Stock", value: "7 SKU", hint: "Needs restock planning" },
+  { label: "ยอดขายรวม", value: "THB 128,400", hint: "+12.4% ในเดือนนี้" },
+  { label: "คำสั่งซื้อ", value: "324", hint: "18 รายการรอตรวจสอบ" },
+  { label: "สมาชิก", value: "1,286", hint: "สมาชิกใหม่ 42 คนในสัปดาห์นี้" },
+  { label: "สต็อกต่ำ", value: "7 SKU", hint: "ควรวางแผนเติมสินค้า" },
 ];
 
 export const launchModules = [
   {
-    title: "Catalog Control",
+    title: "จัดการแคตตาล็อก",
     description:
-      "Maintain launch products, categories, media links, pricing, and active status from one workspace.",
+      "ดูแลสินค้าเปิดตัว หมวดหมู่ ลิงก์สื่อ ราคา และสถานะการแสดงผลได้จากหน้าจอเดียว",
   },
   {
-    title: "Member Operations",
+    title: "ดูแลสมาชิก",
     description:
-      "Review profiles, point balances, referral ownership, and store-specific history before support action.",
+      "ตรวจสอบโปรไฟล์สมาชิก แต้มสะสม ผู้แนะนำ และประวัติแยกตามสาขาก่อนให้การช่วยเหลือ",
   },
   {
-    title: "Order & Payment Review",
+    title: "ตรวจสอบคำสั่งซื้อและการชำระเงิน",
     description:
-      "Track checkout progress, PromptPay verification, card status, and wallet payments without leaving the dashboard.",
+      "ติดตามสถานะเช็กเอาต์ การยืนยัน PromptPay สถานะบัตร และการชำระผ่านวอลเล็ทได้โดยไม่ต้องออกจากแดชบอร์ด",
   },
   {
-    title: "Rules & Settings",
+    title: "กติกาและการตั้งค่า",
     description:
-      "Control shipping thresholds, reserve stock policy, point rules, role permissions, and channel links.",
+      "ควบคุมเงื่อนไขจัดส่ง นโยบายกันสต็อก กติกาแต้ม สิทธิ์การใช้งาน และลิงก์ช่องทางต่าง ๆ",
   },
 ];
 
 export const categories = [
-  { name: "Color & Bleach", status: "Active", products: 18, updatedAt: "16 Apr 2026" },
-  { name: "Shampoo & Mask", status: "Active", products: 21, updatedAt: "15 Apr 2026" },
-  { name: "Leave In", status: "Active", products: 14, updatedAt: "14 Apr 2026" },
-  { name: "Point Rewards", status: "Draft", products: 9, updatedAt: "12 Apr 2026" },
+  { name: "สีผมและฟอกสี", status: "Active", products: 18, updatedAt: "16 เม.ย. 2026" },
+  { name: "แชมพูและมาสก์", status: "Active", products: 21, updatedAt: "15 เม.ย. 2026" },
+  { name: "ลีฟอิน", status: "Active", products: 14, updatedAt: "14 เม.ย. 2026" },
+  { name: "ของรางวัลแต้มสะสม", status: "Draft", products: 9, updatedAt: "12 เม.ย. 2026" },
 ];
 
 export const products = [
-  { sku: "BU-CLR-013NB", name: "13-NB Color Cream", category: "Color & Bleach", price: "THB 49", stock: 180, status: "Active" },
-  { sku: "BU-CLR-AD13", name: "Addicthy 13-NB", category: "Color & Bleach", price: "THB 54", stock: 72, status: "Active" },
-  { sku: "BU-SHM-001", name: "Smooth Smoothing Shampoo", category: "Shampoo & Mask", price: "THB 58", stock: 94, status: "Active" },
-  { sku: "BU-LIV-001", name: "Elujuda Hair Oil", category: "Leave In", price: "THB 42", stock: 38, status: "Low stock" },
+  { sku: "BU-CLR-013NB", name: "ครีมสีผม 13-NB", category: "สีผมและฟอกสี", price: "THB 49", stock: 180, status: "Active" },
+  { sku: "BU-CLR-AD13", name: "สีผม Addicthy 13-NB", category: "สีผมและฟอกสี", price: "THB 54", stock: 72, status: "Active" },
+  { sku: "BU-SHM-001", name: "แชมพู Smooth Smoothing", category: "แชมพูและมาสก์", price: "THB 58", stock: 94, status: "Active" },
+  { sku: "BU-LIV-001", name: "ออยล์บำรุงผม Elujuda", category: "ลีฟอิน", price: "THB 42", stock: 38, status: "Low stock" },
 ];
 
 export const members = [
@@ -68,39 +68,39 @@ export const members = [
 ];
 
 export const adminUsers = [
-  { name: "Pao Chonlapat", role: "Super Admin", status: "Active", access: "All stores" },
-  { name: "Store Admin A", role: "Admin", status: "Active", access: "Bangkok Branch" },
-  { name: "Store Admin B", role: "Admin", status: "Pending", access: "Chiang Mai Branch" },
+  { name: "Pao Chonlapat", role: "Super Admin", status: "Active", access: "ทุกสาขา" },
+  { name: "Store Admin A", role: "Admin", status: "Active", access: "สาขากรุงเทพฯ" },
+  { name: "Store Admin B", role: "Admin", status: "Pending", access: "สาขาเชียงใหม่" },
 ];
 
 export const rolePermissions = [
-  { permission: "Manage products", superAdmin: "Full access", admin: "Create / edit / publish" },
-  { permission: "Manage members", superAdmin: "Full access", admin: "View / update support notes" },
-  { permission: "Manage admins", superAdmin: "Full access", admin: "No access" },
-  { permission: "System settings", superAdmin: "Full access", admin: "Store-level only" },
+  { permission: "จัดการสินค้า", superAdmin: "Full access", admin: "สร้าง / แก้ไข / เผยแพร่" },
+  { permission: "จัดการสมาชิก", superAdmin: "Full access", admin: "ดูข้อมูล / อัปเดตหมายเหตุช่วยเหลือ" },
+  { permission: "จัดการผู้ดูแลระบบ", superAdmin: "Full access", admin: "No access" },
+  { permission: "ตั้งค่าระบบ", superAdmin: "Full access", admin: "Store-level only" },
 ];
 
 export const orders = [
-  { code: "BU-24003", member: "Nisa P.", store: "Bangkok", total: "THB 62", status: "Preparing" },
-  { code: "BU-24018", member: "Pimlada K.", store: "Bangkok", total: "THB 118", status: "Paid" },
-  { code: "BU-24031", member: "Thanaporn S.", store: "Chiang Mai", total: "THB 84", status: "Delivered" },
+  { code: "BU-24003", member: "Nisa P.", store: "กรุงเทพฯ", total: "THB 62", status: "Preparing" },
+  { code: "BU-24018", member: "Pimlada K.", store: "กรุงเทพฯ", total: "THB 118", status: "Paid" },
+  { code: "BU-24031", member: "Thanaporn S.", store: "เชียงใหม่", total: "THB 84", status: "Delivered" },
 ];
 
 export const payments = [
-  { method: "PromptPay QR", orders: 162, successRate: "98.1%", note: "Primary method for mobile checkout" },
-  { method: "Credit / Debit Card", orders: 94, successRate: "96.4%", note: "Supports premium checkout flow" },
-  { method: "TrueMoney Wallet", orders: 68, successRate: "95.8%", note: "Popular among returning members" },
+  { method: "PromptPay QR", orders: 162, successRate: "98.1%", note: "ช่องทางหลักสำหรับการชำระเงินผ่านมือถือ" },
+  { method: "บัตรเครดิต / เดบิต", orders: 94, successRate: "96.4%", note: "รองรับการชำระเงินแบบพรีเมียม" },
+  { method: "TrueMoney Wallet", orders: 68, successRate: "95.8%", note: "ได้รับความนิยมในกลุ่มสมาชิกที่กลับมาซื้อซ้ำ" },
 ];
 
 export const reportCards = [
-  { title: "Sales by store", value: "3 branches", note: "Bangkok leads at 48% of total sales" },
-  { title: "Top category", value: "Color & Bleach", note: "Highest conversion from shade-first flow" },
-  { title: "Point redemptions", value: "126 claims", note: "Reward menu launches every campaign cycle" },
+  { title: "ยอดขายตามสาขา", value: "3 สาขา", note: "กรุงเทพฯ มียอดขายสูงสุดที่ 48% ของยอดรวม" },
+  { title: "หมวดหมู่ยอดนิยม", value: "สีผมและฟอกสี", note: "มีอัตราแปลงยอดซื้อสูงสุดจาก flow เลือกเฉดสีก่อน" },
+  { title: "การใช้แต้มสะสม", value: "126 รายการ", note: "เมนูของรางวัลเริ่มใช้งานทุกช่วงแคมเปญ" },
 ];
 
 export const settingsSections = [
-  { title: "Shipping Rules", description: "Free shipping at THB 1,000 and above, fallback fee below threshold." },
-  { title: "Point Rules", description: "Award 300 points for each THB 3,000 paid successfully." },
-  { title: "Referral Rules", description: "Commission set to 3% for successful referred purchases." },
-  { title: "Media Links", description: "Configure storefront shortcuts to YouTube, TikTok, and brand channels." },
+  { title: "กติกาการจัดส่ง", description: "ฟรีค่าจัดส่งเมื่อมียอดตั้งแต่ THB 1,000 ขึ้นไป และคิดค่าจัดส่งเมื่อยอดต่ำกว่าเงื่อนไข" },
+  { title: "กติกาแต้มสะสม", description: "มอบ 300 แต้มทุกการใช้จ่ายสำเร็จครบ THB 3,000" },
+  { title: "กติกาผู้แนะนำ", description: "กำหนดค่าคอมมิชชัน 3% สำหรับคำสั่งซื้อที่มาจากการแนะนำสำเร็จ" },
+  { title: "ลิงก์สื่อ", description: "ตั้งค่าทางลัดไปยัง YouTube, TikTok และช่องทางของแบรนด์" },
 ];

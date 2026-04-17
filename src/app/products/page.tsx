@@ -1,10 +1,11 @@
-import { ContentCard, PageIntro, StatusPill } from "@/components/admin-next/page-elements";
+import { ContentCard, StatusPill } from "@/components/admin-next/page-elements";
 import { getProducts } from "@/lib/admin-api";
+import { toThaiLabel } from "@/lib/thai-text";
 
 const productNotes = [
-  "Support SKU, category, status, stock, and price in one table.",
-  "Prepare for image upload and YouTube / TikTok link fields in the next build.",
-  "Reserve stock policy can later connect to stock summary and adjustment APIs.",
+  "รองรับ SKU หมวดหมู่ สถานะ สต็อก และราคาในตารางเดียว",
+  "เตรียมต่อยอดสำหรับอัปโหลดรูปสินค้าและลิงก์ YouTube / TikTok ในรอบถัดไป",
+  "นโยบายกันสต็อกสามารถเชื่อมกับสรุปสต็อกและการปรับสต็อกได้ในอนาคต",
 ];
 
 export default async function ProductsPage() {
@@ -12,30 +13,21 @@ export default async function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <PageIntro
-        eyebrow="Product Management"
-        badge={products[0]?.source === "api" ? "Live API" : "Mock fallback"}
-        description="Manage launch products, pricing, visibility, inventory, and media preparation from one backoffice page."
-        primaryAction={{ label: "Add product", href: "/products" }}
-        secondaryAction={{ label: "Open categories", href: "/categories" }}
-        title="Control product data, launch stock, and storefront readiness"
-      />
-
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <ContentCard
-          title="Product list"
-          description="The table is ready for CRUD, stock adjustment, publish status, and media link support."
+          title="รายการสินค้า"
+          description="ตารางนี้พร้อมต่อยอดสำหรับ CRUD การปรับสต็อก สถานะการเผยแพร่ และลิงก์สื่อ"
         >
           <div className="overflow-hidden rounded-2xl border border-stroke dark:border-dark-3">
             <table className="w-full text-left">
               <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
                 <tr>
                   <th className="px-5 py-4 font-medium">SKU</th>
-                  <th className="px-5 py-4 font-medium">Product</th>
-                  <th className="px-5 py-4 font-medium">Category</th>
-                  <th className="px-5 py-4 font-medium">Price</th>
-                  <th className="px-5 py-4 font-medium">Stock</th>
-                  <th className="px-5 py-4 font-medium">Status</th>
+                  <th className="px-5 py-4 font-medium">สินค้า</th>
+                  <th className="px-5 py-4 font-medium">หมวดหมู่</th>
+                  <th className="px-5 py-4 font-medium">ราคา</th>
+                  <th className="px-5 py-4 font-medium">สต็อก</th>
+                  <th className="px-5 py-4 font-medium">สถานะ</th>
                 </tr>
               </thead>
               <tbody>
@@ -53,7 +45,7 @@ export default async function ProductsPage() {
                     <td className="px-5 py-4">{product.stock}</td>
                     <td className="px-5 py-4">
                       <StatusPill
-                        label={product.status}
+                        label={toThaiLabel(product.status)}
                         tone={product.status === "Active" ? "success" : "warning"}
                       />
                     </td>
@@ -64,7 +56,7 @@ export default async function ProductsPage() {
           </div>
         </ContentCard>
 
-        <ContentCard title="Readiness" description="This page is already mapped to the launch requirements.">
+        <ContentCard title="ความพร้อมใช้งาน" description="หน้านี้ถูกวางโครงให้ตรงกับงานเปิดระบบในระยะแรกแล้ว">
           <ul className="space-y-3">
             {productNotes.map((note) => (
               <li

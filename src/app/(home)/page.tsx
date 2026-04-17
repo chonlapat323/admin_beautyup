@@ -1,11 +1,11 @@
 import {
   ContentCard,
-  PageIntro,
   StatCard,
   StatusPill,
 } from "@/components/admin-next/page-elements";
 import { getOrders, getPayments } from "@/lib/admin-api";
 import { launchModules, summaryMetrics } from "@/lib/admin-data";
+import { toThaiLabel, toThaiSourceBadge } from "@/lib/thai-text";
 
 export default async function Home() {
   const [orders, payments] = await Promise.all([getOrders(), getPayments()]);
@@ -13,15 +13,6 @@ export default async function Home() {
 
   return (
     <div className="space-y-6">
-      <PageIntro
-        eyebrow="Beauty Up Enterprise"
-        title="Backoffice dashboard for launch operations"
-        description="Follow product readiness, order flow, payment performance, and member operations from one clean workspace built on the NextAdmin foundation."
-        badge="Phase 1"
-        primaryAction={{ label: "Manage products", href: "/products" }}
-        secondaryAction={{ label: "Open reports", href: "/reports" }}
-      />
-
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {summaryMetrics.map((metric) => (
           <StatCard
@@ -35,11 +26,11 @@ export default async function Home() {
 
       <section className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
         <ContentCard
-          title="Order queue"
-          description="A launch-ready view for current orders that need payment review, packing, or delivery follow-up."
+          title="คิวคำสั่งซื้อ"
+          description="มุมมองพร้อมใช้งานสำหรับรายการที่ต้องตรวจสอบการชำระเงิน เตรียมสินค้า หรือรอติดตามการจัดส่ง"
           aside={
             <StatusPill
-              label={topOrders[0]?.source === "api" ? "Live API" : "Mock fallback"}
+              label={toThaiSourceBadge(topOrders[0]?.source === "api" ? "api" : "mock")}
             />
           }
         >
@@ -47,11 +38,11 @@ export default async function Home() {
             <table className="w-full text-left">
               <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
                 <tr>
-                  <th className="px-5 py-4 font-medium">Order</th>
-                  <th className="px-5 py-4 font-medium">Member</th>
-                  <th className="px-5 py-4 font-medium">Store</th>
-                  <th className="px-5 py-4 font-medium">Total</th>
-                  <th className="px-5 py-4 font-medium">Status</th>
+                  <th className="px-5 py-4 font-medium">คำสั่งซื้อ</th>
+                  <th className="px-5 py-4 font-medium">สมาชิก</th>
+                  <th className="px-5 py-4 font-medium">สาขา</th>
+                  <th className="px-5 py-4 font-medium">ยอดรวม</th>
+                  <th className="px-5 py-4 font-medium">สถานะ</th>
                 </tr>
               </thead>
               <tbody>
@@ -68,7 +59,7 @@ export default async function Home() {
                     <td className="px-5 py-4">{order.total}</td>
                     <td className="px-5 py-4">
                       <StatusPill
-                        label={order.status}
+                        label={toThaiLabel(order.status)}
                         tone={
                           order.status === "Paid" || order.status === "Delivered"
                             ? "success"
@@ -84,8 +75,8 @@ export default async function Home() {
         </ContentCard>
 
         <ContentCard
-          title="Operational highlights"
-          description="The most important launch modules and payment channels visible at a glance."
+          title="ภาพรวมการดำเนินงาน"
+          description="สรุปโมดูลสำคัญและช่องทางการชำระเงินที่ต้องติดตามได้แบบรวดเร็ว"
         >
           <div className="space-y-4">
             {launchModules.slice(0, 3).map((module) => (
@@ -101,7 +92,7 @@ export default async function Home() {
 
             <div className="rounded-2xl border border-dashed border-[#cfe2d5] p-4 dark:border-dark-3">
               <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#5f8f74]">
-                Payment channels
+                ช่องทางการชำระเงิน
               </p>
               <div className="mt-3 space-y-3">
                 {payments.map((payment) => (

@@ -1,24 +1,15 @@
-import { ContentCard, PageIntro, StatCard } from "@/components/admin-next/page-elements";
+import { ContentCard, StatCard } from "@/components/admin-next/page-elements";
 import { reportCards } from "@/lib/admin-data";
 
 const reportNotes = [
-  "Prepare dashboard cards for sales by store and category contribution.",
-  "Leave space for point usage, commission payout, and stock health summaries.",
-  "Keep layout simple so stakeholders can scan branch performance quickly.",
+  "เตรียมการ์ดสรุปสำหรับยอดขายรายสาขาและสัดส่วนการขายแต่ละหมวดหมู่",
+  "เผื่อพื้นที่สำหรับสรุปการใช้แต้ม ค่าคอมมิชชัน และสถานะสต็อกในอนาคต",
+  "คงรูปแบบให้เรียบง่ายเพื่อให้ผู้บริหารและทีมงานสแกนข้อมูลได้รวดเร็ว",
 ];
 
 export default function ReportsPage() {
   return (
     <div className="space-y-6">
-      <PageIntro
-        eyebrow="Reports"
-      badge="Store reporting"
-      description="Present branch performance, inventory health, and member-related insights in a clean dashboard for business review."
-      primaryAction={{ label: "Open dashboard", href: "/" }}
-      secondaryAction={{ label: "Review orders", href: "/orders" }}
-      title="Bring store performance into one calm reporting view"
-      />
-
       <section className="grid gap-4 md:grid-cols-3">
         {reportCards.map((card) => (
           <StatCard key={card.title} label={card.title} value={card.value} hint={card.note} />
@@ -26,8 +17,8 @@ export default function ReportsPage() {
       </section>
 
       <ContentCard
-        title="Reporting guidance"
-        description="A clean analytics layer keeps branch performance easy to scan during reviews."
+        title="แนวทางการใช้งานรายงาน"
+        description="การจัดวางข้อมูลที่เรียบง่ายช่วยให้มองเห็นผลงานของแต่ละสาขาได้ชัดเจนขึ้น"
       >
         <ul className="space-y-3">
           {reportNotes.map((note) => (

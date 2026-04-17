@@ -11,7 +11,35 @@ export type ApiCategory = {
   id: string;
   name: string;
   slug: string;
+  description?: string | null;
+  sortOrder: number;
   isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  _count?: {
+    products: number;
+  };
+};
+
+export type CategoryRecord = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  sortOrder: number;
+  status: "Active" | "Inactive";
+  isActive: boolean;
+  products: string;
+  updatedAt: string;
+  source: "api" | "mock";
+};
+
+export type CategoryFormPayload = {
+  name: string;
+  slug: string;
+  description?: string;
+  sortOrder?: number;
+  isActive?: boolean;
 };
 
 export type ApiProduct = {
@@ -111,26 +139,72 @@ export async function getCategories() {
   try {
     const data = await fetchFromApi<ApiCategory[]>("/categories");
 
-    return data.map((category) => ({
-      id: category.id,
-      name: category.name,
-      status: category.isActive ? "Active" : "Inactive",
-      products: "API linked",
-      updatedAt: "Live backend",
-      slug: category.slug,
-      source: "api" as const,
-    }));
+    return data.map(
+      (category): CategoryRecord => ({
+        id: category.id,
+        name: category.name,
+        description: category.description ?? "",
+        sortOrder: category.sortOrder ?? 0,
+        status: category.isActive ? "Active" : "Inactive",
+        isActive: category.isActive,
+        products: String(category._count?.products ?? 0),
+        updatedAt: category.updatedAt
+          ? new Intl.DateTimeFormat("th-TH", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            }).format(new Date(category.updatedAt))
+          : "เชื่อมต่อหลังบ้าน",
+        slug: category.slug,
+        source: "api" as const,
+      }),
+    );
   } catch {
-    return fallbackCategories.map((category) => ({
-      id: category.name.toLowerCase().replace(/\s+/g, "-"),
-      name: category.name,
-      status: category.status,
-      products: String(category.products),
-      updatedAt: category.updatedAt,
-      slug: category.name.toLowerCase().replace(/\s+/g, "-"),
-      source: "mock" as const,
-    }));
+    return fallbackCategories.map(
+      (category): CategoryRecord => ({
+        id: category.name.toLowerCase().replace(/\s+/g, "-"),
+        name: category.name,
+        description: "",
+        sortOrder: 0,
+        status:
+          category.status === "Active"
+            ? "Active"
+            : "Inactive",
+        isActive: category.status === "Active",
+        products: String(category.products),
+        updatedAt: category.updatedAt,
+        slug: category.name.toLowerCase().replace(/\s+/g, "-"),
+        source: "mock" as const,
+      }),
+    );
   }
+}
+
+export async function createCategory(payload: CategoryFormPayload) {
+  return fetchFromApi<ApiCategory>("/categories", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateCategory(id: string, payload: CategoryFormPayload) {
+  return fetchFromApi<ApiCategory>(`/categories/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateCategoryStatus(id: string, isActive: boolean) {
+  return fetchFromApi<ApiCategory>(`/categories/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ isActive }),
+  });
+}
+
+export async function softDeleteCategory(id: string) {
+  return fetchFromApi<{ message?: string }>(`/categories/${id}`, {
+    method: "DELETE",
+  });
 }
 
 export async function getProducts() {
@@ -141,8 +215,8 @@ export async function getProducts() {
       id: product.id,
       sku: product.sku,
       name: product.name,
-      category: "API linked",
-      price: "Pending backend",
+      category: "เชื่อมต่อ API",
+      price: "รอข้อมูลหลังบ้าน",
       stock: String(product.stock),
       status: product.status,
       source: "api" as const,
@@ -170,8 +244,8 @@ export async function getMembers() {
       name: member.fullName,
       tier: member.pointBalance >= 900 ? "Gold" : member.pointBalance >= 300 ? "Silver" : "Basic",
       points: String(member.pointBalance),
-      referrals: "API linked",
-      spend: "Pending backend",
+      referrals: "เชื่อมต่อ API",
+      spend: "รอข้อมูลหลังบ้าน",
       source: "api" as const,
     }));
   } catch {
@@ -194,8 +268,8 @@ export async function getOrders() {
     return data.map((order) => ({
       id: order.id,
       code: order.orderNumber,
-      member: "API linked",
-      store: "Pending backend",
+      member: "เชื่อมต่อ API",
+      store: "รอข้อมูลหลังบ้าน",
       total: `THB ${order.totalAmount}`,
       status: order.status,
       source: "api" as const,
@@ -227,8 +301,8 @@ export async function getPayments() {
         grouped.set(payment.method, {
           method: payment.method,
           orders: 1,
-          successRate: "Live backend",
-          note: "Aggregated from payment records",
+          successRate: "เชื่อมต่อหลังบ้าน",
+          note: "สรุปจากรายการชำระเงินจริง",
           source: "api",
         });
       }
@@ -252,23 +326,23 @@ export async function getSettings() {
 
     return [
       {
-        title: "Shipping Rules",
-        description: `Free shipping from THB ${data.shipping.freeShippingThreshold} and default fee THB ${data.shipping.defaultShippingFee}.`,
+        title: "กติกาการจัดส่ง",
+        description: `ฟรีค่าจัดส่งเมื่อมียอดตั้งแต่ THB ${data.shipping.freeShippingThreshold} และคิดค่าจัดส่งปกติ THB ${data.shipping.defaultShippingFee}`,
         source: "api" as const,
       },
       {
-        title: "Point Rules",
-        description: `Award ${data.points.earnedPoint} points for each THB ${data.points.threshold} spent successfully.`,
+        title: "กติกาแต้มสะสม",
+        description: `มอบ ${data.points.earnedPoint} แต้มทุกการใช้จ่ายสำเร็จครบ THB ${data.points.threshold}`,
         source: "api" as const,
       },
       {
-        title: "Referral Rules",
-        description: `Commission rate is ${(data.referral.commissionRate * 100).toFixed(0)}% for successful referred orders.`,
+        title: "กติกาผู้แนะนำ",
+        description: `ค่าคอมมิชชัน ${(data.referral.commissionRate * 100).toFixed(0)}% สำหรับคำสั่งซื้อจากการแนะนำที่สำเร็จ`,
         source: "api" as const,
       },
       {
-        title: "Stock Rules",
-        description: `Reserve ${data.stock.reservePercentage}% of stock to reduce overselling risk.`,
+        title: "กติกาสต็อก",
+        description: `กันสต็อก ${data.stock.reservePercentage}% เพื่อลดความเสี่ยงในการขายเกินจำนวนจริง`,
         source: "api" as const,
       },
     ];

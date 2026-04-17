@@ -20,64 +20,64 @@ type NavSection = {
 
 export const NAV_DATA: NavSection[] = [
   {
-    label: "MAIN MENU",
+    label: "เมนูหลัก",
     items: [
       {
-        title: "Dashboard",
+        title: "ภาพรวม",
         icon: Icons.HomeIcon,
         url: "/",
         items: [],
       },
       {
-        title: "Categories",
+        title: "หมวดหมู่",
         url: "/categories",
         icon: Icons.Alphabet,
         items: [],
       },
       {
-        title: "Products",
+        title: "สินค้า",
         url: "/products",
         icon: Icons.Table,
         items: [],
       },
       {
-        title: "Members",
+        title: "สมาชิก",
         url: "/members",
         icon: Icons.User,
         items: [],
       },
       {
-        title: "Admin Users",
+        title: "ผู้ดูแลระบบ",
         url: "/admin-users",
         icon: Icons.Authentication,
         items: [],
       },
       {
-        title: "Roles",
+        title: "สิทธิ์การใช้งาน",
         url: "/roles",
         icon: Icons.FourCircle,
         items: [],
       },
       {
-        title: "Orders",
+        title: "คำสั่งซื้อ",
         url: "/orders",
         icon: Icons.Calendar,
         items: [],
       },
       {
-        title: "Payments",
+        title: "การชำระเงิน",
         url: "/payments",
         icon: Icons.PieChart,
         items: [],
       },
       {
-        title: "Reports",
+        title: "รายงาน",
         url: "/reports",
         icon: Icons.Table,
         items: [],
       },
       {
-        title: "Settings",
+        title: "ตั้งค่า",
         url: "/settings",
         icon: Icons.Alphabet,
         items: [],

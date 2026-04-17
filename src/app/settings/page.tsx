@@ -1,4 +1,4 @@
-import { ContentCard, PageIntro, StatusPill } from "@/components/admin-next/page-elements";
+import { ContentCard, StatusPill } from "@/components/admin-next/page-elements";
 import { getSettings } from "@/lib/admin-api";
 
 export default async function SettingsPage() {
@@ -6,18 +6,9 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageIntro
-        eyebrow="Settings"
-        badge={settingsSections[0]?.source === "api" ? "Live API" : "Mock fallback"}
-        description="Manage shipping thresholds, point rules, referral logic, and media channels from a single configuration workspace."
-        primaryAction={{ label: "Review roles", href: "/roles" }}
-        secondaryAction={{ label: "Open payments", href: "/payments" }}
-        title="Keep operational rules consistent across the whole Beauty Up system"
-      />
-
       <ContentCard
-        title="Business settings"
-        description="These cards can become form sections as soon as backend settings CRUD is connected."
+        title="การตั้งค่าธุรกิจ"
+        description="การ์ดเหล่านี้สามารถต่อยอดเป็นฟอร์มแก้ไขได้ทันทีเมื่อเชื่อม CRUD ฝั่งหลังบ้าน"
       >
         <div className="grid gap-4 md:grid-cols-2">
           {settingsSections.map((section) => (
@@ -29,7 +20,7 @@ export default async function SettingsPage() {
                 <h3 className="text-lg font-semibold text-dark dark:text-white">
                   {section.title}
                 </h3>
-                <StatusPill label={section.source === "api" ? "Live" : "Mock"} />
+                <StatusPill label={section.source === "api" ? "เชื่อมต่อแล้ว" : "ข้อมูลตัวอย่าง"} />
               </div>
               <p className="mt-3 text-sm leading-6 text-dark-5 dark:text-dark-6">
                 {section.description}

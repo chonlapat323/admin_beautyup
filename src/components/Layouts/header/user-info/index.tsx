@@ -33,7 +33,7 @@ export function UserInfo() {
   return (
     <Dropdown isOpen={isOpen} setIsOpen={setIsOpen}>
       <DropdownTrigger className="rounded align-middle outline-none ring-primary ring-offset-2 focus-visible:ring-1 dark:ring-offset-gray-dark">
-        <span className="sr-only">My Account</span>
+        <span className="sr-only">บัญชีของฉัน</span>
 
         <figure className="flex items-center gap-3">
           <Image
@@ -63,7 +63,7 @@ export function UserInfo() {
         className="border border-stroke bg-white shadow-md dark:border-dark-3 dark:bg-gray-dark min-[230px]:min-w-[17.5rem]"
         align="end"
       >
-        <h2 className="sr-only">User information</h2>
+        <h2 className="sr-only">ข้อมูลผู้ใช้งาน</h2>
 
         <figure className="flex items-center gap-2.5 px-5 py-3.5">
           <Image
@@ -94,7 +94,7 @@ export function UserInfo() {
           >
             <UserIcon />
 
-            <span className="mr-auto text-base font-medium">Admin users</span>
+            <span className="mr-auto text-base font-medium">ผู้ดูแลระบบ</span>
           </Link>
 
           <Link
@@ -104,9 +104,7 @@ export function UserInfo() {
           >
             <SettingsIcon />
 
-            <span className="mr-auto text-base font-medium">
-              Account Settings
-            </span>
+            <span className="mr-auto text-base font-medium">ตั้งค่าบัญชี</span>
           </Link>
         </div>
 
@@ -119,7 +117,7 @@ export function UserInfo() {
           >
             <LogOutIcon />
 
-            <span className="text-base font-medium">Log out</span>
+            <span className="text-base font-medium">ออกจากระบบ</span>
           </button>
         </div>
       </DropdownContent>

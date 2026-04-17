@@ -11,44 +11,44 @@ import { UserInfo } from "./user-info";
 
 const PAGE_COPY: Record<string, { title: string; description: string }> = {
   "/": {
-    title: "Beauty Up Dashboard",
-    description: "Monitor catalog, members, payments, and store activity in one workspace.",
+    title: "แดชบอร์ด Beauty Up",
+    description: "ติดตามสินค้า สมาชิก การชำระเงิน และภาพรวมการทำงานได้ในหน้าจอเดียว",
   },
   "/categories": {
-    title: "Category Management",
-    description: "Keep storefront discovery organized and ready for launch updates.",
+    title: "จัดการหมวดหมู่",
+    description: "จัดโครงสร้างหมวดหมู่ให้พร้อมสำหรับการใช้งานและการอัปเดตในอนาคต",
   },
   "/products": {
-    title: "Product Management",
-    description: "Maintain SKU, stock, price, media, and publish status from one place.",
+    title: "จัดการสินค้า",
+    description: "ดูแล SKU สต็อก ราคา สื่อ และสถานะการแสดงผลได้จากที่เดียว",
   },
   "/members": {
-    title: "Member Management",
-    description: "Review member details, point balances, and referral ownership.",
+    title: "จัดการสมาชิก",
+    description: "ตรวจสอบข้อมูลสมาชิก แต้มสะสม และการแนะนำสมาชิกได้อย่างชัดเจน",
   },
   "/admin-users": {
-    title: "Admin Users",
-    description: "Control internal access, branch ownership, and admin status.",
+    title: "ผู้ดูแลระบบ",
+    description: "จัดการสิทธิ์การเข้าถึง การดูแลแต่ละสาขา และสถานะของผู้ดูแลระบบ",
   },
   "/roles": {
-    title: "Role Permissions",
-    description: "Define what super admins and admins can manage in the backoffice.",
+    title: "สิทธิ์การใช้งาน",
+    description: "กำหนดขอบเขตการทำงานของซูเปอร์แอดมินและแอดมินในระบบหลังบ้าน",
   },
   "/orders": {
-    title: "Order Management",
-    description: "Track every order from checkout to delivery and reporting.",
+    title: "จัดการคำสั่งซื้อ",
+    description: "ติดตามคำสั่งซื้อทุกขั้นตอนตั้งแต่ชำระเงินจนถึงจัดส่งและสรุปรายงาน",
   },
   "/payments": {
-    title: "Payment Review",
-    description: "Check PromptPay, card, and wallet payment performance.",
+    title: "ตรวจสอบการชำระเงิน",
+    description: "ตรวจสอบประสิทธิภาพการชำระผ่าน PromptPay บัตร และวอลเล็ท",
   },
   "/reports": {
-    title: "Business Reports",
-    description: "Follow store performance, top products, and campaign outcomes.",
+    title: "รายงานธุรกิจ",
+    description: "ติดตามผลงานแต่ละสาขา สินค้าขายดี และผลลัพธ์ของแคมเปญ",
   },
   "/settings": {
-    title: "Settings",
-    description: "Adjust shipping, points, referrals, stock, and channel settings.",
+    title: "ตั้งค่าระบบ",
+    description: "ปรับเงื่อนไขจัดส่ง แต้มสะสม การแนะนำ สต็อก และช่องทางต่าง ๆ",
   },
 };
 
@@ -64,7 +64,7 @@ export function Header() {
         className="rounded-lg border px-1.5 py-1 dark:border-stroke-dark dark:bg-[#020D1A] hover:dark:bg-[#FFFFFF1A] lg:hidden"
       >
         <MenuIcon />
-        <span className="sr-only">Toggle Sidebar</span>
+        <span className="sr-only">เปิดหรือปิดเมนูด้านข้าง</span>
       </button>
 
       {isMobile && (
@@ -84,7 +84,7 @@ export function Header() {
       </div>
 
       <div className="flex flex-1 items-center justify-end gap-2 min-[375px]:gap-4">
-        <div className="relative w-full max-w-[300px]">
+        {/* <div className="relative w-full max-w-[300px]">
           <input
             type="search"
             placeholder="Search catalog, orders, members"
@@ -92,7 +92,7 @@ export function Header() {
           />
 
           <SearchIcon className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 max-[1015px]:size-5" />
-        </div>
+        </div> */}
 
         <ThemeToggleSwitch />
 

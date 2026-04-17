@@ -1,33 +1,25 @@
-import { ContentCard, PageIntro, StatusPill } from "@/components/admin-next/page-elements";
+import { ContentCard, StatusPill } from "@/components/admin-next/page-elements";
 import { getOrders } from "@/lib/admin-api";
+import { toThaiLabel } from "@/lib/thai-text";
 
 export default async function OrdersPage() {
   const orders = await getOrders();
 
   return (
     <div className="space-y-6">
-      <PageIntro
-        eyebrow="Order Management"
-        badge={orders[0]?.source === "api" ? "Live API" : "Mock fallback"}
-        description="Review order status, branch ownership, and checkout totals before fulfilment and reporting workflows proceed."
-        primaryAction={{ label: "Open payments", href: "/payments" }}
-        secondaryAction={{ label: "View reports", href: "/reports" }}
-        title="Monitor the order pipeline from payment to delivery"
-      />
-
       <ContentCard
-        title="Current order status"
-        description="Prepared for status updates, cancellation flow, and branch-specific fulfilment review."
+        title="สถานะคำสั่งซื้อปัจจุบัน"
+        description="เตรียมไว้สำหรับอัปเดตสถานะ ยกเลิกคำสั่งซื้อ และตรวจสอบการทำงานแยกตามสาขา"
       >
         <div className="overflow-hidden rounded-2xl border border-stroke dark:border-dark-3">
           <table className="w-full text-left">
             <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
-                <th className="px-5 py-4 font-medium">Order</th>
-                <th className="px-5 py-4 font-medium">Member</th>
-                <th className="px-5 py-4 font-medium">Store</th>
-                <th className="px-5 py-4 font-medium">Total</th>
-                <th className="px-5 py-4 font-medium">Status</th>
+                <th className="px-5 py-4 font-medium">คำสั่งซื้อ</th>
+                <th className="px-5 py-4 font-medium">สมาชิก</th>
+                <th className="px-5 py-4 font-medium">สาขา</th>
+                <th className="px-5 py-4 font-medium">ยอดรวม</th>
+                <th className="px-5 py-4 font-medium">สถานะ</th>
               </tr>
             </thead>
             <tbody>
@@ -42,11 +34,11 @@ export default async function OrdersPage() {
                   <td className="px-5 py-4">{order.member}</td>
                   <td className="px-5 py-4">{order.store}</td>
                   <td className="px-5 py-4">{order.total}</td>
-                  <td className="px-5 py-4">
-                    <StatusPill
-                      label={order.status}
-                      tone={
-                        order.status === "Paid" || order.status === "Delivered"
+                    <td className="px-5 py-4">
+                      <StatusPill
+                        label={toThaiLabel(order.status)}
+                        tone={
+                          order.status === "Paid" || order.status === "Delivered"
                           ? "success"
                           : "default"
                       }

@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const body = (await request.json()) as LoginRequestBody;
 
   if (!body.email || !body.password) {
-    return NextResponse.json({ message: "Email and password are required." }, { status: 400 });
+    return NextResponse.json({ message: "กรุณากรอกอีเมลและรหัสผ่าน" }, { status: 400 });
   }
 
   try {
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     });
 
     if (!response.ok) {
-      return NextResponse.json({ message: "Invalid admin credentials." }, { status: response.status });
+      return NextResponse.json({ message: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" }, { status: response.status });
     }
 
     const result = (await response.json()) as LoginResponse;
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     return nextResponse;
   } catch {
     return NextResponse.json(
-      { message: "Cannot reach Beauty Up admin API right now." },
+      { message: "ไม่สามารถเชื่อมต่อ API ของระบบหลังบ้านได้ในขณะนี้" },
       { status: 503 },
     );
   }

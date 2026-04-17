@@ -1,33 +1,25 @@
-import { ContentCard, PageIntro, StatusPill } from "@/components/admin-next/page-elements";
+import { ContentCard, StatusPill } from "@/components/admin-next/page-elements";
 import { getMembers } from "@/lib/admin-api";
+import { toThaiLabel } from "@/lib/thai-text";
 
 export default async function MembersPage() {
   const members = await getMembers();
 
   return (
     <div className="space-y-6">
-      <PageIntro
-        eyebrow="Member Management"
-        badge={members[0]?.source === "api" ? "Live API" : "Mock fallback"}
-        description="Track member profiles, point balances, referral ownership, and spending history before support action."
-        primaryAction={{ label: "Create member", href: "/members" }}
-        secondaryAction={{ label: "View reports", href: "/reports" }}
-        title="Keep member operations visible, simple, and support-ready"
-      />
-
       <ContentCard
-        title="Customer and referral overview"
-        description="Prepared for profile CRUD, points history, support notes, and referral ownership review."
+        title="ภาพรวมสมาชิกและผู้แนะนำ"
+        description="เตรียมไว้สำหรับจัดการโปรไฟล์ ประวัติแต้มสะสม หมายเหตุช่วยเหลือ และความสัมพันธ์ของผู้แนะนำ"
       >
         <div className="overflow-hidden rounded-2xl border border-stroke dark:border-dark-3">
           <table className="w-full text-left">
             <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
-                <th className="px-5 py-4 font-medium">Name</th>
-                <th className="px-5 py-4 font-medium">Tier</th>
-                <th className="px-5 py-4 font-medium">Points</th>
-                <th className="px-5 py-4 font-medium">Referrals</th>
-                <th className="px-5 py-4 font-medium">Spend</th>
+                <th className="px-5 py-4 font-medium">ชื่อ</th>
+                <th className="px-5 py-4 font-medium">ระดับสมาชิก</th>
+                <th className="px-5 py-4 font-medium">แต้ม</th>
+                <th className="px-5 py-4 font-medium">ผู้แนะนำ</th>
+                <th className="px-5 py-4 font-medium">ยอดใช้จ่าย</th>
               </tr>
             </thead>
             <tbody>
@@ -41,7 +33,7 @@ export default async function MembersPage() {
                   </td>
                   <td className="px-5 py-4">
                     <StatusPill
-                      label={member.tier}
+                      label={toThaiLabel(member.tier)}
                       tone={member.tier === "Gold" ? "warning" : member.tier === "Silver" ? "success" : "default"}
                     />
                   </td>

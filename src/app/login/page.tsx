@@ -10,20 +10,19 @@ export default function LoginPage() {
           </div>
 
           <h1 className="mt-8 max-w-xl text-3xl font-bold leading-tight lg:text-[40px]">
-            Calm control for products, orders, members, and reports.
+            จัดการสินค้า คำสั่งซื้อ สมาชิก และรายงานได้อย่างเป็นระบบ
           </h1>
 
           <p className="mt-5 max-w-xl text-base leading-7 text-[#d7e8dd]">
-            Sign in to the backoffice workspace built for Beauty Up operations. Review catalog
-            readiness, monitor payment channels, and keep launch rules consistent across every
-            store.
+            เข้าสู่ระบบหลังบ้านสำหรับทีม Beauty Up เพื่อตรวจสอบความพร้อมของสินค้า
+            ติดตามช่องทางการชำระเงิน และดูแลกติกาการทำงานให้สอดคล้องกันทุกสาขา
           </p>
 
           <div className="mt-10 space-y-4">
             {[
-              "Manage categories, products, pricing, and stock visibility in one clean workspace.",
-              "Track PromptPay, card, and TrueMoney payment performance before fulfilment.",
-              "Review member points, referral activity, and branch reporting with one account.",
+              "จัดการหมวดหมู่ สินค้า ราคา และสถานะสต็อกได้ในหน้าจอเดียว",
+              "ติดตามการชำระเงินผ่าน PromptPay บัตร และ TrueMoney ก่อนส่งมอบสินค้า",
+              "ตรวจสอบแต้มสะสม การแนะนำสมาชิก และรายงานของแต่ละสาขาได้จากบัญชีเดียว",
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-white/10 bg-white/8 p-4 text-sm leading-6 text-[#edf7f0]">
                 {item}
@@ -35,12 +34,11 @@ export default function LoginPage() {
         <section className="flex items-center p-4 lg:p-8">
           <div className="w-full">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#5f8f74]">
-              Admin Login
+              เข้าสู่ระบบผู้ดูแล
             </p>
-            <h2 className="mt-4 text-3xl font-bold text-dark dark:text-white">Welcome back</h2>
+            <h2 className="mt-4 text-3xl font-bold text-dark dark:text-white">ยินดีต้อนรับกลับ</h2>
             <p className="mt-3 max-w-md text-base leading-7 text-dark-5 dark:text-dark-6">
-              Access the Beauty Up admin dashboard to review business activity and keep launch
-              operations aligned.
+              เข้าสู่แดชบอร์ดผู้ดูแลของ Beauty Up เพื่อตรวจสอบการดำเนินงานและดูแลระบบให้พร้อมใช้งาน
             </p>
 
             <div className="mt-8 rounded-[24px] border border-stroke bg-[#fbfdfb] p-6 dark:border-dark-3 dark:bg-dark-2">
