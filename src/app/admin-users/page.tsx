@@ -7,7 +7,7 @@ export default function AdminUsersPage() {
     <div className="space-y-6">
       <ContentCard
         title="ภาพรวมสิทธิ์ผู้ใช้งาน"
-        description="ใช้สำหรับจัดการบทบาท สถานะ การรีเซ็ตรหัสผ่าน และติดตามการใช้งานของผู้ดูแลระบบ"
+        description=""
       >
         <div className="overflow-hidden rounded-2xl border border-stroke dark:border-dark-3">
           <table className="w-full text-left">

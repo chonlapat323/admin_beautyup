@@ -9,7 +9,7 @@ export default async function MembersPage() {
     <div className="space-y-6">
       <ContentCard
         title="ภาพรวมสมาชิกและผู้แนะนำ"
-        description="เตรียมไว้สำหรับจัดการโปรไฟล์ ประวัติแต้มสะสม หมายเหตุช่วยเหลือ และความสัมพันธ์ของผู้แนะนำ"
+        description=""
       >
         <div className="overflow-hidden rounded-2xl border border-stroke dark:border-dark-3">
           <table className="w-full text-left">

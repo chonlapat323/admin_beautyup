@@ -16,7 +16,7 @@ export default async function ProductsPage() {
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <ContentCard
           title="รายการสินค้า"
-          description="ตารางนี้พร้อมต่อยอดสำหรับ CRUD การปรับสต็อก สถานะการเผยแพร่ และลิงก์สื่อ"
+          description=""
         >
           <div className="overflow-hidden rounded-2xl border border-stroke dark:border-dark-3">
             <table className="w-full text-left">

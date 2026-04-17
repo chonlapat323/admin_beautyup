@@ -7,7 +7,7 @@ export default function RolesPage() {
     <div className="space-y-6">
       <ContentCard
         title="ตารางสิทธิ์การใช้งาน"
-        description="หน้าแสดงสิทธิ์พื้นฐานเพื่อใช้ต่อยอดกับ policy และ route protection ในขั้นถัดไป"
+        description=""
       >
         <div className="overflow-hidden rounded-2xl border border-stroke dark:border-dark-3">
           <table className="w-full text-left">

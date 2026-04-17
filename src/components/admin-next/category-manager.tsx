@@ -111,6 +111,14 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
               year: "numeric",
             }).format(new Date(response.updatedAt))
           : "Just now",
+        processedBy: response.processedBy ?? "system",
+        processedAt: response.processedAt
+          ? new Intl.DateTimeFormat("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            }).format(new Date(response.processedAt))
+          : "Just now",
         source: "api",
       };
 
@@ -208,7 +216,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
     <>
       <ContentCard
         title="จัดการหมวดหมู่"
-        description="เริ่มจากโครงสร้างหมวดหมู่พื้นฐานก่อน ส่วนการเชื่อมระบบภายนอกค่อยทำในสปรินต์ถัดไป"
+        description=""
         aside={
           <button
             className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"

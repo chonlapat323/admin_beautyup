@@ -8,7 +8,7 @@ export default async function PaymentsPage() {
     <div className="space-y-6">
       <ContentCard
         title="ภาพรวมช่องทางชำระเงิน"
-        description="ใช้สำหรับติดตาม PromptPay QR บัตร และ TrueMoney พร้อมรองรับการ retry และ reconciliation ในภายหลัง"
+        description=""
       >
         <div className="overflow-hidden rounded-2xl border border-stroke dark:border-dark-3">
           <table className="w-full text-left">

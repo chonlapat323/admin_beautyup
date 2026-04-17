@@ -14,11 +14,34 @@ export type ApiCategory = {
   description?: string | null;
   sortOrder: number;
   isActive: boolean;
+  processedBy?: string | null;
+  processedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
   _count?: {
     products: number;
   };
+};
+
+export type CategoryListParams = {
+  search?: string;
+  status?: "all" | "active" | "inactive";
+  page?: number;
+  pageSize?: number;
+};
+
+export type CategoryListMeta = {
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+};
+
+export type ApiCategoryListResponse = {
+  items: ApiCategory[];
+  meta: CategoryListMeta;
 };
 
 export type CategoryRecord = {
@@ -31,6 +54,8 @@ export type CategoryRecord = {
   isActive: boolean;
   products: string;
   updatedAt: string;
+  processedBy: string;
+  processedAt: string;
   source: "api" | "mock";
 };
 
@@ -155,6 +180,14 @@ export async function getCategories() {
               year: "numeric",
             }).format(new Date(category.updatedAt))
           : "เชื่อมต่อหลังบ้าน",
+        processedBy: category.processedBy ?? "system",
+        processedAt: category.processedAt
+          ? new Intl.DateTimeFormat("th-TH", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            }).format(new Date(category.processedAt))
+          : "เชื่อมต่อหลังบ้าน",
         slug: category.slug,
         source: "api" as const,
       }),
@@ -173,6 +206,8 @@ export async function getCategories() {
         isActive: category.status === "Active",
         products: String(category.products),
         updatedAt: category.updatedAt,
+        processedBy: "system",
+        processedAt: category.updatedAt,
         slug: category.name.toLowerCase().replace(/\s+/g, "-"),
         source: "mock" as const,
       }),
@@ -180,31 +215,175 @@ export async function getCategories() {
   }
 }
 
+function formatCategoryDate(value?: string | null) {
+  if (!value) {
+    return "เชื่อมต่อหลังบ้าน";
+  }
+
+  return new Intl.DateTimeFormat("th-TH", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function mapCategoryRecord(category: ApiCategory): CategoryRecord {
+  return {
+    id: category.id,
+    name: category.name,
+    description: category.description ?? "",
+    sortOrder: category.sortOrder ?? 0,
+    status: category.isActive ? "Active" : "Inactive",
+    isActive: category.isActive,
+    products: String(category._count?.products ?? 0),
+    updatedAt: formatCategoryDate(category.updatedAt),
+    processedBy: category.processedBy ?? "system",
+    processedAt: formatCategoryDate(category.processedAt),
+    slug: category.slug,
+    source: "api",
+  };
+}
+
+export async function getCategoriesPageData(params: CategoryListParams = {}) {
+  const searchParams = new URLSearchParams();
+
+  if (params.search?.trim()) {
+    searchParams.set("search", params.search.trim());
+  }
+
+  if (params.status && params.status !== "all") {
+    searchParams.set("status", params.status);
+  }
+
+  searchParams.set("page", String(params.page ?? 1));
+  searchParams.set("pageSize", String(params.pageSize ?? 10));
+
+  try {
+    const data = await fetchFromApi<ApiCategoryListResponse>(`/categories?${searchParams.toString()}`);
+
+    return {
+      items: data.items.map(mapCategoryRecord),
+      meta: data.meta,
+    };
+  } catch {
+    const keyword = params.search?.trim().toLowerCase();
+    const filteredItems = fallbackCategories
+      .filter((category) => {
+        if (!keyword) {
+          return true;
+        }
+
+        return [category.name, category.name.toLowerCase().replace(/\s+/g, "-")].some((value) =>
+          value.toLowerCase().includes(keyword),
+        );
+      })
+      .filter((category) => {
+        if (!params.status || params.status === "all") {
+          return true;
+        }
+
+        return params.status === "active"
+          ? category.status === "Active"
+          : category.status !== "Active";
+      });
+
+    const page = params.page ?? 1;
+    const pageSize = params.pageSize ?? 10;
+    const totalItems = filteredItems.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+    const startIndex = (page - 1) * pageSize;
+
+    return {
+      items: filteredItems.slice(startIndex, startIndex + pageSize).map(
+        (category): CategoryRecord => ({
+          id: category.name.toLowerCase().replace(/\s+/g, "-"),
+          name: category.name,
+          description: "",
+          sortOrder: 0,
+          status: category.status === "Active" ? "Active" : "Inactive",
+          isActive: category.status === "Active",
+          products: String(category.products),
+          updatedAt: category.updatedAt,
+          processedBy: "system",
+          processedAt: category.updatedAt,
+          slug: category.name.toLowerCase().replace(/\s+/g, "-"),
+          source: "mock",
+        }),
+      ),
+      meta: {
+        page,
+        pageSize,
+        totalItems,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
+}
+
 export async function createCategory(payload: CategoryFormPayload) {
-  return fetchFromApi<ApiCategory>("/categories", {
+  const response = await fetch("/api/categories", {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(payload),
   });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถสร้างหมวดหมู่ได้");
+  }
+
+  return response.json() as Promise<ApiCategory>;
 }
 
 export async function updateCategory(id: string, payload: CategoryFormPayload) {
-  return fetchFromApi<ApiCategory>(`/categories/${id}`, {
+  const response = await fetch(`/api/categories/${id}`, {
     method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(payload),
   });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถแก้ไขหมวดหมู่ได้");
+  }
+
+  return response.json() as Promise<ApiCategory>;
 }
 
 export async function updateCategoryStatus(id: string, isActive: boolean) {
-  return fetchFromApi<ApiCategory>(`/categories/${id}/status`, {
+  const response = await fetch(`/api/categories/${id}/status`, {
     method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ isActive }),
   });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถเปลี่ยนสถานะหมวดหมู่ได้");
+  }
+
+  return response.json() as Promise<ApiCategory>;
 }
 
 export async function softDeleteCategory(id: string) {
-  return fetchFromApi<{ message?: string }>(`/categories/${id}`, {
+  const response = await fetch(`/api/categories/${id}`, {
     method: "DELETE",
   });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถลบหมวดหมู่ได้");
+  }
+
+  return response.json() as Promise<{ message?: string }>;
 }
 
 export async function getProducts() {

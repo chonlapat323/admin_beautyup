@@ -1,12 +1,19 @@
-import { CategoryManager } from "@/components/admin-next/category-manager";
-import { getCategories } from "@/lib/admin-api";
+import { CategoryManagerTable } from "@/components/admin-next/category-manager-table";
+import { getCategoriesPageData } from "@/lib/admin-api";
 
 export default async function CategoriesPage() {
-  const categories = await getCategories();
+  const categories = await getCategoriesPageData({
+    page: 1,
+    pageSize: 10,
+    status: "all",
+  });
 
   return (
     <div className="space-y-6">
-      <CategoryManager initialCategories={categories} />
+      <CategoryManagerTable
+        initialItems={categories.items}
+        initialMeta={categories.meta}
+      />
     </div>
   );
 }

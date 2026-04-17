@@ -9,7 +9,7 @@ export default async function OrdersPage() {
     <div className="space-y-6">
       <ContentCard
         title="สถานะคำสั่งซื้อปัจจุบัน"
-        description="เตรียมไว้สำหรับอัปเดตสถานะ ยกเลิกคำสั่งซื้อ และตรวจสอบการทำงานแยกตามสาขา"
+        description=""
       >
         <div className="overflow-hidden rounded-2xl border border-stroke dark:border-dark-3">
           <table className="w-full text-left">
