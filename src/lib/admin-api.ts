@@ -12,6 +12,8 @@ export type ApiCategory = {
   name: string;
   slug: string;
   description?: string | null;
+  imageUrl?: string | null;
+  requiresShadeSelection: boolean;
   sortOrder: number;
   isActive: boolean;
   processedBy?: string | null;
@@ -49,6 +51,8 @@ export type CategoryRecord = {
   name: string;
   slug: string;
   description: string;
+  imageUrl: string | null;
+  requiresShadeSelection: boolean;
   sortOrder: number;
   status: "Active" | "Inactive";
   isActive: boolean;
@@ -63,16 +67,66 @@ export type CategoryFormPayload = {
   name: string;
   slug: string;
   description?: string;
+  imageUrl?: string;
+  requiresShadeSelection?: boolean;
+  tempImageFile?: string;
   sortOrder?: number;
   isActive?: boolean;
+};
+
+export type ApiProductImage = {
+  id: string;
+  url: string;
+  altText?: string | null;
+  sortOrder: number;
 };
 
 export type ApiProduct = {
   id: string;
   sku: string;
   name: string;
-  status: string;
+  slug: string;
+  description?: string | null;
+  price: string;
+  specialPrice?: string | null;
   stock: number;
+  status: "DRAFT" | "ACTIVE" | "INACTIVE";
+  categoryId: string;
+  category?: { id: string; name: string } | null;
+  images?: ApiProductImage[];
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type ProductRecord = {
+  id: string;
+  sku: string;
+  name: string;
+  slug: string;
+  description: string;
+  price: number;
+  specialPrice: number | null;
+  categoryId: string;
+  categoryName: string;
+  stock: number;
+  status: "DRAFT" | "ACTIVE" | "INACTIVE";
+  thumbnail: string | null;
+  updatedAt: string;
+  source: "api" | "mock";
+};
+
+export type ProductFormPayload = {
+  name: string;
+  slug: string;
+  sku: string;
+  description?: string;
+  price: number;
+  specialPrice?: number;
+  categoryId: string;
+  stock: number;
+  status: "DRAFT" | "ACTIVE" | "INACTIVE";
+  tempFiles?: string[];
+  orderedImages?: Array<{ kind: "existing"; id: string } | { kind: "temp"; filename: string }>;
 };
 
 export type LoginPayload = {
@@ -87,14 +141,24 @@ export type LoginResponse = {
     id: string;
     email: string;
     role: string;
+    roleId?: string | null;
   };
 };
 
 export type ApiMember = {
   id: string;
   fullName: string;
-  phone: string;
+  phone?: string | null;
+  email?: string | null;
+  isActive: boolean;
   pointBalance: number;
+  referredById?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  _count?: {
+    orders: number;
+    referrals: number;
+  };
 };
 
 export type ApiOrder = {
@@ -168,7 +232,10 @@ export async function getCategories() {
       (category): CategoryRecord => ({
         id: category.id,
         name: category.name,
+        slug: category.slug,
         description: category.description ?? "",
+        imageUrl: category.imageUrl ?? null,
+        requiresShadeSelection: category.requiresShadeSelection ?? false,
         sortOrder: category.sortOrder ?? 0,
         status: category.isActive ? "Active" : "Inactive",
         isActive: category.isActive,
@@ -188,7 +255,6 @@ export async function getCategories() {
               year: "numeric",
             }).format(new Date(category.processedAt))
           : "เชื่อมต่อหลังบ้าน",
-        slug: category.slug,
         source: "api" as const,
       }),
     );
@@ -197,18 +263,17 @@ export async function getCategories() {
       (category): CategoryRecord => ({
         id: category.name.toLowerCase().replace(/\s+/g, "-"),
         name: category.name,
+        slug: category.name.toLowerCase().replace(/\s+/g, "-"),
         description: "",
+        imageUrl: null,
+        requiresShadeSelection: false,
         sortOrder: 0,
-        status:
-          category.status === "Active"
-            ? "Active"
-            : "Inactive",
+        status: category.status === "Active" ? "Active" : "Inactive",
         isActive: category.status === "Active",
         products: String(category.products),
         updatedAt: category.updatedAt,
         processedBy: "system",
         processedAt: category.updatedAt,
-        slug: category.name.toLowerCase().replace(/\s+/g, "-"),
         source: "mock" as const,
       }),
     );
@@ -231,7 +296,10 @@ function mapCategoryRecord(category: ApiCategory): CategoryRecord {
   return {
     id: category.id,
     name: category.name,
+    slug: category.slug,
     description: category.description ?? "",
+    imageUrl: category.imageUrl ?? null,
+    requiresShadeSelection: category.requiresShadeSelection ?? false,
     sortOrder: category.sortOrder ?? 0,
     status: category.isActive ? "Active" : "Inactive",
     isActive: category.isActive,
@@ -239,7 +307,6 @@ function mapCategoryRecord(category: ApiCategory): CategoryRecord {
     updatedAt: formatCategoryDate(category.updatedAt),
     processedBy: category.processedBy ?? "system",
     processedAt: formatCategoryDate(category.processedAt),
-    slug: category.slug,
     source: "api",
   };
 }
@@ -298,7 +365,10 @@ export async function getCategoriesPageData(params: CategoryListParams = {}) {
         (category): CategoryRecord => ({
           id: category.name.toLowerCase().replace(/\s+/g, "-"),
           name: category.name,
+          slug: category.name.toLowerCase().replace(/\s+/g, "-"),
           description: "",
+          imageUrl: null,
+          requiresShadeSelection: false,
           sortOrder: 0,
           status: category.status === "Active" ? "Active" : "Inactive",
           isActive: category.status === "Active",
@@ -306,7 +376,6 @@ export async function getCategoriesPageData(params: CategoryListParams = {}) {
           updatedAt: category.updatedAt,
           processedBy: "system",
           processedAt: category.updatedAt,
-          slug: category.name.toLowerCase().replace(/\s+/g, "-"),
           source: "mock",
         }),
       ),
@@ -386,32 +455,136 @@ export async function softDeleteCategory(id: string) {
   return response.json() as Promise<{ message?: string }>;
 }
 
-export async function getProducts() {
-  try {
-    const data = await fetchFromApi<ApiProduct[]>("/products");
+type ProductApiResponse = {
+  items: ApiProduct[];
+  meta: CategoryListMeta;
+};
 
-    return data.map((product) => ({
-      id: product.id,
-      sku: product.sku,
-      name: product.name,
-      category: "เชื่อมต่อ API",
-      price: "รอข้อมูลหลังบ้าน",
-      stock: String(product.stock),
-      status: product.status,
-      source: "api" as const,
-    }));
+function mapProductRecord(product: ApiProduct): ProductRecord {
+  return {
+    id: product.id,
+    sku: product.sku,
+    name: product.name,
+    slug: product.slug,
+    description: product.description ?? "",
+    price: parseFloat(product.price) || 0,
+    specialPrice: product.specialPrice ? parseFloat(product.specialPrice) : null,
+    categoryId: product.categoryId,
+    categoryName: product.category?.name ?? "ไม่ระบุหมวดหมู่",
+    stock: product.stock,
+    status: product.status,
+    thumbnail: product.images?.[0]?.url ?? null,
+    updatedAt: product.updatedAt
+      ? new Intl.DateTimeFormat("th-TH", { day: "2-digit", month: "short", year: "numeric" }).format(
+          new Date(product.updatedAt),
+        )
+      : "-",
+    source: "api",
+  };
+}
+
+export async function getProductsPageData(
+  params: { search?: string; status?: string; page?: number; pageSize?: number } = {},
+): Promise<{ items: ProductRecord[]; meta: CategoryListMeta }> {
+  const searchParams = new URLSearchParams();
+
+  if (params.search?.trim()) searchParams.set("search", params.search.trim());
+  if (params.status && params.status !== "all") searchParams.set("status", params.status);
+  searchParams.set("page", String(params.page ?? 1));
+  searchParams.set("pageSize", String(params.pageSize ?? 10));
+
+  try {
+    const data = await fetchFromApi<ProductApiResponse>(`/products?${searchParams.toString()}`);
+
+    return {
+      items: data.items.map(mapProductRecord),
+      meta: data.meta,
+    };
   } catch {
-    return fallbackProducts.map((product) => ({
-      id: product.sku,
-      sku: product.sku,
-      name: product.name,
-      category: product.category,
-      price: product.price,
-      stock: String(product.stock),
-      status: product.status,
-      source: "mock" as const,
-    }));
+    const page = params.page ?? 1;
+    const pageSize = params.pageSize ?? 10;
+    const items = fallbackProducts.slice((page - 1) * pageSize, page * pageSize).map(
+      (p): ProductRecord => ({
+        id: p.sku,
+        sku: p.sku,
+        name: p.name,
+        slug: p.name.toLowerCase().replace(/\s+/g, "-"),
+        description: "",
+        price: parseFloat(p.price.replace(/[^0-9.]/g, "")) || 0,
+        specialPrice: null,
+        categoryId: "",
+        categoryName: p.category,
+        stock: p.stock,
+        status: p.status === "Active" ? "ACTIVE" : "INACTIVE",
+        thumbnail: null,
+        updatedAt: "-",
+        source: "mock",
+      }),
+    );
+    const totalItems = fallbackProducts.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+
+    return {
+      items,
+      meta: { page, pageSize, totalItems, totalPages, hasNextPage: page < totalPages, hasPreviousPage: page > 1 },
+    };
   }
+}
+
+export async function createProduct(payload: ProductFormPayload) {
+  const response = await fetch("/api/products", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถสร้างสินค้าได้");
+  }
+
+  return response.json() as Promise<ApiProduct>;
+}
+
+export async function updateProduct(id: string, payload: Partial<ProductFormPayload>) {
+  const response = await fetch(`/api/products/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถแก้ไขสินค้าได้");
+  }
+
+  return response.json() as Promise<ApiProduct>;
+}
+
+export async function updateProductStatus(id: string, status: "DRAFT" | "ACTIVE" | "INACTIVE") {
+  const response = await fetch(`/api/products/${id}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถเปลี่ยนสถานะสินค้าได้");
+  }
+
+  return response.json() as Promise<ApiProduct>;
+}
+
+export async function deleteProduct(id: string) {
+  const response = await fetch(`/api/products/${id}`, { method: "DELETE" });
+
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถลบสินค้าได้");
+  }
+
+  return response.json() as Promise<{ message?: string }>;
 }
 
 export async function getMembers() {
@@ -530,5 +703,521 @@ export async function getSettings() {
       ...section,
       source: "mock" as const,
     }));
+  }
+}
+
+// ===== Members (full CRUD) =====
+
+export type MemberRecord = {
+  id: string;
+  fullName: string;
+  phone: string;
+  email: string;
+  isActive: boolean;
+  pointBalance: number;
+  orders: number;
+  referrals: number;
+  updatedAt: string;
+  source: "api" | "mock";
+};
+
+export type MemberFormPayload = {
+  fullName: string;
+  phone?: string;
+  email?: string;
+  referredById?: string;
+};
+
+type MemberApiResponse = {
+  items: ApiMember[];
+  meta: CategoryListMeta;
+};
+
+function mapMemberRecord(member: ApiMember): MemberRecord {
+  return {
+    id: member.id,
+    fullName: member.fullName,
+    phone: member.phone ?? "",
+    email: member.email ?? "",
+    isActive: member.isActive,
+    pointBalance: member.pointBalance,
+    orders: member._count?.orders ?? 0,
+    referrals: member._count?.referrals ?? 0,
+    updatedAt: member.updatedAt
+      ? new Intl.DateTimeFormat("th-TH", { day: "2-digit", month: "short", year: "numeric" }).format(
+          new Date(member.updatedAt),
+        )
+      : "-",
+    source: "api",
+  };
+}
+
+export async function getMembersPageData(
+  params: { search?: string; status?: string; page?: number; pageSize?: number } = {},
+): Promise<{ items: MemberRecord[]; meta: CategoryListMeta }> {
+  const searchParams = new URLSearchParams();
+  if (params.search?.trim()) searchParams.set("search", params.search.trim());
+  if (params.status && params.status !== "all") searchParams.set("status", params.status);
+  searchParams.set("page", String(params.page ?? 1));
+  searchParams.set("pageSize", String(params.pageSize ?? 10));
+
+  try {
+    const data = await fetchFromApi<MemberApiResponse>(`/members?${searchParams.toString()}`);
+    return { items: data.items.map(mapMemberRecord), meta: data.meta };
+  } catch {
+    const page = params.page ?? 1;
+    const pageSize = params.pageSize ?? 10;
+    return {
+      items: fallbackMembers.slice((page - 1) * pageSize, page * pageSize).map(
+        (m): MemberRecord => ({
+          id: m.name.toLowerCase().replace(/\s+/g, "-"),
+          fullName: m.name,
+          phone: "",
+          email: "",
+          isActive: true,
+          pointBalance: m.points,
+          orders: 0,
+          referrals: Number(m.referrals) || 0,
+          updatedAt: "-",
+          source: "mock",
+        }),
+      ),
+      meta: {
+        page,
+        pageSize,
+        totalItems: fallbackMembers.length,
+        totalPages: Math.max(1, Math.ceil(fallbackMembers.length / pageSize)),
+        hasNextPage: page < Math.ceil(fallbackMembers.length / pageSize),
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
+}
+
+export async function createMember(payload: MemberFormPayload) {
+  const response = await fetch("/api/members", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถสร้างสมาชิกได้");
+  }
+  return response.json() as Promise<ApiMember>;
+}
+
+export async function updateMember(id: string, payload: Partial<MemberFormPayload>) {
+  const response = await fetch(`/api/members/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถแก้ไขสมาชิกได้");
+  }
+  return response.json() as Promise<ApiMember>;
+}
+
+export async function updateMemberStatus(id: string, isActive: boolean) {
+  const response = await fetch(`/api/members/${id}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ isActive }),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถเปลี่ยนสถานะสมาชิกได้");
+  }
+  return response.json() as Promise<ApiMember>;
+}
+
+export async function deleteMember(id: string) {
+  const response = await fetch(`/api/members/${id}`, { method: "DELETE" });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถลบสมาชิกได้");
+  }
+  return response.json() as Promise<{ message?: string }>;
+}
+
+// ===== Admin Users =====
+
+export type ApiAdminUser = {
+  id: string;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  roleId?: string | null;
+  role?: { id: string; name: string } | null;
+  isActive: boolean;
+  storeId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type AdminUserRecord = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  roleId: string | null;
+  roleName: string;
+  isActive: boolean;
+  updatedAt: string;
+  source: "api" | "mock";
+};
+
+export type AdminUserFormPayload = {
+  email: string;
+  password?: string;
+  firstName?: string;
+  lastName?: string;
+  roleId?: string;
+};
+
+type AdminUserApiResponse = {
+  items: ApiAdminUser[];
+  meta: CategoryListMeta;
+};
+
+function mapAdminUserRecord(user: ApiAdminUser): AdminUserRecord {
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName ?? "",
+    lastName: user.lastName ?? "",
+    displayName: [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email,
+    roleId: user.roleId ?? null,
+    roleName: user.role?.name ?? "ไม่ระบุ",
+    isActive: user.isActive,
+    updatedAt: user.updatedAt
+      ? new Intl.DateTimeFormat("th-TH", { day: "2-digit", month: "short", year: "numeric" }).format(
+          new Date(user.updatedAt),
+        )
+      : "-",
+    source: "api",
+  };
+}
+
+export async function getAdminUsersPageData(
+  params: { search?: string; status?: string; page?: number; pageSize?: number } = {},
+): Promise<{ items: AdminUserRecord[]; meta: CategoryListMeta }> {
+  const searchParams = new URLSearchParams();
+  if (params.search?.trim()) searchParams.set("search", params.search.trim());
+  if (params.status && params.status !== "all") searchParams.set("status", params.status);
+  searchParams.set("page", String(params.page ?? 1));
+  searchParams.set("pageSize", String(params.pageSize ?? 10));
+
+  try {
+    const data = await fetchFromApi<AdminUserApiResponse>(`/admin-users?${searchParams.toString()}`);
+    return { items: data.items.map(mapAdminUserRecord), meta: data.meta };
+  } catch {
+    const page = params.page ?? 1;
+    const pageSize = params.pageSize ?? 10;
+    return {
+      items: [],
+      meta: { page, pageSize, totalItems: 0, totalPages: 1, hasNextPage: false, hasPreviousPage: false },
+    };
+  }
+}
+
+export async function createAdminUser(payload: AdminUserFormPayload & { password: string }) {
+  const response = await fetch("/api/admin-users", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถสร้างผู้ดูแลระบบได้");
+  }
+  return response.json() as Promise<ApiAdminUser>;
+}
+
+export async function updateAdminUser(id: string, payload: Partial<AdminUserFormPayload>) {
+  const response = await fetch(`/api/admin-users/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถแก้ไขผู้ดูแลระบบได้");
+  }
+  return response.json() as Promise<ApiAdminUser>;
+}
+
+export async function updateAdminUserStatus(id: string, isActive: boolean) {
+  const response = await fetch(`/api/admin-users/${id}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ isActive }),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถเปลี่ยนสถานะผู้ดูแลระบบได้");
+  }
+  return response.json() as Promise<ApiAdminUser>;
+}
+
+export async function deleteAdminUser(id: string) {
+  const response = await fetch(`/api/admin-users/${id}`, { method: "DELETE" });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถลบผู้ดูแลระบบได้");
+  }
+  return response.json() as Promise<{ message?: string }>;
+}
+
+// ===== Roles =====
+
+export type MenuPermission = {
+  menu: string;
+  label: string;
+  canView: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+};
+
+export type ApiRole = {
+  id: string;
+  name: string;
+  permissions: MenuPermission[];
+  isActive: boolean;
+  _count?: { admins: number };
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type RoleRecord = {
+  id: string;
+  name: string;
+  permissions: MenuPermission[];
+  isActive: boolean;
+  adminCount: number;
+  updatedAt: string;
+  source: "api" | "mock";
+};
+
+export type RoleFormPayload = {
+  name: string;
+  permissions: MenuPermission[];
+};
+
+type RoleApiResponse = {
+  items: ApiRole[];
+  meta: CategoryListMeta;
+};
+
+function mapRoleRecord(role: ApiRole): RoleRecord {
+  return {
+    id: role.id,
+    name: role.name,
+    permissions: role.permissions,
+    isActive: role.isActive,
+    adminCount: role._count?.admins ?? 0,
+    updatedAt: role.updatedAt
+      ? new Intl.DateTimeFormat("th-TH", { day: "2-digit", month: "short", year: "numeric" }).format(
+          new Date(role.updatedAt),
+        )
+      : "-",
+    source: "api",
+  };
+}
+
+export async function getRolesPageData(
+  params: { search?: string; status?: string; page?: number; pageSize?: number } = {},
+): Promise<{ items: RoleRecord[]; meta: CategoryListMeta }> {
+  const searchParams = new URLSearchParams();
+  if (params.search?.trim()) searchParams.set("search", params.search.trim());
+  if (params.status && params.status !== "all") searchParams.set("status", params.status);
+  searchParams.set("page", String(params.page ?? 1));
+  searchParams.set("pageSize", String(params.pageSize ?? 20));
+
+  try {
+    const data = await fetchFromApi<RoleApiResponse>(`/roles?${searchParams.toString()}`);
+    return { items: data.items.map(mapRoleRecord), meta: data.meta };
+  } catch {
+    return {
+      items: [],
+      meta: { page: 1, pageSize: 20, totalItems: 0, totalPages: 1, hasNextPage: false, hasPreviousPage: false },
+    };
+  }
+}
+
+export async function createRole(payload: RoleFormPayload) {
+  const response = await fetch("/api/roles", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถสร้างสิทธิ์ได้");
+  }
+  return response.json() as Promise<ApiRole>;
+}
+
+export async function updateRole(id: string, payload: Partial<RoleFormPayload>) {
+  const response = await fetch(`/api/roles/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถแก้ไขสิทธิ์ได้");
+  }
+  return response.json() as Promise<ApiRole>;
+}
+
+export async function updateRoleStatus(id: string, isActive: boolean) {
+  const response = await fetch(`/api/roles/${id}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ isActive }),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถเปลี่ยนสถานะสิทธิ์ได้");
+  }
+  return response.json() as Promise<ApiRole>;
+}
+
+export async function deleteRole(id: string) {
+  const response = await fetch(`/api/roles/${id}`, { method: "DELETE" });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถลบสิทธิ์ได้");
+  }
+  return response.json() as Promise<{ message?: string }>;
+}
+
+// ===== Shade Groups =====
+
+export type ApiShadeItem = {
+  id: string;
+  shadeGroupId: string;
+  name: string;
+  imageUrl?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+};
+
+export type ApiShadeGroup = {
+  id: string;
+  categoryId: string;
+  name: string;
+  sortOrder: number;
+  isActive: boolean;
+  shades: ApiShadeItem[];
+};
+
+export async function getShadeGroups(categoryId: string): Promise<ApiShadeGroup[]> {
+  const response = await fetch(`/api/categories/${categoryId}/shade-groups`, { cache: "no-store" });
+  if (!response.ok) throw new Error("ไม่สามารถดึงข้อมูลกลุ่มเฉดสีได้");
+  return response.json() as Promise<ApiShadeGroup[]>;
+}
+
+export async function createShadeGroup(categoryId: string, payload: { name: string; sortOrder?: number }): Promise<ApiShadeGroup> {
+  const response = await fetch(`/api/categories/${categoryId}/shade-groups`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถสร้างกลุ่มเฉดสีได้");
+  }
+  return response.json() as Promise<ApiShadeGroup>;
+}
+
+export async function updateShadeGroup(
+  categoryId: string,
+  groupId: string,
+  payload: Partial<{ name: string; sortOrder: number; isActive: boolean }>,
+): Promise<ApiShadeGroup> {
+  const response = await fetch(`/api/categories/${categoryId}/shade-groups/${groupId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถแก้ไขกลุ่มเฉดสีได้");
+  }
+  return response.json() as Promise<ApiShadeGroup>;
+}
+
+export async function deleteShadeGroup(categoryId: string, groupId: string): Promise<void> {
+  const response = await fetch(`/api/categories/${categoryId}/shade-groups/${groupId}`, { method: "DELETE" });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถลบกลุ่มเฉดสีได้");
+  }
+}
+
+export async function createShadeItem(categoryId: string, groupId: string, payload: { name: string; sortOrder?: number }): Promise<ApiShadeItem> {
+  const response = await fetch(`/api/categories/${categoryId}/shade-groups/${groupId}/shades`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถสร้างเฉดสีได้");
+  }
+  return response.json() as Promise<ApiShadeItem>;
+}
+
+export async function updateShadeItem(
+  categoryId: string,
+  groupId: string,
+  shadeId: string,
+  payload: Partial<{ name: string; isActive: boolean; sortOrder: number }>,
+): Promise<ApiShadeItem> {
+  const response = await fetch(`/api/categories/${categoryId}/shade-groups/${groupId}/shades/${shadeId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถแก้ไขเฉดสีได้");
+  }
+  return response.json() as Promise<ApiShadeItem>;
+}
+
+export async function uploadShadeItemImage(categoryId: string, groupId: string, shadeId: string, file: File): Promise<ApiShadeItem> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const response = await fetch(`/api/categories/${categoryId}/shade-groups/${groupId}/shades/${shadeId}/image`, {
+    method: "POST",
+    body: fd,
+  });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถอัปโหลดรูปได้");
+  }
+  return response.json() as Promise<ApiShadeItem>;
+}
+
+export async function deleteShadeItem(categoryId: string, groupId: string, shadeId: string): Promise<void> {
+  const response = await fetch(`/api/categories/${categoryId}/shade-groups/${groupId}/shades/${shadeId}`, { method: "DELETE" });
+  if (!response.ok) {
+    const data = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(data?.message || "ไม่สามารถลบเฉดสีได้");
+  }
+}
+
+export async function getRolesList(): Promise<{ id: string; name: string }[]> {
+  try {
+    const data = await fetchFromApi<RoleApiResponse>("/roles?status=active&pageSize=100");
+    return data.items.map((r) => ({ id: r.id, name: r.name }));
+  } catch {
+    return [];
   }
 }

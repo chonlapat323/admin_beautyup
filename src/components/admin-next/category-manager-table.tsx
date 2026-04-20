@@ -1,16 +1,27 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useToast } from "@/components/shared/toast-provider";
 import {
   ApiCategory,
+  ApiShadeGroup,
+  ApiShadeItem,
   CategoryFormPayload,
   CategoryListMeta,
   CategoryRecord,
   createCategory,
+  createShadeGroup,
+  createShadeItem,
+  deleteShadeGroup,
+  deleteShadeItem,
+  getShadeGroups,
   softDeleteCategory,
   updateCategory,
   updateCategoryStatus,
+  updateShadeGroup,
+  updateShadeItem,
+  uploadShadeItemImage,
 } from "@/lib/admin-api";
 import { ContentCard, StatusPill } from "./page-elements";
 
@@ -33,6 +44,10 @@ type SelectOption<T extends string | number> = {
 const INITIAL_FORM: CategoryFormPayload = {
   name: "",
   slug: "",
+  description: "",
+  imageUrl: undefined,
+  requiresShadeSelection: false,
+  tempImageFile: undefined,
   isActive: true,
 };
 
@@ -71,6 +86,8 @@ function mapCategoryRecord(category: ApiCategory): CategoryRecord {
     name: category.name,
     slug: category.slug,
     description: category.description ?? "",
+    imageUrl: category.imageUrl ?? null,
+    requiresShadeSelection: category.requiresShadeSelection ?? false,
     sortOrder: category.sortOrder ?? 0,
     status: category.isActive ? "Active" : "Inactive",
     isActive: category.isActive,
@@ -320,6 +337,387 @@ function ConfirmDeleteModal({
   );
 }
 
+function ShadeManagerModal({ category, onClose }: { category: CategoryRecord; onClose: () => void }) {
+  const { showToast } = useToast();
+  const [groups, setGroups] = useState<ApiShadeGroup[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [view, setView] = useState<"groups" | "shades">("groups");
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+
+  const [groupForm, setGroupForm] = useState<{ name: string; sortOrder: number } | null>(null);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [isGroupSubmitting, setIsGroupSubmitting] = useState(false);
+  const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
+
+  const [shadeForm, setShadeForm] = useState<{ name: string; imageFile?: File | null; imagePreview?: string | null } | null>(null);
+  const [editingShadeId, setEditingShadeId] = useState<string | null>(null);
+  const [isShadeSubmitting, setIsShadeSubmitting] = useState(false);
+  const [uploadingShadeId, setUploadingShadeId] = useState<string | null>(null);
+  const [deletingShadeId, setDeletingShadeId] = useState<string | null>(null);
+  const [draggingGroupIdx, setDraggingGroupIdx] = useState<number | null>(null);
+  const [dragOverGroupIdx, setDragOverGroupIdx] = useState<number | null>(null);
+  const [draggingShadeIdx, setDraggingShadeIdx] = useState<number | null>(null);
+  const [dragOverShadeIdx, setDragOverShadeIdx] = useState<number | null>(null);
+
+  const selectedGroup = groups.find((g) => g.id === selectedGroupId) ?? null;
+
+  useEffect(() => {
+    setIsLoading(true);
+    getShadeGroups(category.id)
+      .then(setGroups)
+      .catch(() => showToast("ไม่สามารถโหลดกลุ่มเฉดสีได้", "error"))
+      .finally(() => setIsLoading(false));
+  }, [category.id]);
+
+  function patchGroupShades(groupId: string, updater: (s: ApiShadeItem[]) => ApiShadeItem[]) {
+    setGroups((g) => g.map((gr) => (gr.id === groupId ? { ...gr, shades: updater(gr.shades) } : gr)));
+  }
+
+  async function handleGroupSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!groupForm?.name.trim()) { showToast("กรุณากรอกชื่อกลุ่ม", "error"); return; }
+    setIsGroupSubmitting(true);
+    try {
+      if (editingGroupId) {
+        const updated = await updateShadeGroup(category.id, editingGroupId, groupForm);
+        setGroups((g) => g.map((gr) => (gr.id === updated.id ? { ...updated, shades: gr.shades } : gr)));
+        showToast("อัปเดตกลุ่มสำเร็จ", "success");
+      } else {
+        const created = await createShadeGroup(category.id, groupForm);
+        setGroups((g) => [...g, { ...created, shades: [] }]);
+        showToast("เพิ่มกลุ่มสำเร็จ", "success");
+      }
+      setGroupForm(null); setEditingGroupId(null);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error");
+    } finally { setIsGroupSubmitting(false); }
+  }
+
+  async function handleDeleteGroup(groupId: string) {
+    setDeletingGroupId(groupId);
+    try {
+      await deleteShadeGroup(category.id, groupId);
+      setGroups((g) => g.filter((gr) => gr.id !== groupId));
+      showToast("ลบกลุ่มสำเร็จ", "warning");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error");
+    } finally { setDeletingGroupId(null); }
+  }
+
+  async function handleShadeSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!shadeForm?.name.trim() || !selectedGroupId) return;
+    setIsShadeSubmitting(true);
+    try {
+      let result: ApiShadeItem;
+      if (editingShadeId) {
+        result = await updateShadeItem(category.id, selectedGroupId, editingShadeId, { name: shadeForm.name });
+      } else {
+        result = await createShadeItem(category.id, selectedGroupId, { name: shadeForm.name });
+      }
+      if (shadeForm.imageFile) {
+        result = await uploadShadeItemImage(category.id, selectedGroupId, result.id, shadeForm.imageFile);
+      }
+      if (editingShadeId) {
+        patchGroupShades(selectedGroupId, (s) => s.map((sh) => (sh.id === result.id ? result : sh)));
+        showToast("อัปเดตเฉดสีสำเร็จ", "success");
+      } else {
+        patchGroupShades(selectedGroupId, (s) => [...s, result]);
+        showToast("เพิ่มเฉดสีสำเร็จ", "success");
+      }
+      setShadeForm(null); setEditingShadeId(null);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error");
+    } finally { setIsShadeSubmitting(false); }
+  }
+
+  async function handleShadeToggle(shade: ApiShadeItem) {
+    if (!selectedGroupId) return;
+    try {
+      const updated = await updateShadeItem(category.id, selectedGroupId, shade.id, { isActive: !shade.isActive });
+      patchGroupShades(selectedGroupId, (s) => s.map((sh) => (sh.id === updated.id ? updated : sh)));
+    } catch (err) { showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error"); }
+  }
+
+  async function handleShadeImageUpload(shade: ApiShadeItem, file: File) {
+    if (!selectedGroupId) return;
+    setUploadingShadeId(shade.id);
+    try {
+      const updated = await uploadShadeItemImage(category.id, selectedGroupId, shade.id, file);
+      patchGroupShades(selectedGroupId, (s) => s.map((sh) => (sh.id === updated.id ? updated : sh)));
+      showToast("อัปโหลดรูปสำเร็จ", "success");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "อัปโหลดล้มเหลว", "error");
+    } finally { setUploadingShadeId(null); }
+  }
+
+  async function handleGroupDrop(targetIdx: number) {
+    if (draggingGroupIdx === null || draggingGroupIdx === targetIdx) {
+      setDraggingGroupIdx(null); setDragOverGroupIdx(null); return;
+    }
+    const reordered = [...groups];
+    const [moved] = reordered.splice(draggingGroupIdx, 1);
+    reordered.splice(targetIdx, 0, moved);
+    const updated = reordered.map((g, i) => ({ ...g, sortOrder: i }));
+    setGroups(updated);
+    setDraggingGroupIdx(null); setDragOverGroupIdx(null);
+    try {
+      await Promise.all(updated.map((g) => updateShadeGroup(category.id, g.id, { sortOrder: g.sortOrder })));
+    } catch {
+      showToast("บันทึกลำดับไม่สำเร็จ", "error");
+      getShadeGroups(category.id).then(setGroups).catch(() => {});
+    }
+  }
+
+  async function handleShadeDrop(targetIdx: number) {
+    if (!selectedGroupId || draggingShadeIdx === null || draggingShadeIdx === targetIdx) {
+      setDraggingShadeIdx(null); setDragOverShadeIdx(null); return;
+    }
+    const currentShades = groups.find((g) => g.id === selectedGroupId)?.shades ?? [];
+    const reordered = [...currentShades];
+    const [moved] = reordered.splice(draggingShadeIdx, 1);
+    reordered.splice(targetIdx, 0, moved);
+    const updated = reordered.map((s, i) => ({ ...s, sortOrder: i }));
+    patchGroupShades(selectedGroupId, () => updated);
+    setDraggingShadeIdx(null); setDragOverShadeIdx(null);
+    try {
+      await Promise.all(updated.map((s) => updateShadeItem(category.id, selectedGroupId, s.id, { sortOrder: s.sortOrder })));
+    } catch {
+      showToast("บันทึกลำดับไม่สำเร็จ", "error");
+      getShadeGroups(category.id).then(setGroups).catch(() => {});
+    }
+  }
+
+  async function handleShadeDelete(shadeId: string) {
+    if (!selectedGroupId) return;
+    setDeletingShadeId(shadeId);
+    try {
+      await deleteShadeItem(category.id, selectedGroupId, shadeId);
+      patchGroupShades(selectedGroupId, (s) => s.filter((sh) => sh.id !== shadeId));
+      showToast("ลบเฉดสีสำเร็จ", "warning");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error");
+    } finally { setDeletingShadeId(null); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[125] flex items-center justify-center bg-[#0f172a]/55 px-4 py-8">
+      <div className="flex w-full max-w-2xl flex-col overflow-hidden rounded-[28px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark" style={{ maxHeight: "90vh" }}>
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-stroke px-6 py-5 dark:border-dark-3">
+          <div className="flex items-center gap-3">
+            {view === "shades" ? (
+              <button className="rounded-full border border-[#d7e7dc] px-3 py-1.5 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6]"
+                onClick={() => { setView("groups"); setSelectedGroupId(null); setShadeForm(null); setEditingShadeId(null); }} type="button">
+                ← กลับ
+              </button>
+            ) : null}
+            <div>
+              <h3 className="text-xl font-bold text-dark dark:text-white">
+                {view === "groups" ? "จัดการเฉดสี" : `กลุ่ม: ${selectedGroup?.name ?? ""}`}
+              </h3>
+              <p className="mt-0.5 text-sm text-dark-5">{category.name}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {view === "groups" && !groupForm ? (
+              <button className="rounded-full bg-[#45745a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#355846]"
+                onClick={() => { setGroupForm({ name: "", sortOrder: groups.length }); setEditingGroupId(null); }} type="button">
+                + เพิ่มกลุ่ม
+              </button>
+            ) : null}
+            {view === "shades" && !shadeForm ? (
+              <button className="rounded-full bg-[#45745a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#355846]"
+                onClick={() => { setShadeForm({ name: "" }); setEditingShadeId(null); }} type="button">
+                + เพิ่มเฉดสี
+              </button>
+            ) : null}
+            <button className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6]" onClick={onClose} type="button">ปิด</button>
+          </div>
+        </div>
+
+        {/* Inline form */}
+        {groupForm || shadeForm ? (
+          <div className="shrink-0 border-b border-stroke bg-[#f8fbf9] px-6 py-4 dark:border-dark-3 dark:bg-dark-2">
+            {groupForm ? (
+              <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => void handleGroupSubmit(e)}>
+                <div className="flex-1 min-w-[160px]">
+                  <label className="mb-1 block text-xs font-medium text-dark-5">ชื่อกลุ่ม *</label>
+                  <input autoFocus className="w-full rounded-xl border border-stroke bg-white px-3 py-2 text-sm outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
+                    onChange={(e) => setGroupForm((f) => f ? { ...f, name: e.target.value } : f)}
+                    placeholder="เช่น NB Natural Brown" value={groupForm.name} />
+                </div>
+                <div className="w-20">
+                  <label className="mb-1 block text-xs font-medium text-dark-5">ลำดับ</label>
+                  <input className="w-full rounded-xl border border-stroke bg-white px-3 py-2 text-sm outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
+                    min={0} type="number"
+                    onChange={(e) => setGroupForm((f) => f ? { ...f, sortOrder: Number(e.target.value) } : f)}
+                    value={groupForm.sortOrder} />
+                </div>
+                <button className="rounded-full bg-[#45745a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#355846] disabled:opacity-70" disabled={isGroupSubmitting} type="submit">
+                  {isGroupSubmitting ? "..." : editingGroupId ? "บันทึก" : "เพิ่ม"}
+                </button>
+                <button className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6]"
+                  onClick={() => { setGroupForm(null); setEditingGroupId(null); }} type="button">ยกเลิก</button>
+              </form>
+            ) : shadeForm ? (
+              <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => void handleShadeSubmit(e)}>
+                <div className="flex items-end gap-3">
+                  <label className="cursor-pointer">
+                    <div className="mb-1 text-xs font-medium text-dark-5">รูป</div>
+                    {shadeForm.imagePreview ? (
+                      <img alt="preview" className="h-14 w-14 rounded-xl border border-stroke object-cover hover:opacity-80" src={shadeForm.imagePreview} title="คลิกเพื่อเปลี่ยนรูป" />
+                    ) : (
+                      <div className="flex h-14 w-14 items-center justify-center rounded-xl border-2 border-dashed border-[#c8ddd1] text-xs text-[#45745a] hover:border-[#5f8f74]">
+                        + รูป
+                      </div>
+                    )}
+                    <input accept="image/jpeg,image/png,image/webp" className="sr-only"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) setShadeForm((prev) => prev ? { ...prev, imageFile: f, imagePreview: URL.createObjectURL(f) } : prev);
+                        e.target.value = "";
+                      }} type="file" />
+                  </label>
+                </div>
+                <div className="flex-1 min-w-[160px]">
+                  <label className="mb-1 block text-xs font-medium text-dark-5">ชื่อเฉดสี *</label>
+                  <input autoFocus className="w-full rounded-xl border border-stroke bg-white px-3 py-2 text-sm outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
+                    onChange={(e) => setShadeForm((prev) => prev ? { ...prev, name: e.target.value } : prev)}
+                    placeholder="เช่น NB 3" value={shadeForm.name} />
+                </div>
+                <button className="rounded-full bg-[#45745a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#355846] disabled:opacity-70" disabled={isShadeSubmitting} type="submit">
+                  {isShadeSubmitting ? "..." : editingShadeId ? "บันทึก" : "เพิ่ม"}
+                </button>
+                <button className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6]"
+                  onClick={() => { setShadeForm(null); setEditingShadeId(null); }} type="button">ยกเลิก</button>
+              </form>
+            ) : null}
+          </div>
+        ) : null}
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            <p className="py-10 text-center text-sm text-dark-5">กำลังโหลด...</p>
+          ) : view === "groups" ? (
+            groups.length === 0 ? (
+              <p className="py-10 text-center text-sm text-dark-5">ยังไม่มีกลุ่มเฉดสี — กด "+ เพิ่มกลุ่ม" เพื่อเริ่มต้น</p>
+            ) : (
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-stroke bg-[#f8fbf9] dark:border-dark-3 dark:bg-dark-2">
+                    <th className="w-8 px-3 py-3" />
+                    <th className="px-6 py-3 font-medium text-dark-5">ชื่อกลุ่ม</th>
+                    <th className="px-6 py-3 font-medium text-dark-5">เฉดสี</th>
+                    <th className="px-6 py-3 font-medium text-dark-5">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {groups.map((group, idx) => (
+                    <tr
+                      key={group.id}
+                      className={`border-b border-stroke dark:border-dark-3 transition-colors ${draggingGroupIdx === idx ? "opacity-40" : ""} ${dragOverGroupIdx === idx && draggingGroupIdx !== idx ? "bg-[#eef8f1]" : ""}`}
+                      draggable
+                      onDragEnd={() => { setDraggingGroupIdx(null); setDragOverGroupIdx(null); }}
+                      onDragOver={(e) => { e.preventDefault(); setDragOverGroupIdx(idx); }}
+                      onDragStart={() => setDraggingGroupIdx(idx)}
+                      onDrop={() => void handleGroupDrop(idx)}
+                    >
+                      <td className="px-3 py-4 text-dark-5 cursor-grab select-none text-center">⠿</td>
+                      <td className="px-6 py-4 font-semibold text-dark dark:text-white">{group.name}</td>
+                      <td className="px-6 py-4 text-dark-5">{group.shades.length} เฉด</td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-1.5">
+                          <button className="rounded-full bg-[#45745a] px-3 py-1 text-xs font-semibold text-white hover:bg-[#355846]"
+                            onClick={() => { setSelectedGroupId(group.id); setView("shades"); }} type="button">
+                            เฉดสี →
+                          </button>
+                          <button className="rounded-full border border-[#d7e7dc] px-3 py-1 text-xs font-semibold text-[#355846] hover:bg-[#f4fbf6]"
+                            onClick={() => { setEditingGroupId(group.id); setGroupForm({ name: group.name, sortOrder: group.sortOrder }); }} type="button">
+                            แก้ไข
+                          </button>
+                          <button className="rounded-full border border-[#f1d0cf] px-3 py-1 text-xs font-semibold text-[#b42318] hover:bg-[#fff5f4] disabled:opacity-50"
+                            disabled={deletingGroupId === group.id}
+                            onClick={() => void handleDeleteGroup(group.id)} type="button">
+                            {deletingGroupId === group.id ? "..." : "ลบ"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )
+          ) : selectedGroup ? (
+            selectedGroup.shades.length === 0 && !shadeForm ? (
+              <p className="py-10 text-center text-sm text-dark-5">ยังไม่มีเฉดสีในกลุ่มนี้ — กด "+ เพิ่มเฉดสี"</p>
+            ) : (
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-stroke bg-[#f8fbf9] dark:border-dark-3 dark:bg-dark-2">
+                    <th className="w-8 px-3 py-3" />
+                    <th className="px-6 py-3 font-medium text-dark-5">รูป</th>
+                    <th className="px-6 py-3 font-medium text-dark-5">ชื่อ</th>
+                    <th className="px-6 py-3 font-medium text-dark-5">สถานะ</th>
+                    <th className="px-6 py-3 font-medium text-dark-5">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedGroup.shades.map((shade, idx) => (
+                    <tr
+                      key={shade.id}
+                      className={`border-b border-stroke dark:border-dark-3 transition-colors ${draggingShadeIdx === idx ? "opacity-40" : ""} ${dragOverShadeIdx === idx && draggingShadeIdx !== idx ? "bg-[#eef8f1]" : ""}`}
+                      draggable
+                      onDragEnd={() => { setDraggingShadeIdx(null); setDragOverShadeIdx(null); }}
+                      onDragOver={(e) => { e.preventDefault(); setDragOverShadeIdx(idx); }}
+                      onDragStart={() => setDraggingShadeIdx(idx)}
+                      onDrop={() => void handleShadeDrop(idx)}
+                    >
+                      <td className="px-3 py-3 text-dark-5 cursor-grab select-none text-center">⠿</td>
+                      <td className="px-6 py-3">
+                        <label className="cursor-pointer">
+                          {shade.imageUrl ? (
+                            <img alt={shade.name} className="h-12 w-12 rounded-xl border border-stroke object-cover hover:opacity-80" src={shade.imageUrl} title="คลิกเพื่อเปลี่ยนรูป" />
+                          ) : (
+                            <div className={`flex h-12 w-12 items-center justify-center rounded-xl border-2 border-dashed border-[#c8ddd1] text-xs text-[#45745a] hover:border-[#5f8f74] ${uploadingShadeId === shade.id ? "opacity-60" : ""}`}>
+                              {uploadingShadeId === shade.id ? "..." : "+ รูป"}
+                            </div>
+                          )}
+                          <input accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={uploadingShadeId === shade.id}
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleShadeImageUpload(shade, f); e.target.value = ""; }} type="file" />
+                        </label>
+                      </td>
+                      <td className="px-6 py-3 font-medium text-dark dark:text-white">{shade.name}</td>
+                      <td className="px-6 py-3">
+                        <button className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors ${shade.isActive ? "bg-[#58cf94]" : "bg-[#d7e2db]"}`}
+                          onClick={() => void handleShadeToggle(shade)} type="button">
+                          <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${shade.isActive ? "translate-x-5" : "translate-x-1"}`} />
+                        </button>
+                      </td>
+                      <td className="px-6 py-3">
+                        <div className="flex gap-1">
+                          <button className="rounded-full border border-[#d7e7dc] px-2 py-1 text-xs font-semibold text-[#355846] hover:bg-[#f4fbf6]"
+                            onClick={() => { setEditingShadeId(shade.id); setShadeForm({ name: shade.name, imagePreview: shade.imageUrl ?? null }); }} type="button">แก้ไข</button>
+                          <button className="rounded-full border border-[#f1d0cf] px-2 py-1 text-xs font-semibold text-[#b42318] hover:bg-[#fff5f4] disabled:opacity-50"
+                            disabled={deletingShadeId === shade.id}
+                            onClick={() => void handleShadeDelete(shade.id)} type="button">
+                            {deletingShadeId === shade.id ? "..." : "ลบ"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function CategoryManagerTable({
   initialItems,
   initialMeta,
@@ -337,10 +735,11 @@ export function CategoryManagerTable({
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [page, setPage] = useState(initialMeta.page);
   const [pageSize, setPageSize] = useState(initialMeta.pageSize);
-  const [categoryToDelete, setCategoryToDelete] = useState<CategoryRecord | null>(
-    null,
-  );
+  const [categoryToDelete, setCategoryToDelete] = useState<CategoryRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [shadeManagerCategory, setShadeManagerCategory] = useState<CategoryRecord | null>(null);
 
   const tableRows = useMemo(
     () =>
@@ -410,6 +809,7 @@ export function CategoryManagerTable({
   function resetForm() {
     setEditingId(null);
     setForm(INITIAL_FORM);
+    setImagePreview(null);
   }
 
   function openCreateModal() {
@@ -427,8 +827,12 @@ export function CategoryManagerTable({
     setForm({
       name: category.name,
       slug: category.slug,
+      description: category.description,
+      imageUrl: category.imageUrl ?? undefined,
+      requiresShadeSelection: category.requiresShadeSelection,
       isActive: category.isActive,
     });
+    setImagePreview(category.imageUrl ?? null);
     setIsModalOpen(true);
   }
 
@@ -438,6 +842,22 @@ export function CategoryManagerTable({
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
+  }
+
+  async function handleImageUpload(file: File) {
+    setIsUploadingImage(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/uploads/temp", { method: "POST", body: fd });
+      const data = await res.json() as { filename: string; url: string };
+      setImagePreview(data.url);
+      setForm((c) => ({ ...c, tempImageFile: data.filename, imageUrl: undefined }));
+    } catch {
+      showToast("อัปโหลดรูปล้มเหลว", "error");
+    } finally {
+      setIsUploadingImage(false);
+    }
   }
 
   async function refreshAfterMutation(targetPage = page) {
@@ -514,17 +934,17 @@ export function CategoryManagerTable({
     }
   }
 
-  async function handleSoftDelete(category: CategoryRecord) {
-    const confirmed = window.confirm(`ต้องการลบหมวดหมู่ "${category.name}" ใช่หรือไม่`);
+  function handleSoftDelete(category: CategoryRecord) {
+    setCategoryToDelete(category);
+  }
 
-    if (!confirmed) {
-      return;
-    }
-
+  async function handleConfirmDelete() {
+    if (!categoryToDelete) return;
+    setIsDeleting(true);
     try {
-      await softDeleteCategory(category.id);
+      await softDeleteCategory(categoryToDelete.id);
       showToast("ลบหมวดหมู่สำเร็จ", "warning");
-
+      setCategoryToDelete(null);
       const nextPage =
         categories.length === 1 && page > 1 ? page - 1 : page;
       await refreshAfterMutation(nextPage);
@@ -533,6 +953,8 @@ export function CategoryManagerTable({
         caughtError instanceof Error ? caughtError.message : "ไม่สามารถลบหมวดหมู่ได้",
         "error",
       );
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -563,31 +985,23 @@ export function CategoryManagerTable({
               value={searchTerm}
             />
 
-            <select
-              className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-              onChange={(event) => {
+            <SelectField
+              options={STATUS_OPTIONS}
+              onChange={(value) => {
                 setPage(1);
-                setStatusFilter(event.target.value as "all" | "active" | "inactive");
+                setStatusFilter(value);
               }}
               value={statusFilter}
-            >
-              <option value="all">ทุกสถานะ</option>
-              <option value="active">เปิดใช้งาน</option>
-              <option value="inactive">ปิดใช้งาน</option>
-            </select>
+            />
 
-            <select
-              className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-              onChange={(event) => {
+            <SelectField
+              options={PAGE_SIZE_OPTIONS}
+              onChange={(value) => {
                 setPage(1);
-                setPageSize(Number(event.target.value));
+                setPageSize(value);
               }}
               value={pageSize}
-            >
-              <option value={10}>10 รายการ</option>
-              <option value={20}>20 รายการ</option>
-              <option value={50}>50 รายการ</option>
-            </select>
+            />
           </div>
         </div>
 
@@ -644,6 +1058,15 @@ export function CategoryManagerTable({
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-2">
+                      {category.requiresShadeSelection ? (
+                        <button
+                          className="rounded-full border border-[#c8ddd1] px-3 py-1 text-xs font-semibold text-[#45745a] transition-colors hover:bg-[#eef8f1]"
+                          onClick={() => setShadeManagerCategory(category)}
+                          type="button"
+                        >
+                          เฉดสี
+                        </button>
+                      ) : null}
                       <button
                         className="rounded-full border border-[#d7e7dc] px-3 py-1 text-xs font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
                         onClick={() => startEdit(category)}
@@ -705,7 +1128,25 @@ export function CategoryManagerTable({
         </div>
       </ContentCard>
 
-      {isModalOpen ? (
+      {shadeManagerCategory ? createPortal(
+        <ShadeManagerModal
+          category={shadeManagerCategory}
+          onClose={() => setShadeManagerCategory(null)}
+        />,
+        document.body,
+      ) : null}
+
+      {categoryToDelete ? createPortal(
+        <ConfirmDeleteModal
+          categoryName={categoryToDelete.name}
+          isDeleting={isDeleting}
+          onClose={() => setCategoryToDelete(null)}
+          onConfirm={handleConfirmDelete}
+        />,
+        document.body
+      ) : null}
+
+      {isModalOpen ? createPortal(
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/50 px-4 py-8">
           <div className="w-full max-w-2xl rounded-[28px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark">
             <div className="flex items-start justify-between gap-4 border-b border-stroke px-6 py-5 dark:border-dark-3">
@@ -727,46 +1168,88 @@ export function CategoryManagerTable({
             </div>
 
             <form className="space-y-4 px-6 py-6" onSubmit={handleSubmit}>
+              {/* ชื่อ + Slug */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-dark dark:text-white">ชื่อหมวดหมู่ <span className="text-[#c84b44]">*</span></label>
+                  <input
+                    className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
+                    onChange={(e) => setForm((c) => ({ ...c, name: e.target.value, slug: c.slug || slugify(e.target.value) }))}
+                    placeholder="เช่น สีผม"
+                    value={form.name ?? ""}
+                  />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-dark dark:text-white">Slug <span className="text-[#c84b44]">*</span></label>
+                  <input
+                    className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm font-mono outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
+                    onChange={(e) => setForm((c) => ({ ...c, slug: e.target.value }))}
+                    placeholder="เช่น hair-color"
+                    value={form.slug ?? ""}
+                  />
+                </div>
+              </div>
+
+              {/* คำอธิบาย */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-                  ชื่อหมวดหมู่
-                </label>
-                <input
+                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">คำอธิบาย</label>
+                <textarea
                   className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, name: event.target.value }))
-                  }
-                  placeholder="เช่น สีผม"
-                  value={form.name ?? ""}
+                  onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))}
+                  placeholder="อธิบายหมวดหมู่นี้..."
+                  rows={2}
+                  value={form.description ?? ""}
                 />
               </div>
 
+              {/* รูปหมวดหมู่ */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-                  Slug
-                </label>
-                <input
-                  className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, slug: event.target.value }))
-                  }
-                  placeholder="เช่น hair-color"
-                  value={form.slug ?? ""}
-                />
+                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">รูปหมวดหมู่</label>
+                <div className="flex items-center gap-4">
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img alt="preview" className="h-20 w-20 rounded-xl border border-[#d8e6dd] object-cover" src={imagePreview} />
+                      <button
+                        className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#c84b44] text-xs text-white hover:bg-[#ad3d37]"
+                        onClick={() => { setImagePreview(null); setForm((c) => ({ ...c, tempImageFile: undefined, imageUrl: undefined })); }}
+                        type="button"
+                      >×</button>
+                    </div>
+                  ) : null}
+                  <label className={`cursor-pointer rounded-xl border-2 border-dashed border-[#c8ddd1] px-4 py-3 text-sm text-[#45745a] transition-colors hover:border-[#5f8f74] hover:bg-[#f4fbf6] ${isUploadingImage ? "opacity-60" : ""}`}>
+                    {isUploadingImage ? "กำลังอัปโหลด..." : imagePreview ? "เปลี่ยนรูป" : "เลือกรูป"}
+                    <input
+                      accept="image/jpeg,image/png,image/webp"
+                      className="sr-only"
+                      disabled={isUploadingImage}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleImageUpload(f); e.target.value = ""; }}
+                      type="file"
+                    />
+                  </label>
+                </div>
               </div>
 
+              {/* ต้องเลือกเฉดสี */}
+              <div className="flex items-center gap-3 rounded-xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3">
+                <button
+                  className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${form.requiresShadeSelection ? "bg-[#58cf94]" : "bg-[#d7e2db]"}`}
+                  onClick={() => setForm((c) => ({ ...c, requiresShadeSelection: !c.requiresShadeSelection }))}
+                  type="button"
+                >
+                  <span className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${form.requiresShadeSelection ? "translate-x-6" : "translate-x-1"}`} />
+                </button>
+                <div>
+                  <p className="text-sm font-medium text-dark dark:text-white">ต้องเลือกเฉดสีก่อน</p>
+                  <p className="text-xs text-dark-5">เปิดเมื่อเป็นหมวดหมู่สีผม ลูกค้าต้องเลือกเฉดก่อนดูสินค้า</p>
+                </div>
+              </div>
+
+              {/* สถานะ */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-                  สถานะ
-                </label>
+                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">สถานะ</label>
                 <select
                   className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      isActive: event.target.value === "active",
-                    }))
-                  }
+                  onChange={(e) => setForm((c) => ({ ...c, isActive: e.target.value === "active" }))}
                   value={form.isActive ? "active" : "inactive"}
                 >
                   <option value="active">เปิดใช้งาน</option>
@@ -774,21 +1257,14 @@ export function CategoryManagerTable({
                 </select>
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-3 pt-1">
                 <button
                   className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:cursor-not-allowed disabled:opacity-70"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isUploadingImage}
                   type="submit"
                 >
-                  {isSubmitting
-                    ? editingId
-                      ? "กำลังบันทึก..."
-                      : "กำลังสร้าง..."
-                    : editingId
-                      ? "บันทึกการเปลี่ยนแปลง"
-                      : "สร้างหมวดหมู่"}
+                  {isSubmitting ? (editingId ? "กำลังบันทึก..." : "กำลังสร้าง...") : editingId ? "บันทึกการเปลี่ยนแปลง" : "สร้างหมวดหมู่"}
                 </button>
-
                 <button
                   className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
                   onClick={closeModal}
@@ -799,7 +1275,8 @@ export function CategoryManagerTable({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       ) : null}
     </>
   );

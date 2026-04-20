@@ -100,6 +100,8 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
         name: response.name,
         slug: response.slug,
         description: response.description ?? "",
+        imageUrl: response.imageUrl ?? null,
+        requiresShadeSelection: response.requiresShadeSelection ?? false,
         sortOrder: response.sortOrder ?? 0,
         status: response.isActive ? "Active" : "Inactive",
         isActive: response.isActive,
