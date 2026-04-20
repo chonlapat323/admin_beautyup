@@ -12,6 +12,7 @@ module.exports = {
         NODE_ENV: "production",
         PORT: 3000,
         ADMIN_API_URL: "http://localhost:3001/api",
+        SECURE_COOKIE: "false",
       },
     },
   ],
