@@ -91,6 +91,7 @@ export type ApiProduct = {
   specialPrice?: string | null;
   stock: number;
   status: "DRAFT" | "ACTIVE" | "INACTIVE";
+  isFeatured: boolean;
   categoryId: string;
   category?: { id: string; name: string } | null;
   shadeId?: string | null;
@@ -115,6 +116,7 @@ export type ProductRecord = {
   shadeGroupId: string | null;
   stock: number;
   status: "DRAFT" | "ACTIVE" | "INACTIVE";
+  isFeatured: boolean;
   thumbnail: string | null;
   updatedAt: string;
   source: "api" | "mock";
@@ -131,6 +133,7 @@ export type ProductFormPayload = {
   shadeId?: string | null;
   stock: number;
   status: "DRAFT" | "ACTIVE" | "INACTIVE";
+  isFeatured?: boolean;
   tempFiles?: string[];
   orderedImages?: Array<{ kind: "existing"; id: string } | { kind: "temp"; filename: string }>;
 };
@@ -482,6 +485,7 @@ function mapProductRecord(product: ApiProduct): ProductRecord {
     shadeGroupId: product.shade?.shadeGroupId ?? null,
     stock: product.stock,
     status: product.status,
+    isFeatured: product.isFeatured ?? false,
     thumbnail: product.images?.[0]?.url ?? null,
     updatedAt: product.updatedAt
       ? new Intl.DateTimeFormat("th-TH", { day: "2-digit", month: "short", year: "numeric" }).format(
@@ -528,6 +532,7 @@ export async function getProductsPageData(
         shadeGroupId: null,
         stock: p.stock,
         status: p.status === "Active" ? "ACTIVE" : "INACTIVE",
+        isFeatured: false,
         thumbnail: null,
         updatedAt: "-",
         source: "mock",

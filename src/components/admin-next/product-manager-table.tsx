@@ -43,6 +43,7 @@ type ProductFormState = {
   shadeId: string;
   stock: string;
   status: ProductStatus;
+  isFeatured: boolean;
 };
 
 const INITIAL_FORM: ProductFormState = {
@@ -56,6 +57,7 @@ const INITIAL_FORM: ProductFormState = {
   shadeId: "",
   stock: "0",
   status: "DRAFT",
+  isFeatured: false,
 };
 
 const STATUS_OPTIONS: SelectOption<StatusFilter>[] = [
@@ -119,6 +121,7 @@ function mapProductRecord(product: ApiProduct): ProductRecord {
     shadeGroupId: product.shade?.shadeGroupId ?? null,
     stock: product.stock,
     status: product.status,
+    isFeatured: product.isFeatured ?? false,
     thumbnail: product.images?.[0]?.url ?? null,
     updatedAt: formatProductDate(product.updatedAt),
     source: "api",
@@ -446,6 +449,20 @@ function ProductFormModal({
             />
           </div>
 
+          <div className="flex items-center justify-between rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 dark:border-dark-3 dark:bg-dark-2">
+            <div>
+              <p className="text-sm font-medium text-dark dark:text-white">แนะนำในหน้าแรก</p>
+              <p className="mt-0.5 text-xs text-dark-5">สินค้านี้จะแสดงในส่วน "The Selection" ของ mobile app</p>
+            </div>
+            <button
+              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${form.isFeatured ? "bg-[#58cf94]" : "bg-[#d7e2db]"}`}
+              onClick={() => onChange({ isFeatured: !form.isFeatured })}
+              type="button"
+            >
+              <span className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${form.isFeatured ? "translate-x-6" : "translate-x-1"}`} />
+            </button>
+          </div>
+
           <div>
             <label className="mb-3 block text-sm font-medium text-dark dark:text-white">รูปภาพสินค้า</label>
             <ProductImageManager
@@ -497,6 +514,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [featuredFilter, setFeaturedFilter] = useState<"all" | "featured">("all");
   const [page, setPage] = useState(initialMeta.page);
   const [pageSize, setPageSize] = useState(initialMeta.pageSize);
   const [productToDelete, setProductToDelete] = useState<ProductRecord | null>(null);
@@ -512,15 +530,17 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
     [products, meta.page, meta.pageSize],
   );
 
-  async function loadProducts(overrides?: Partial<Record<"page" | "pageSize" | "searchTerm" | "statusFilter", string | number>>) {
+  async function loadProducts(overrides?: Partial<Record<"page" | "pageSize" | "searchTerm" | "statusFilter" | "featuredFilter", string | number>>) {
     const nextPage = typeof overrides?.page === "number" ? overrides.page : page;
     const nextPageSize = typeof overrides?.pageSize === "number" ? overrides.pageSize : pageSize;
     const nextSearch = typeof overrides?.searchTerm === "string" ? overrides.searchTerm : searchTerm;
     const nextStatus = typeof overrides?.statusFilter === "string" ? overrides.statusFilter : statusFilter;
+    const nextFeatured = typeof overrides?.featuredFilter === "string" ? overrides.featuredFilter : featuredFilter;
 
     const params = new URLSearchParams({ page: String(nextPage), pageSize: String(nextPageSize) });
     if (nextSearch.trim()) params.set("search", nextSearch.trim());
     if (nextStatus !== "all") params.set("status", nextStatus);
+    if (nextFeatured === "featured") params.set("isFeatured", "true");
 
     setIsLoading(true);
 
@@ -569,7 +589,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
   useEffect(() => {
     if (isFirstLoad.current) { isFirstLoad.current = false; return; }
     void loadProducts();
-  }, [page, pageSize, searchTerm, statusFilter]);
+  }, [page, pageSize, searchTerm, statusFilter, featuredFilter]);
 
   useEffect(() => {
     if (isModalOpen) void loadFormCategories();
@@ -627,6 +647,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
       shadeId: product.shadeId ?? "",
       stock: String(product.stock),
       status: product.status,
+      isFeatured: product.isFeatured,
     });
     if (product.shadeGroupId) setFormShadeGroupId(product.shadeGroupId);
     setIsModalOpen(true);
@@ -736,6 +757,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
         shadeId: selectedCat?.requiresShadeSelection ? (form.shadeId || null) : null,
         stock: isNaN(stock) ? 0 : stock,
         status: form.status,
+        isFeatured: form.isFeatured,
       };
 
       if (editingId) {
@@ -818,7 +840,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
         }
       >
         <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="grid w-full gap-3 lg:max-w-3xl lg:grid-cols-[minmax(0,1fr)_200px_130px]">
+          <div className="grid w-full gap-3 lg:max-w-4xl lg:grid-cols-[minmax(0,1fr)_200px_160px_130px]">
             <input
               className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
               onChange={(e) => { setPage(1); setSearchTerm(e.target.value); }}
@@ -829,6 +851,11 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
               options={STATUS_OPTIONS}
               onChange={(v) => { setPage(1); setStatusFilter(v); }}
               value={statusFilter}
+            />
+            <SelectField
+              options={[{ label: "ทุกประเภท", value: "all" }, { label: "แนะนำหน้าแรก", value: "featured" }]}
+              onChange={(v: "all" | "featured") => { setPage(1); setFeaturedFilter(v); }}
+              value={featuredFilter}
             />
             <SelectField
               options={PAGE_SIZE_OPTIONS}
@@ -851,6 +878,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                 <th className="px-5 py-4 font-medium">ราคา</th>
                 <th className="px-5 py-4 font-medium">สต็อก</th>
                 <th className="px-5 py-4 font-medium">สถานะ</th>
+                <th className="px-5 py-4 font-medium">แนะนำ</th>
                 <th className="px-5 py-4 font-medium">จัดการ</th>
               </tr>
             </thead>
@@ -909,6 +937,11 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                     </div>
                   </td>
                   <td className="px-5 py-4">
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${product.isFeatured ? "bg-[#fef9c3] text-[#854d0e]" : "bg-[#f1f5f9] text-[#94a3b8]"}`}>
+                      {product.isFeatured ? "★ แนะนำ" : "—"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-2">
                       <button
                         className="rounded-full border border-[#d7e7dc] px-3 py-1 text-xs font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
@@ -931,7 +964,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
 
               {!isLoading && tableRows.length === 0 ? (
                 <tr className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6">
-                  <td className="px-5 py-6 text-center" colSpan={10}>
+                  <td className="px-5 py-6 text-center" colSpan={11}>
                     ไม่พบข้อมูลสินค้า
                   </td>
                 </tr>
