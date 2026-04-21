@@ -29,6 +29,8 @@ type ProductApiResponse = {
 type StatusFilter = "all" | "active" | "inactive" | "draft";
 type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE";
 type SelectOption<T extends string | number> = { label: string; value: T };
+type FormCategory = { id: string; name: string; requiresShadeSelection: boolean };
+type FormShadeGroup = { id: string; name: string; shades: { id: string; name: string }[] };
 
 type ProductFormState = {
   name: string;
@@ -38,6 +40,7 @@ type ProductFormState = {
   price: string;
   specialPrice: string;
   categoryId: string;
+  shadeId: string;
   stock: string;
   status: ProductStatus;
 };
@@ -50,6 +53,7 @@ const INITIAL_FORM: ProductFormState = {
   price: "",
   specialPrice: "",
   categoryId: "",
+  shadeId: "",
   stock: "0",
   status: "DRAFT",
 };
@@ -110,6 +114,9 @@ function mapProductRecord(product: ApiProduct): ProductRecord {
     specialPrice: product.specialPrice ? parseFloat(product.specialPrice) : null,
     categoryId: product.categoryId,
     categoryName: product.category?.name ?? "ไม่ระบุหมวดหมู่",
+    shadeId: product.shadeId ?? null,
+    shadeName: product.shade?.name ?? null,
+    shadeGroupId: product.shade?.shadeGroupId ?? null,
     stock: product.stock,
     status: product.status,
     thumbnail: product.images?.[0]?.url ?? null,
@@ -246,6 +253,9 @@ function ProductFormModal({
   form,
   isSubmitting,
   categories,
+  shadeGroups,
+  shadeGroupId,
+  onShadeGroupChange,
   previewImages,
   onFilesDropped,
   onRemoveImage,
@@ -257,7 +267,10 @@ function ProductFormModal({
   editingId: string | null;
   form: ProductFormState;
   isSubmitting: boolean;
-  categories: { id: string; name: string }[];
+  categories: FormCategory[];
+  shadeGroups: FormShadeGroup[];
+  shadeGroupId: string;
+  onShadeGroupChange: (groupId: string) => void;
   previewImages: PreviewImage[];
   onFilesDropped: (files: File[]) => void;
   onRemoveImage: (key: string) => void;
@@ -266,9 +279,23 @@ function ProductFormModal({
   onClose: () => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
 }) {
+  const selectedCategory = categories.find((c) => c.id === form.categoryId);
+  const requiresShade = selectedCategory?.requiresShadeSelection ?? false;
+
   const categoryOptions: SelectOption<string>[] = [
     { label: "เลือกหมวดหมู่", value: "" },
     ...categories.map((c) => ({ label: c.name, value: c.id })),
+  ];
+
+  const shadeGroupOptions: SelectOption<string>[] = [
+    { label: "เลือกกลุ่มเฉดสี", value: "" },
+    ...shadeGroups.map((g) => ({ label: g.name, value: g.id })),
+  ];
+
+  const selectedGroup = shadeGroups.find((g) => g.id === shadeGroupId);
+  const shadeOptions: SelectOption<string>[] = [
+    { label: "เลือกเฉดสี", value: "" },
+    ...(selectedGroup?.shades ?? []).map((s) => ({ label: s.name, value: s.id })),
   ];
 
   return (
@@ -334,9 +361,26 @@ function ProductFormModal({
           <SelectField
             label="หมวดหมู่ *"
             options={categoryOptions}
-            onChange={(v) => onChange({ categoryId: v })}
+            onChange={(v) => onChange({ categoryId: v, shadeId: "" })}
             value={form.categoryId}
           />
+
+          {requiresShade ? (
+            <div className="grid gap-5 sm:grid-cols-2">
+              <SelectField
+                label="กลุ่มเฉดสี *"
+                options={shadeGroupOptions}
+                onChange={(v) => { onShadeGroupChange(v); onChange({ shadeId: "" }); }}
+                value={shadeGroupId}
+              />
+              <SelectField
+                label="เฉดสี *"
+                options={shadeOptions}
+                onChange={(v) => onChange({ shadeId: v })}
+                value={form.shadeId}
+              />
+            </div>
+          ) : null}
 
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
@@ -457,7 +501,9 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
   const [pageSize, setPageSize] = useState(initialMeta.pageSize);
   const [productToDelete, setProductToDelete] = useState<ProductRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [formCategories, setFormCategories] = useState<{ id: string; name: string }[]>([]);
+  const [formCategories, setFormCategories] = useState<FormCategory[]>([]);
+  const [formShadeGroups, setFormShadeGroups] = useState<FormShadeGroup[]>([]);
+  const [formShadeGroupId, setFormShadeGroupId] = useState<string>("");
   const [previewImages, setPreviewImages] = useState<PreviewImage[]>([]);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
@@ -499,8 +545,22 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
     try {
       const response = await fetch("/api/categories?status=active&pageSize=100", { cache: "no-store" });
       if (!response.ok) return;
-      const data = await response.json() as { items?: { id: string; name: string }[] };
-      setFormCategories(data.items ?? []);
+      const data = await response.json() as { items?: { id: string; name: string; requiresShadeSelection?: boolean }[] };
+      setFormCategories((data.items ?? []).map((c) => ({ id: c.id, name: c.name, requiresShadeSelection: c.requiresShadeSelection ?? false })));
+    } catch {
+      // silently fail
+    }
+  }
+
+  async function loadShadeGroups(categoryId: string) {
+    setFormShadeGroups([]);
+    setFormShadeGroupId("");
+    if (!categoryId) return;
+    try {
+      const response = await fetch(`/api/categories/${categoryId}/shade-groups`, { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json() as { id: string; name: string; shades?: { id: string; name: string }[] }[];
+      setFormShadeGroups(data.map((g) => ({ id: g.id, name: g.name, shades: g.shades ?? [] })));
     } catch {
       // silently fail
     }
@@ -515,6 +575,16 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
     if (isModalOpen) void loadFormCategories();
   }, [isModalOpen]);
 
+  useEffect(() => {
+    const cat = formCategories.find((c) => c.id === form.categoryId);
+    if (cat?.requiresShadeSelection) {
+      void loadShadeGroups(form.categoryId);
+    } else {
+      setFormShadeGroups([]);
+      setFormShadeGroupId("");
+    }
+  }, [form.categoryId, formCategories]);
+
   async function refreshAfterMutation(targetPage = page) {
     await loadProducts({ page: targetPage });
     setPage(targetPage);
@@ -524,6 +594,8 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
     setEditingId(null);
     setForm(INITIAL_FORM);
     setPreviewImages([]);
+    setFormShadeGroups([]);
+    setFormShadeGroupId("");
   }
 
   function openCreateModal() {
@@ -552,9 +624,11 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
       price: String(product.price),
       specialPrice: product.specialPrice !== null ? String(product.specialPrice) : "",
       categoryId: product.categoryId,
+      shadeId: product.shadeId ?? "",
       stock: String(product.stock),
       status: product.status,
     });
+    if (product.shadeGroupId) setFormShadeGroupId(product.shadeGroupId);
     setIsModalOpen(true);
     // Load existing images
     void fetch(`/api/products/${product.id}`, { cache: "no-store" })
@@ -650,6 +724,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
 
       const readyImages = previewImages.filter((img) => !img.uploading && !img.error);
 
+      const selectedCat = formCategories.find((c) => c.id === form.categoryId);
       const payload: ProductFormPayload = {
         name: form.name.trim(),
         slug: form.slug.trim() ? slugify(form.slug) : slugify(form.name),
@@ -658,6 +733,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
         price,
         specialPrice,
         categoryId: form.categoryId,
+        shadeId: selectedCat?.requiresShadeSelection ? (form.shadeId || null) : null,
         stock: isNaN(stock) ? 0 : stock,
         status: form.status,
       };
@@ -771,6 +847,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                 <th className="px-5 py-4 font-medium">SKU</th>
                 <th className="px-5 py-4 font-medium">ชื่อสินค้า</th>
                 <th className="px-5 py-4 font-medium">หมวดหมู่</th>
+                <th className="px-5 py-4 font-medium">เฉดสี</th>
                 <th className="px-5 py-4 font-medium">ราคา</th>
                 <th className="px-5 py-4 font-medium">สต็อก</th>
                 <th className="px-5 py-4 font-medium">สถานะ</th>
@@ -804,6 +881,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                   </td>
                   <td className="px-5 py-4 font-semibold text-dark dark:text-white">{product.name}</td>
                   <td className="px-5 py-4">{product.categoryName}</td>
+                  <td className="px-5 py-4 text-xs text-dark-5">{product.shadeName ?? "-"}</td>
                   <td className="px-5 py-4">
                     <div className="font-medium text-dark dark:text-white">{formatPrice(product.price)}</div>
                     {product.specialPrice !== null ? (
@@ -853,7 +931,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
 
               {!isLoading && tableRows.length === 0 ? (
                 <tr className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6">
-                  <td className="px-5 py-6 text-center" colSpan={9}>
+                  <td className="px-5 py-6 text-center" colSpan={10}>
                     ไม่พบข้อมูลสินค้า
                   </td>
                 </tr>
@@ -908,6 +986,9 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
           form={form}
           isSubmitting={isSubmitting}
           categories={formCategories}
+          shadeGroups={formShadeGroups}
+          shadeGroupId={formShadeGroupId}
+          onShadeGroupChange={setFormShadeGroupId}
           previewImages={previewImages}
           onFilesDropped={handleFilesDropped}
           onRemoveImage={handleRemoveImage}

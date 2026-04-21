@@ -93,6 +93,8 @@ export type ApiProduct = {
   status: "DRAFT" | "ACTIVE" | "INACTIVE";
   categoryId: string;
   category?: { id: string; name: string } | null;
+  shadeId?: string | null;
+  shade?: { id: string; name: string; shadeGroupId?: string } | null;
   images?: ApiProductImage[];
   createdAt?: string;
   updatedAt?: string;
@@ -108,6 +110,9 @@ export type ProductRecord = {
   specialPrice: number | null;
   categoryId: string;
   categoryName: string;
+  shadeId: string | null;
+  shadeName: string | null;
+  shadeGroupId: string | null;
   stock: number;
   status: "DRAFT" | "ACTIVE" | "INACTIVE";
   thumbnail: string | null;
@@ -123,6 +128,7 @@ export type ProductFormPayload = {
   price: number;
   specialPrice?: number;
   categoryId: string;
+  shadeId?: string | null;
   stock: number;
   status: "DRAFT" | "ACTIVE" | "INACTIVE";
   tempFiles?: string[];
@@ -471,6 +477,9 @@ function mapProductRecord(product: ApiProduct): ProductRecord {
     specialPrice: product.specialPrice ? parseFloat(product.specialPrice) : null,
     categoryId: product.categoryId,
     categoryName: product.category?.name ?? "ไม่ระบุหมวดหมู่",
+    shadeId: product.shadeId ?? null,
+    shadeName: product.shade?.name ?? null,
+    shadeGroupId: product.shade?.shadeGroupId ?? null,
     stock: product.stock,
     status: product.status,
     thumbnail: product.images?.[0]?.url ?? null,
@@ -514,6 +523,9 @@ export async function getProductsPageData(
         specialPrice: null,
         categoryId: "",
         categoryName: p.category,
+        shadeId: null,
+        shadeName: null,
+        shadeGroupId: null,
         stock: p.stock,
         status: p.status === "Active" ? "ACTIVE" : "INACTIVE",
         thumbnail: null,
