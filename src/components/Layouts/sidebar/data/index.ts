@@ -41,6 +41,12 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
+        title: "แบนเนอร์",
+        url: "/banners",
+        icon: Icons.Table,
+        items: [],
+      },
+      {
         title: "สมาชิก",
         url: "/members",
         icon: Icons.User,
