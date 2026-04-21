@@ -44,6 +44,7 @@ type SelectOption<T extends string | number> = {
 const INITIAL_FORM: CategoryFormPayload = {
   name: "",
   slug: "",
+  eyebrow: "",
   description: "",
   imageUrl: undefined,
   requiresShadeSelection: false,
@@ -85,6 +86,7 @@ function mapCategoryRecord(category: ApiCategory): CategoryRecord {
     id: category.id,
     name: category.name,
     slug: category.slug,
+    eyebrow: category.eyebrow ?? "",
     description: category.description ?? "",
     imageUrl: category.imageUrl ?? null,
     requiresShadeSelection: category.requiresShadeSelection ?? false,
@@ -827,6 +829,7 @@ export function CategoryManagerTable({
     setForm({
       name: category.name,
       slug: category.slug,
+      eyebrow: category.eyebrow,
       description: category.description,
       imageUrl: category.imageUrl ?? undefined,
       requiresShadeSelection: category.requiresShadeSelection,
@@ -1190,9 +1193,20 @@ export function CategoryManagerTable({
                 </div>
               </div>
 
+              {/* Eyebrow */}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">Eyebrow <span className="text-dark-5 font-normal">(ป้ายเล็กเหนือชื่อในหน้าแรก)</span></label>
+                <input
+                  className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
+                  onChange={(e) => setForm((c) => ({ ...c, eyebrow: e.target.value }))}
+                  placeholder="เช่น Daily Essentials, Color Collection"
+                  value={form.eyebrow ?? ""}
+                />
+              </div>
+
               {/* คำอธิบาย */}
               <div>
-                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">คำอธิบาย</label>
+                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">คำอธิบาย <span className="text-dark-5 font-normal">(แสดงเป็น body text ในหน้าแรก)</span></label>
                 <textarea
                   className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
                   onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))}

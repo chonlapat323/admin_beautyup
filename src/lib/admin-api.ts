@@ -11,6 +11,7 @@ export type ApiCategory = {
   id: string;
   name: string;
   slug: string;
+  eyebrow?: string | null;
   description?: string | null;
   imageUrl?: string | null;
   requiresShadeSelection: boolean;
@@ -50,6 +51,7 @@ export type CategoryRecord = {
   id: string;
   name: string;
   slug: string;
+  eyebrow: string;
   description: string;
   imageUrl: string | null;
   requiresShadeSelection: boolean;
@@ -66,6 +68,7 @@ export type CategoryRecord = {
 export type CategoryFormPayload = {
   name: string;
   slug: string;
+  eyebrow?: string;
   description?: string;
   imageUrl?: string;
   requiresShadeSelection?: boolean;
@@ -242,6 +245,7 @@ export async function getCategories() {
         id: category.id,
         name: category.name,
         slug: category.slug,
+        eyebrow: category.eyebrow ?? "",
         description: category.description ?? "",
         imageUrl: category.imageUrl ?? null,
         requiresShadeSelection: category.requiresShadeSelection ?? false,
@@ -273,6 +277,7 @@ export async function getCategories() {
         id: category.name.toLowerCase().replace(/\s+/g, "-"),
         name: category.name,
         slug: category.name.toLowerCase().replace(/\s+/g, "-"),
+        eyebrow: "",
         description: "",
         imageUrl: null,
         requiresShadeSelection: false,
@@ -306,6 +311,7 @@ function mapCategoryRecord(category: ApiCategory): CategoryRecord {
     id: category.id,
     name: category.name,
     slug: category.slug,
+    eyebrow: category.eyebrow ?? "",
     description: category.description ?? "",
     imageUrl: category.imageUrl ?? null,
     requiresShadeSelection: category.requiresShadeSelection ?? false,
@@ -375,6 +381,7 @@ export async function getCategoriesPageData(params: CategoryListParams = {}) {
           id: category.name.toLowerCase().replace(/\s+/g, "-"),
           name: category.name,
           slug: category.name.toLowerCase().replace(/\s+/g, "-"),
+          eyebrow: "",
           description: "",
           imageUrl: null,
           requiresShadeSelection: false,

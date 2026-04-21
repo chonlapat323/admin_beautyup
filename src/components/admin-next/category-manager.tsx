@@ -99,6 +99,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
         id: response.id,
         name: response.name,
         slug: response.slug,
+        eyebrow: response.eyebrow ?? "",
         description: response.description ?? "",
         imageUrl: response.imageUrl ?? null,
         requiresShadeSelection: response.requiresShadeSelection ?? false,
