@@ -554,12 +554,12 @@ export function AdminUserManagerTable({ initialItems, initialMeta }: AdminUserMa
         </div>
 
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
-          <table className="w-full min-w-[650px] text-left">
+          <table className="w-full min-w-[360px] text-left">
             <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
-                <th className="px-5 py-4 font-medium">ลำดับ</th>
+                <th className="hidden px-5 py-4 font-medium md:table-cell">ลำดับ</th>
                 <th className="px-5 py-4 font-medium">อีเมล</th>
-                <th className="px-5 py-4 font-medium">ชื่อ</th>
+                <th className="hidden px-5 py-4 font-medium sm:table-cell">ชื่อ</th>
                 <th className="px-5 py-4 font-medium">บทบาท</th>
                 <th className="px-5 py-4 font-medium">สถานะ</th>
                 <th className="px-5 py-4 font-medium">จัดการ</th>
@@ -571,9 +571,9 @@ export function AdminUserManagerTable({ initialItems, initialMeta }: AdminUserMa
                   key={user.id}
                   className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6"
                 >
-                  <td className="px-5 py-4">{user.no}</td>
+                  <td className="hidden px-5 py-4 md:table-cell">{user.no}</td>
                   <td className="px-5 py-4 font-semibold text-dark dark:text-white">{user.email}</td>
-                  <td className="px-5 py-4">{user.displayName}</td>
+                  <td className="hidden px-5 py-4 sm:table-cell">{user.displayName}</td>
                   <td className="px-5 py-4">
                     <StatusPill label={user.roleName} tone="default" />
                   </td>

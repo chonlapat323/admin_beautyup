@@ -435,13 +435,13 @@ export function BannerManager() {
         }
       >
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
-          <table className="w-full min-w-[700px] text-left">
+          <table className="w-full min-w-[360px] text-left">
             <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
-                <th className="px-4 py-4 font-medium w-8"></th>
+                <th className="hidden px-4 py-4 font-medium w-8 sm:table-cell"></th>
                 <th className="px-4 py-4 font-medium">รูป</th>
                 <th className="px-4 py-4 font-medium">Eyebrow / หัวข้อ</th>
-                <th className="px-4 py-4 font-medium">ลิงก์</th>
+                <th className="hidden px-4 py-4 font-medium md:table-cell">ลิงก์</th>
                 <th className="px-4 py-4 font-medium">สถานะ</th>
                 <th className="px-4 py-4 font-medium">จัดการ</th>
               </tr>
@@ -461,7 +461,7 @@ export function BannerManager() {
                   onDragStart={() => setDraggingIdx(idx)}
                   onDrop={() => void handleDrop(idx)}
                 >
-                  <td className="px-4 py-4 text-center text-lg text-dark-5 cursor-grab">⠿</td>
+                  <td className="hidden px-4 py-4 text-center text-lg text-dark-5 cursor-grab sm:table-cell">⠿</td>
                   <td className="px-3 py-2">
                     {banner.imageUrl ? (
                       <img alt={banner.title} className="h-12 w-20 rounded-lg object-cover border border-[#d8e6dd]" src={banner.imageUrl} />
@@ -474,7 +474,7 @@ export function BannerManager() {
                     <div className="font-semibold text-dark dark:text-white">{banner.title}</div>
                     <div className="text-xs text-dark-5">{banner.buttonLabel}</div>
                   </td>
-                  <td className="px-4 py-4 text-xs text-dark-5">{linkLabel(banner)}</td>
+                  <td className="hidden px-4 py-4 text-xs text-dark-5 md:table-cell">{linkLabel(banner)}</td>
                   <td className="px-4 py-4">
                     <button
                       className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${banner.isActive ? "bg-[#58cf94]" : "bg-[#d7e2db]"}`}

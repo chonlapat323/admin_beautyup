@@ -840,7 +840,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
         }
       >
         <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="grid w-full gap-3 lg:max-w-4xl lg:grid-cols-[minmax(0,1fr)_200px_160px_130px]">
+          <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-4xl lg:grid-cols-[minmax(0,1fr)_200px_160px_130px]">
             <input
               className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
               onChange={(e) => { setPage(1); setSearchTerm(e.target.value); }}
@@ -866,19 +866,19 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
         </div>
 
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
-          <table className="w-full min-w-[800px] text-left">
+          <table className="w-full min-w-[360px] text-left">
             <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
-                <th className="px-5 py-4 font-medium">ลำดับ</th>
+                <th className="hidden px-5 py-4 font-medium md:table-cell">ลำดับ</th>
                 <th className="px-5 py-4 font-medium">รูป</th>
-                <th className="px-5 py-4 font-medium">SKU</th>
+                <th className="hidden px-5 py-4 font-medium sm:table-cell">SKU</th>
                 <th className="px-5 py-4 font-medium">ชื่อสินค้า</th>
-                <th className="px-5 py-4 font-medium">หมวดหมู่</th>
-                <th className="px-5 py-4 font-medium">เฉดสี</th>
+                <th className="hidden px-5 py-4 font-medium lg:table-cell">หมวดหมู่</th>
+                <th className="hidden px-5 py-4 font-medium xl:table-cell">เฉดสี</th>
                 <th className="px-5 py-4 font-medium">ราคา</th>
-                <th className="px-5 py-4 font-medium">สต็อก</th>
+                <th className="hidden px-5 py-4 font-medium lg:table-cell">สต็อก</th>
                 <th className="px-5 py-4 font-medium">สถานะ</th>
-                <th className="px-5 py-4 font-medium">แนะนำ</th>
+                <th className="hidden px-5 py-4 font-medium xl:table-cell">แนะนำ</th>
                 <th className="px-5 py-4 font-medium">จัดการ</th>
               </tr>
             </thead>
@@ -888,7 +888,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                   key={product.id}
                   className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6"
                 >
-                  <td className="px-5 py-4">{product.no}</td>
+                  <td className="hidden px-5 py-4 md:table-cell">{product.no}</td>
                   <td className="px-3 py-2">
                     {product.thumbnail ? (
                       <button type="button" onClick={() => setLightboxUrl(product.thumbnail)}>
@@ -904,19 +904,19 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                       </div>
                     )}
                   </td>
-                  <td className="px-5 py-4 font-mono text-xs font-semibold text-dark dark:text-white">
+                  <td className="hidden px-5 py-4 font-mono text-xs font-semibold text-dark sm:table-cell dark:text-white">
                     {product.sku}
                   </td>
                   <td className="px-5 py-4 font-semibold text-dark dark:text-white">{product.name}</td>
-                  <td className="px-5 py-4">{product.categoryName}</td>
-                  <td className="px-5 py-4 text-xs text-dark-5">{product.shadeName ?? "-"}</td>
+                  <td className="hidden px-5 py-4 lg:table-cell">{product.categoryName}</td>
+                  <td className="hidden px-5 py-4 text-xs text-dark-5 xl:table-cell">{product.shadeName ?? "-"}</td>
                   <td className="px-5 py-4">
                     <div className="font-medium text-dark dark:text-white">{formatPrice(product.price)}</div>
                     {product.specialPrice !== null ? (
                       <div className="mt-0.5 text-xs text-[#5f8f74]">{formatPrice(product.specialPrice)}</div>
                     ) : null}
                   </td>
-                  <td className="px-5 py-4">{product.stock}</td>
+                  <td className="hidden px-5 py-4 lg:table-cell">{product.stock}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <button
@@ -936,7 +936,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                       <StatusPill label={statusLabel(product.status)} tone={statusTone(product.status)} />
                     </div>
                   </td>
-                  <td className="px-5 py-4">
+                  <td className="hidden px-5 py-4 xl:table-cell">
                     <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${product.isFeatured ? "bg-[#fef9c3] text-[#854d0e]" : "bg-[#f1f5f9] text-[#94a3b8]"}`}>
                       {product.isFeatured ? "★ แนะนำ" : "—"}
                     </span>

@@ -476,7 +476,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
         }
       >
         <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="grid w-full gap-3 lg:max-w-2xl lg:grid-cols-[minmax(0,1fr)_180px_130px]">
+          <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-2xl lg:grid-cols-[minmax(0,1fr)_180px_130px]">
             <input
               className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
               onChange={(e) => {
@@ -506,14 +506,14 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
         </div>
 
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
-          <table className="w-full min-w-[700px] text-left">
+          <table className="w-full min-w-[360px] text-left">
             <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
-                <th className="px-5 py-4 font-medium">ลำดับ</th>
+                <th className="hidden px-5 py-4 font-medium md:table-cell">ลำดับ</th>
                 <th className="px-5 py-4 font-medium">ชื่อ-นามสกุล</th>
                 <th className="px-5 py-4 font-medium">เบอร์โทร</th>
-                <th className="px-5 py-4 font-medium">อีเมล</th>
-                <th className="px-5 py-4 font-medium">แต้ม</th>
+                <th className="hidden px-5 py-4 font-medium lg:table-cell">อีเมล</th>
+                <th className="hidden px-5 py-4 font-medium lg:table-cell">แต้ม</th>
                 <th className="px-5 py-4 font-medium">สถานะ</th>
                 <th className="px-5 py-4 font-medium">จัดการ</th>
               </tr>
@@ -524,11 +524,11 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
                   key={member.id}
                   className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6"
                 >
-                  <td className="px-5 py-4">{member.no}</td>
+                  <td className="hidden px-5 py-4 md:table-cell">{member.no}</td>
                   <td className="px-5 py-4 font-semibold text-dark dark:text-white">{member.fullName}</td>
                   <td className="px-5 py-4">{member.phone || "-"}</td>
-                  <td className="px-5 py-4">{member.email || "-"}</td>
-                  <td className="px-5 py-4">{member.pointBalance.toLocaleString()}</td>
+                  <td className="hidden px-5 py-4 lg:table-cell">{member.email || "-"}</td>
+                  <td className="hidden px-5 py-4 lg:table-cell">{member.pointBalance.toLocaleString()}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <button
