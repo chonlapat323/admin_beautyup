@@ -1,9 +1,15 @@
+import Image from "next/image";
+
 export function Logo() {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex size-10 items-center justify-center rounded-2xl bg-[#e8f5ec] text-lg font-bold text-[#3d6d55] dark:bg-[#133423] dark:text-[#8ed0aa]">
-        B
-      </div>
+      <Image
+        src="/images/logo.png"
+        alt="Beauty Up"
+        width={40}
+        height={40}
+        className="rounded-xl object-contain"
+      />
 
       <div>
         <div className="text-lg font-bold leading-none text-dark dark:text-white">
