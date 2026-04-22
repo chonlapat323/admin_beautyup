@@ -19,7 +19,7 @@ export function UserInfo() {
 
   const USER = {
     name: "Beauty Up Admin",
-    email: "admin@beautyup.enterprise",
+    email: "admin@beautyup-enterprise.com",
     img: "/images/user/user-03.png",
   };
 
@@ -75,12 +75,12 @@ export function UserInfo() {
             height={200}
           />
 
-          <figcaption className="space-y-1 text-base font-medium">
-            <div className="mb-2 leading-none text-dark dark:text-white">
+          <figcaption className="min-w-0 space-y-1 text-base font-medium">
+            <div className="mb-2 truncate leading-none text-dark dark:text-white">
               {USER.name}
             </div>
 
-            <div className="leading-none text-gray-6">{USER.email}</div>
+            <div className="truncate leading-none text-gray-6">{USER.email}</div>
           </figcaption>
         </figure>
 
