@@ -83,6 +83,12 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
+        title: "รายงาน Commission",
+        url: "/commissions/report",
+        icon: Icons.PieChart,
+        items: [],
+      },
+      {
         title: "รายงาน",
         url: "/reports",
         icon: Icons.Table,
