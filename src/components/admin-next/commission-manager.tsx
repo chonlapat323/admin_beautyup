@@ -1,9 +1,68 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { ContentCard } from "./content-card";
-import { SelectField } from "./select-field";
-import { StatusPill } from "./status-pill";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ContentCard, StatusPill } from "./page-elements";
+
+type SelectOption<T extends string | number> = { label: string; value: T };
+
+function SelectField<T extends string | number>({
+  options,
+  value,
+  onChange,
+}: {
+  options: SelectOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const selectedOption = options.find((o) => o.value === value) ?? options[0];
+
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  return (
+    <div className="relative" ref={containerRef}>
+      <button
+        className="flex w-full items-center justify-between rounded-[20px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark transition-colors hover:border-[#bfd6c7] focus:border-[#5f8f74] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+        onClick={() => setIsOpen((c) => !c)}
+        type="button"
+      >
+        <span>{selectedOption?.label}</span>
+        <span className={`text-xs text-dark-5 transition-transform ${isOpen ? "rotate-180" : ""}`}>▼</span>
+      </button>
+      {isOpen && (
+        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-30 overflow-hidden rounded-[20px] border border-[#d8e6dd] bg-white shadow-1 dark:border-dark-3 dark:bg-dark-2">
+          {options.map((option) => {
+            const isSelected = option.value === value;
+            return (
+              <button
+                className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors ${
+                  isSelected
+                    ? "bg-[#eef8f1] font-semibold text-[#355846]"
+                    : "text-dark hover:bg-[#f8fbf9] dark:text-white dark:hover:bg-dark-3"
+                }`}
+                key={String(option.value)}
+                onClick={() => { onChange(option.value); setIsOpen(false); }}
+                type="button"
+              >
+                <span>{option.label}</span>
+                {isSelected && <span className="text-[#58cf94]">●</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 type CommissionItem = {
   id: string;
