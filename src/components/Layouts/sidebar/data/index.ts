@@ -77,6 +77,12 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
+        title: "Commission",
+        url: "/commissions",
+        icon: Icons.PieChart,
+        items: [],
+      },
+      {
         title: "รายงาน",
         url: "/reports",
         icon: Icons.Table,
