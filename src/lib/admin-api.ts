@@ -177,7 +177,8 @@ export type ApiOrder = {
   id: string;
   orderNumber: string;
   status: string;
-  totalAmount: number;
+  totalAmount: number | string;
+  member?: { fullName: string; email: string | null; phone: string | null } | null;
 };
 
 export type ApiPayment = {
@@ -644,9 +645,9 @@ export async function getOrders() {
     return data.map((order) => ({
       id: order.id,
       code: order.orderNumber,
-      member: "เชื่อมต่อ API",
-      store: "รอข้อมูลหลังบ้าน",
-      total: `THB ${order.totalAmount}`,
+      member: order.member?.fullName ?? order.member?.email ?? order.member?.phone ?? "-",
+      store: "-",
+      total: `THB ${Number(order.totalAmount).toLocaleString("th-TH", { minimumFractionDigits: 2 })}`,
       status: order.status,
       source: "api" as const,
     }));
