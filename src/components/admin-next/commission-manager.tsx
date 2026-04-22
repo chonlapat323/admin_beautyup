@@ -92,7 +92,7 @@ const PAGE_SIZE_OPTIONS = [
 
 function statusTone(s: string) {
   if (s === "PAID") return "success" as const;
-  if (s === "CANCELLED") return "error" as const;
+  if (s === "CANCELLED") return "default" as const;
   return "warning" as const;
 }
 
