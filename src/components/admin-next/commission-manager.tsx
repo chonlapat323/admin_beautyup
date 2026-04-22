@@ -116,6 +116,37 @@ export function CommissionManager() {
   const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
+  // settings
+  const [salonRate, setSalonRate] = useState<number>(10);
+  const [regularRate, setRegularRate] = useState<number>(5);
+  const [showSettings, setShowSettings] = useState(false);
+  const [isSavingRates, setIsSavingRates] = useState(false);
+
+  useEffect(() => {
+    void fetch("/api/commissions/settings")
+      .then((r) => r.json())
+      .then((d: { salon?: number; regular?: number }) => {
+        if (d.salon != null) setSalonRate(d.salon);
+        if (d.regular != null) setRegularRate(d.regular);
+      })
+      .catch(() => null);
+  }, []);
+
+  async function handleSaveRates() {
+    setIsSavingRates(true);
+    try {
+      await fetch("/api/commissions/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ salon: salonRate, regular: regularRate }),
+      });
+      showToast("บันทึกอัตรา commission แล้ว");
+      setShowSettings(false);
+    } finally {
+      setIsSavingRates(false);
+    }
+  }
+
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -188,8 +219,53 @@ export function CommissionManager() {
 
       <ContentCard
         title="จัดการ Commission"
-        description="ค่าแนะนำจากการสั่งซื้อ — SALON 10%, REGULAR 5% (1 ระดับ)"
+        description={`ค่าแนะนำจากการสั่งซื้อ — SALON ${salonRate}%, REGULAR ${regularRate}% (1 ระดับ)`}
       >
+        {/* Rate settings */}
+        <div className="mb-5">
+          <button
+            onClick={() => setShowSettings((s) => !s)}
+            className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#45745a] hover:underline"
+            type="button"
+          >
+            ⚙ ตั้งค่าอัตรา commission {showSettings ? "▲" : "▼"}
+          </button>
+          {showSettings && (
+            <div className="flex flex-wrap items-end gap-4 rounded-2xl border border-stroke bg-[#f8fbf9] px-5 py-4 dark:border-dark-3 dark:bg-dark-2">
+              <div>
+                <label className="mb-1 block text-xs text-dark-5">SALON (%)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={salonRate}
+                  onChange={(e) => setSalonRate(Number(e.target.value))}
+                  className="w-24 rounded-xl border border-stroke bg-white px-3 py-2 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-dark-5">REGULAR (%)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={regularRate}
+                  onChange={(e) => setRegularRate(Number(e.target.value))}
+                  className="w-24 rounded-xl border border-stroke bg-white px-3 py-2 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                />
+              </div>
+              <button
+                onClick={() => void handleSaveRates()}
+                disabled={isSavingRates}
+                className="rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#355846] disabled:opacity-50"
+                type="button"
+              >
+                {isSavingRates ? "กำลังบันทึก..." : "บันทึก"}
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Summary strip */}
         <div className="mb-5 flex flex-wrap gap-3">
           <div className="flex-1 min-w-[140px] rounded-2xl border border-stroke bg-[#f8fbf9] px-5 py-4 dark:border-dark-3 dark:bg-dark-2">
