@@ -36,6 +36,7 @@ type OrderDetail = OrderListItem & {
     quantity: number;
     unitPrice: number | string;
     totalPrice: number | string;
+    product?: { images?: { url: string }[] } | null;
   }[];
   statusLogs: StatusLog[];
 };
@@ -81,6 +82,8 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function ItemRow({ item }: { item: OrderDetail["items"][number] }) {
   const [open, setOpen] = useState(false);
+  const imageUrl = item.product?.images?.[0]?.url;
+
   return (
     <div className="overflow-hidden rounded-xl border border-stroke bg-white dark:border-dark-3 dark:bg-gray-dark">
       <button
@@ -89,10 +92,18 @@ function ItemRow({ item }: { item: OrderDetail["items"][number] }) {
         className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-[#f8fbf9] dark:hover:bg-dark-2"
       >
         <div className="flex items-center gap-3 min-w-0">
-          <span className="flex-shrink-0 flex h-7 w-7 items-center justify-center rounded-lg bg-[#eef8f1] text-xs font-bold text-[#2f7a4f]">
-            {item.quantity}
-          </span>
-          <span className="truncate text-sm font-medium text-dark dark:text-white">{item.name}</span>
+          {imageUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={imageUrl} alt={item.name} className="h-10 w-10 flex-shrink-0 rounded-lg object-cover" />
+          ) : (
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#eef8f1] text-xs font-bold text-[#2f7a4f]">
+              {item.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-dark dark:text-white">{item.name}</p>
+            <p className="text-xs text-dark-5">× {item.quantity} ชิ้น</p>
+          </div>
         </div>
         <div className="flex flex-shrink-0 items-center gap-3">
           <span className="text-sm font-semibold text-dark dark:text-white">{fmt(item.totalPrice)}</span>
@@ -106,22 +117,28 @@ function ItemRow({ item }: { item: OrderDetail["items"][number] }) {
       </button>
       {open && (
         <div className="border-t border-stroke bg-[#f8fbf9] px-4 py-3 dark:border-dark-3 dark:bg-dark-2">
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <span className="text-dark-5">SKU</span>
-              <p className="mt-0.5 font-mono font-semibold text-dark dark:text-white">{item.sku}</p>
-            </div>
-            <div>
-              <span className="text-dark-5">ราคาต่อชิ้น</span>
-              <p className="mt-0.5 font-semibold text-dark dark:text-white">{fmt(item.unitPrice)}</p>
-            </div>
-            <div>
-              <span className="text-dark-5">จำนวน</span>
-              <p className="mt-0.5 font-semibold text-dark dark:text-white">{item.quantity} ชิ้น</p>
-            </div>
-            <div>
-              <span className="text-dark-5">รวม</span>
-              <p className="mt-0.5 font-semibold text-[#2f7a4f]">{fmt(item.totalPrice)}</p>
+          <div className="flex gap-4">
+            {imageUrl && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={imageUrl} alt={item.name} className="h-20 w-20 flex-shrink-0 rounded-xl object-cover" />
+            )}
+            <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-2 text-xs">
+              <div>
+                <span className="text-dark-5">SKU</span>
+                <p className="mt-0.5 font-mono font-semibold text-dark dark:text-white">{item.sku}</p>
+              </div>
+              <div>
+                <span className="text-dark-5">ราคาต่อชิ้น</span>
+                <p className="mt-0.5 font-semibold text-dark dark:text-white">{fmt(item.unitPrice)}</p>
+              </div>
+              <div>
+                <span className="text-dark-5">จำนวน</span>
+                <p className="mt-0.5 font-semibold text-dark dark:text-white">{item.quantity} ชิ้น</p>
+              </div>
+              <div>
+                <span className="text-dark-5">รวม</span>
+                <p className="mt-0.5 font-semibold text-[#2f7a4f]">{fmt(item.totalPrice)}</p>
+              </div>
             </div>
           </div>
         </div>
