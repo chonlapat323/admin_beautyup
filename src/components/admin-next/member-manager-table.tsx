@@ -33,6 +33,7 @@ type MemberFormState = {
   phone: string;
   email: string;
   referredById: string;
+  memberType: "REGULAR" | "SALON";
 };
 
 const INITIAL_FORM: MemberFormState = {
@@ -40,6 +41,7 @@ const INITIAL_FORM: MemberFormState = {
   phone: "",
   email: "",
   referredById: "",
+  memberType: "REGULAR",
 };
 
 const STATUS_OPTIONS: SelectOption<StatusFilter>[] = [
@@ -64,15 +66,20 @@ function formatMemberDate(value?: string | null) {
 }
 
 function mapMemberRecord(member: ApiMember): MemberRecord {
+  const fmt = (d?: string) =>
+    d ? new Intl.DateTimeFormat("th-TH", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(d)) : "-";
   return {
     id: member.id,
     fullName: member.fullName,
     phone: member.phone ?? "",
     email: member.email ?? "",
+    memberType: member.memberType ?? "REGULAR",
+    referralCode: member.referralCode ?? "",
     isActive: member.isActive,
     pointBalance: member.pointBalance,
     orders: member._count?.orders ?? 0,
     referrals: member._count?.referrals ?? 0,
+    createdAt: fmt(member.createdAt),
     updatedAt: formatMemberDate(member.updatedAt),
     source: "api",
   };
@@ -276,6 +283,26 @@ function MemberFormModal({
             />
           </div>
 
+          <div>
+            <label className="mb-2 block text-sm font-medium text-dark dark:text-white">ประเภทสมาชิก</label>
+            <div className="flex gap-3">
+              {(["REGULAR", "SALON"] as const).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => onChange({ memberType: type })}
+                  className={`flex-1 rounded-[18px] border px-4 py-3 text-sm font-medium transition-colors ${
+                    form.memberType === type
+                      ? "border-[#5f8f74] bg-[#eef8f1] text-[#355846]"
+                      : "border-[#d8e6dd] bg-[#f8fbf9] text-dark-5 hover:border-[#bfd6c7]"
+                  }`}
+                >
+                  {type === "SALON" ? "Salon Member" : "Regular Member"}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="flex flex-wrap gap-3 pt-2">
             <button
               className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:cursor-not-allowed disabled:opacity-70"
@@ -391,6 +418,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
       phone: member.phone,
       email: member.email,
       referredById: "",
+      memberType: member.memberType,
     });
     setIsModalOpen(true);
   }
@@ -409,6 +437,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
         phone: form.phone.trim() || undefined,
         email: form.email.trim() || undefined,
         referredById: form.referredById.trim() || undefined,
+        memberType: form.memberType,
       };
 
       await (editingId ? updateMember(editingId, payload) : createMember(payload));
@@ -509,11 +538,13 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
           <table className="w-full min-w-[360px] text-left">
             <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
-                <th className="hidden px-5 py-4 font-medium md:table-cell">ลำดับ</th>
                 <th className="px-5 py-4 font-medium">ชื่อ-นามสกุล</th>
-                <th className="px-5 py-4 font-medium">เบอร์โทร</th>
-                <th className="hidden px-5 py-4 font-medium lg:table-cell">อีเมล</th>
-                <th className="hidden px-5 py-4 font-medium lg:table-cell">แต้ม</th>
+                <th className="px-5 py-4 font-medium">เบอร์โทร / อีเมล</th>
+                <th className="hidden px-5 py-4 font-medium lg:table-cell">รหัสแนะนำ</th>
+                <th className="hidden px-5 py-4 font-medium lg:table-cell">ประเภท</th>
+                <th className="hidden px-5 py-4 font-medium xl:table-cell">ออเดอร์</th>
+                <th className="hidden px-5 py-4 font-medium xl:table-cell">แนะนำ</th>
+                <th className="hidden px-5 py-4 font-medium xl:table-cell">แต้ม</th>
                 <th className="px-5 py-4 font-medium">สถานะ</th>
                 <th className="px-5 py-4 font-medium">จัดการ</th>
               </tr>
@@ -524,11 +555,28 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
                   key={member.id}
                   className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6"
                 >
-                  <td className="hidden px-5 py-4 md:table-cell">{member.no}</td>
-                  <td className="px-5 py-4 font-semibold text-dark dark:text-white">{member.fullName}</td>
-                  <td className="px-5 py-4">{member.phone || "-"}</td>
-                  <td className="hidden px-5 py-4 lg:table-cell">{member.email || "-"}</td>
-                  <td className="hidden px-5 py-4 lg:table-cell">{member.pointBalance.toLocaleString()}</td>
+                  <td className="px-5 py-4">
+                    <div className="font-semibold text-dark dark:text-white">{member.fullName}</div>
+                    <div className="mt-0.5 text-xs text-dark-5">{member.createdAt}</div>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div>{member.phone || "-"}</div>
+                    <div className="mt-0.5 text-xs text-dark-5">{member.email || "-"}</div>
+                  </td>
+                  <td className="hidden px-5 py-4 lg:table-cell">
+                    {member.referralCode ? (
+                      <span className="font-mono text-xs text-[#45745a]">{member.referralCode}</span>
+                    ) : "-"}
+                  </td>
+                  <td className="hidden px-5 py-4 lg:table-cell">
+                    <StatusPill
+                      label={member.memberType === "SALON" ? "Salon" : "Regular"}
+                      tone={member.memberType === "SALON" ? "success" : "default"}
+                    />
+                  </td>
+                  <td className="hidden px-5 py-4 text-center xl:table-cell">{member.orders}</td>
+                  <td className="hidden px-5 py-4 text-center xl:table-cell">{member.referrals}</td>
+                  <td className="hidden px-5 py-4 xl:table-cell">{member.pointBalance.toLocaleString()}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <button
@@ -574,7 +622,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
 
               {!isLoading && tableRows.length === 0 ? (
                 <tr className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6">
-                  <td className="px-5 py-6 text-center" colSpan={7}>
+                  <td className="px-5 py-6 text-center" colSpan={9}>
                     ไม่พบข้อมูลสมาชิก
                   </td>
                 </tr>

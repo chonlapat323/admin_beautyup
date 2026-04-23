@@ -162,6 +162,8 @@ export type ApiMember = {
   fullName: string;
   phone?: string | null;
   email?: string | null;
+  memberType: "REGULAR" | "SALON";
+  referralCode?: string | null;
   isActive: boolean;
   pointBalance: number;
   referredById?: string | null;
@@ -738,10 +740,13 @@ export type MemberRecord = {
   fullName: string;
   phone: string;
   email: string;
+  memberType: "REGULAR" | "SALON";
+  referralCode: string;
   isActive: boolean;
   pointBalance: number;
   orders: number;
   referrals: number;
+  createdAt: string;
   updatedAt: string;
   source: "api" | "mock";
 };
@@ -751,6 +756,7 @@ export type MemberFormPayload = {
   phone?: string;
   email?: string;
   referredById?: string;
+  memberType?: "REGULAR" | "SALON";
 };
 
 type MemberApiResponse = {
@@ -759,20 +765,21 @@ type MemberApiResponse = {
 };
 
 function mapMemberRecord(member: ApiMember): MemberRecord {
+  const fmt = (d?: string) =>
+    d ? new Intl.DateTimeFormat("th-TH", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(d)) : "-";
   return {
     id: member.id,
     fullName: member.fullName,
     phone: member.phone ?? "",
     email: member.email ?? "",
+    memberType: member.memberType ?? "REGULAR",
+    referralCode: member.referralCode ?? "",
     isActive: member.isActive,
     pointBalance: member.pointBalance,
     orders: member._count?.orders ?? 0,
     referrals: member._count?.referrals ?? 0,
-    updatedAt: member.updatedAt
-      ? new Intl.DateTimeFormat("th-TH", { day: "2-digit", month: "short", year: "numeric" }).format(
-          new Date(member.updatedAt),
-        )
-      : "-",
+    createdAt: fmt(member.createdAt),
+    updatedAt: fmt(member.updatedAt),
     source: "api",
   };
 }
@@ -799,10 +806,13 @@ export async function getMembersPageData(
           fullName: m.name,
           phone: "",
           email: "",
+          memberType: "REGULAR",
+          referralCode: "",
           isActive: true,
           pointBalance: m.points,
           orders: 0,
           referrals: Number(m.referrals) || 0,
+          createdAt: "-",
           updatedAt: "-",
           source: "mock",
         }),
