@@ -448,7 +448,15 @@ export function BannerManager() {
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td className="px-4 py-6 text-center text-sm text-dark-5" colSpan={6}>กำลังโหลด...</td></tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-t border-stroke dark:border-dark-3">
+                    {Array.from({ length: 6 }).map((__, j) => (
+                      <td key={j} className="px-4 py-4">
+                        <div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
               ) : banners.length === 0 ? (
                 <tr><td className="px-4 py-6 text-center text-sm text-dark-5" colSpan={6}>ยังไม่มีแบนเนอร์</td></tr>
               ) : banners.map((banner, idx) => (
