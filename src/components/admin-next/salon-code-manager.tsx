@@ -271,7 +271,7 @@ export function SalonCodeManager({ initialItems }: { initialItems: SalonCode[] }
                     <td className="px-5 py-4 text-dark-5 dark:text-dark-6">{formatDate(item.expiresAt)}</td>
                     <td className="px-5 py-4 text-center">
                       <button onClick={() => toggleActive(item)} title="สลับสถานะ">
-                        <StatusPill isActive={item.isActive} />
+                        <StatusPill label={item.isActive ? "เปิด" : "ปิด"} tone={item.isActive ? "success" : "default"} />
                       </button>
                     </td>
                     <td className="px-5 py-4 text-center">
