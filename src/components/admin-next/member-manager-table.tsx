@@ -287,17 +287,19 @@ function MemberFormModal({
             </div>
           )}
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-              รหัสสมาชิกผู้แนะนำ
-            </label>
-            <input
-              className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-              onChange={(e) => onChange({ referredById: e.target.value })}
-              placeholder="ID สมาชิกผู้แนะนำ (ไม่บังคับ)"
-              value={form.referredById}
-            />
-          </div>
+          {!editingId && (
+            <div>
+              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+                รหัสสมาชิกผู้แนะนำ
+              </label>
+              <input
+                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                onChange={(e) => onChange({ referredById: e.target.value })}
+                placeholder="ID สมาชิกผู้แนะนำ (ไม่บังคับ)"
+                value={form.referredById}
+              />
+            </div>
+          )}
 
           <div>
             <label className="mb-2 block text-sm font-medium text-dark dark:text-white">ประเภทสมาชิก</label>
@@ -451,7 +453,6 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
       const payload: MemberFormPayload = editingId
         ? {
             fullName: form.fullName.trim(),
-            referredById: form.referredById.trim() || undefined,
             memberType: form.memberType,
           }
         : {
