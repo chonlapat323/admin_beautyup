@@ -14,6 +14,7 @@ import {
   updateMemberStatus,
 } from "@/lib/admin-api";
 import { ContentCard, StatusPill } from "./page-elements";
+import { MemberAddressModal } from "./member-address-modal";
 
 type MemberManagerTableProps = {
   initialItems: MemberRecord[];
@@ -365,6 +366,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
   const [pageSize, setPageSize] = useState(initialMeta.pageSize);
   const [memberToDelete, setMemberToDelete] = useState<MemberRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [addressMember, setAddressMember] = useState<{ id: string; name: string } | null>(null);
 
   const tableRows = useMemo(
     () => members.map((m, i) => ({ ...m, no: (meta.page - 1) * meta.pageSize + i + 1 })),
@@ -632,6 +634,13 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
                         แก้ไข
                       </button>
                       <button
+                        className="rounded-full border border-[#d0e0f0] px-3 py-1 text-xs font-semibold text-[#2563a8] transition-colors hover:bg-[#f0f7ff]"
+                        onClick={() => setAddressMember({ id: member.id, name: member.fullName })}
+                        type="button"
+                      >
+                        ที่อยู่
+                      </button>
+                      <button
                         className="rounded-full border border-[#f1d0cf] px-3 py-1 text-xs font-semibold text-[#b42318] transition-colors hover:bg-[#fff5f4]"
                         onClick={() => handleDelete(member)}
                         type="button"
@@ -709,6 +718,14 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
             document.body,
           )
         : null}
+
+      {addressMember ? (
+        <MemberAddressModal
+          memberId={addressMember.id}
+          memberName={addressMember.name}
+          onClose={() => setAddressMember(null)}
+        />
+      ) : null}
     </>
   );
 }
