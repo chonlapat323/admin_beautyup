@@ -228,21 +228,18 @@ export function SalonCodeManager({ initialItems }: { initialItems: SalonCode[] }
 
   return (
     <>
-      <ContentCard>
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-dark dark:text-white">Salon Code</h2>
-            <p className="mt-1 text-sm text-dark-5 dark:text-dark-6">
-              โค้ดสำหรับลงทะเบียนเป็นสมาชิกประเภท Salon
-            </p>
-          </div>
+      <ContentCard
+        title="Salon Code"
+        description="โค้ดสำหรับลงทะเบียนเป็นสมาชิกประเภท Salon"
+        aside={
           <button
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-2 rounded-full bg-[#5f8f74] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#4e7a61]"
           >
             + สร้าง Code
           </button>
-        </div>
+        }
+      >
 
         {items.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-[#d8e6dd] py-16 text-center dark:border-dark-3">
