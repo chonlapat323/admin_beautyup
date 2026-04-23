@@ -742,6 +742,8 @@ export function CategoryManagerTable({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [shadeManagerCategory, setShadeManagerCategory] = useState<CategoryRecord | null>(null);
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   const tableRows = useMemo(
     () =>
@@ -860,6 +862,25 @@ export function CategoryManagerTable({
       showToast("อัปโหลดรูปล้มเหลว", "error");
     } finally {
       setIsUploadingImage(false);
+    }
+  }
+
+  async function handleCategoryDrop(targetIdx: number) {
+    if (draggingIdx === null || draggingIdx === targetIdx) {
+      setDraggingIdx(null); setDragOverIdx(null); return;
+    }
+    const reordered = [...categories];
+    const [moved] = reordered.splice(draggingIdx, 1);
+    reordered.splice(targetIdx, 0, moved);
+    const updated = reordered.map((c, i) => ({ ...c, sortOrder: i }));
+    setCategories(updated);
+    setDraggingIdx(null); setDragOverIdx(null);
+    try {
+      await Promise.all(updated.map((c) => updateCategory(c.id, { name: c.name, slug: c.slug, sortOrder: c.sortOrder })));
+      showToast("บันทึกลำดับแล้ว", "success");
+    } catch {
+      showToast("บันทึกลำดับไม่สำเร็จ", "error");
+      void loadCategories();
     }
   }
 
@@ -1012,7 +1033,8 @@ export function CategoryManagerTable({
           <table className="w-full text-left">
             <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
-                <th className="px-5 py-4 font-medium">ลำดับ</th>
+                <th className="w-8 px-3 py-4" />
+                <th className="px-3 py-4 font-medium">รูป</th>
                 <th className="px-5 py-4 font-medium">ชื่อหมวดหมู่</th>
                 <th className="px-5 py-4 font-medium">Slug</th>
                 <th className="px-5 py-4 font-medium">สถานะ</th>
@@ -1021,12 +1043,24 @@ export function CategoryManagerTable({
               </tr>
             </thead>
             <tbody>
-              {tableRows.map((category) => (
+              {tableRows.map((category, idx) => (
                 <tr
                   key={category.id}
-                  className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6"
+                  className={`border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6 transition-colors ${draggingIdx === idx ? "opacity-40" : ""} ${dragOverIdx === idx && draggingIdx !== idx ? "bg-[#eef8f1]" : ""}`}
+                  draggable
+                  onDragEnd={() => { setDraggingIdx(null); setDragOverIdx(null); }}
+                  onDragOver={(e) => { e.preventDefault(); setDragOverIdx(idx); }}
+                  onDragStart={() => setDraggingIdx(idx)}
+                  onDrop={() => void handleCategoryDrop(idx)}
                 >
-                  <td className="px-5 py-4">{category.no}</td>
+                  <td className="px-3 py-4 text-center text-dark-5 cursor-grab select-none">⠿</td>
+                  <td className="px-3 py-4">
+                    {category.imageUrl ? (
+                      <img alt={category.name} className="h-10 w-10 rounded-lg object-cover border border-stroke" src={category.imageUrl} />
+                    ) : (
+                      <div className="h-10 w-10 rounded-lg bg-[#f0f4f2] border border-stroke" />
+                    )}
+                  </td>
                   <td className="px-5 py-4 font-semibold text-dark dark:text-white">
                     {category.name}
                   </td>
@@ -1091,7 +1125,7 @@ export function CategoryManagerTable({
 
               {!isLoading && tableRows.length === 0 ? (
                 <tr className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6">
-                  <td className="px-5 py-6 text-center" colSpan={6}>
+                  <td className="px-5 py-6 text-center" colSpan={7}>
                     ไม่พบข้อมูลหมวดหมู่
                   </td>
                 </tr>
