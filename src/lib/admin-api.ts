@@ -547,6 +547,7 @@ export async function getProductsPageData(
         stock: p.stock,
         status: p.status === "Active" ? "ACTIVE" : "INACTIVE",
         isFeatured: false,
+        tag: null,
         thumbnail: null,
         updatedAt: "-",
         source: "mock",

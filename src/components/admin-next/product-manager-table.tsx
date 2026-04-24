@@ -124,6 +124,7 @@ function mapProductRecord(product: ApiProduct): ProductRecord {
     stock: product.stock,
     status: product.status,
     isFeatured: product.isFeatured ?? false,
+    tag: product.tag ?? null,
     thumbnail: product.images?.[0]?.url ?? null,
     updatedAt: formatProductDate(product.updatedAt),
     source: "api",
