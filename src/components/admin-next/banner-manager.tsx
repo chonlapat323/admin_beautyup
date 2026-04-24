@@ -10,6 +10,7 @@ type ApiBanner = {
   eyebrow: string;
   title: string;
   body?: string | null;
+  tag?: string | null;
   buttonLabel: string;
   imageUrl?: string | null;
   linkType: string;
@@ -22,6 +23,7 @@ type BannerFormState = {
   eyebrow: string;
   title: string;
   body: string;
+  tag: string;
   buttonLabel: string;
   linkType: string;
   linkId: string;
@@ -32,6 +34,7 @@ const INITIAL_FORM: BannerFormState = {
   eyebrow: "",
   title: "",
   body: "",
+  tag: "",
   buttonLabel: "Shop Now",
   linkType: "none",
   linkId: "",
@@ -123,6 +126,18 @@ function BannerFormModal({
               placeholder="คำอธิบายสั้นๆ (ไม่บังคับ)"
               rows={2}
               value={form.body}
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+              Badge <span className="text-xs font-normal text-dark-5">(เช่น NEW, BEST SELLER — แสดงมุมบนขวาของ banner)</span>
+            </label>
+            <input
+              className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+              onChange={(e) => onChange({ tag: e.target.value })}
+              placeholder="NEW / BEST SELLER (ไม่บังคับ)"
+              value={form.tag}
             />
           </div>
 
@@ -300,6 +315,7 @@ export function BannerManager() {
       eyebrow: banner.eyebrow,
       title: banner.title,
       body: banner.body ?? "",
+      tag: banner.tag ?? "",
       buttonLabel: banner.buttonLabel,
       linkType: banner.linkType,
       linkId: banner.linkId ?? "",
@@ -327,6 +343,7 @@ export function BannerManager() {
         eyebrow: form.eyebrow.trim(),
         title: form.title.trim(),
         body: form.body.trim() || undefined,
+        tag: form.tag.trim() || null,
         buttonLabel: form.buttonLabel.trim() || "Shop Now",
         linkType: form.linkType,
         linkId: form.linkId || null,
