@@ -44,6 +44,7 @@ type ProductFormState = {
   stock: string;
   status: ProductStatus;
   isFeatured: boolean;
+  tag: string;
 };
 
 const INITIAL_FORM: ProductFormState = {
@@ -58,6 +59,7 @@ const INITIAL_FORM: ProductFormState = {
   stock: "0",
   status: "DRAFT",
   isFeatured: false,
+  tag: "",
 };
 
 const STATUS_OPTIONS: SelectOption<StatusFilter>[] = [
@@ -464,6 +466,19 @@ function ProductFormModal({
           </div>
 
           <div>
+            <label className="mb-2 block text-sm font-medium text-dark dark:text-white">Badge สินค้า</label>
+            <select
+              className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+              onChange={(e) => onChange({ tag: e.target.value })}
+              value={form.tag}
+            >
+              <option value="">ไม่มี badge</option>
+              <option value="NEW">NEW — สินค้าใหม่</option>
+              <option value="BEST SELLER">BEST SELLER — ขายดี</option>
+            </select>
+          </div>
+
+          <div>
             <label className="mb-3 block text-sm font-medium text-dark dark:text-white">รูปภาพสินค้า</label>
             <ProductImageManager
               images={previewImages}
@@ -648,6 +663,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
       stock: String(product.stock),
       status: product.status,
       isFeatured: product.isFeatured,
+      tag: product.tag ?? "",
     });
     if (product.shadeGroupId) setFormShadeGroupId(product.shadeGroupId);
     setIsModalOpen(true);
@@ -758,6 +774,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
         stock: isNaN(stock) ? 0 : stock,
         status: form.status,
         isFeatured: form.isFeatured,
+        tag: form.tag.trim() || null,
       };
 
       if (editingId) {
