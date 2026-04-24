@@ -897,6 +897,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                 <th className="hidden px-5 py-4 font-medium lg:table-cell">สต็อก</th>
                 <th className="px-5 py-4 font-medium">สถานะ</th>
                 <th className="hidden px-5 py-4 font-medium xl:table-cell">แนะนำ</th>
+                <th className="hidden px-5 py-4 font-medium xl:table-cell">Badge</th>
                 <th className="px-5 py-4 font-medium">จัดการ</th>
               </tr>
             </thead>
@@ -958,6 +959,21 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                     <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${product.isFeatured ? "bg-[#fef9c3] text-[#854d0e]" : "bg-[#f1f5f9] text-[#94a3b8]"}`}>
                       {product.isFeatured ? "★ แนะนำ" : "—"}
                     </span>
+                  </td>
+                  <td className="hidden px-5 py-4 xl:table-cell">
+                    {product.tag === "NEW" && (
+                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                        🆕 NEW
+                      </span>
+                    )}
+                    {product.tag === "BEST SELLER" && (
+                      <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-1 text-xs font-semibold text-orange-700">
+                        🔥 BEST SELLER
+                      </span>
+                    )}
+                    {!product.tag && (
+                      <span className="text-xs text-[#94a3b8]">—</span>
+                    )}
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-2">
