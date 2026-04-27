@@ -208,6 +208,9 @@ export type ApiSettings = {
   stock: {
     reservePercentage: number;
   };
+  payment: {
+    gatewayFee: number;
+  };
 };
 
 function getApiBaseUrl() {
@@ -702,6 +705,10 @@ export async function getPayments() {
       source: "mock" as const,
     }));
   }
+}
+
+export async function getRawSettings(): Promise<ApiSettings> {
+  return fetchFromApi<ApiSettings>("/settings");
 }
 
 export async function getSettings() {
