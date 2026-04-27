@@ -25,6 +25,7 @@ type StatusLog = {
 type OrderDetail = OrderListItem & {
   subtotalAmount: number | string;
   shippingAmount: number | string;
+  gatewayFee: number | string;
   shippingName: string;
   shippingPhone: string;
   shippingAddr: string;
@@ -326,6 +327,10 @@ export function OrderManager() {
                         <div className="flex justify-between text-sm">
                           <span className="text-dark-5">ค่าจัดส่ง</span>
                           <span className="text-dark dark:text-white">{fmt(detail.shippingAmount)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-dark-5">ค่าธรรมเนียมการชำระเงิน</span>
+                          <span className="text-dark dark:text-white">{fmt(detail.gatewayFee ?? 0)}</span>
                         </div>
                         <div className="flex justify-between border-t border-stroke pt-3 dark:border-dark-3">
                           <span className="font-semibold text-dark dark:text-white">รวมทั้งหมด</span>
