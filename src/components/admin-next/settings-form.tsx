@@ -3,28 +3,27 @@
 import { useState } from "react";
 import { useToast } from "@/components/shared/toast-provider";
 import { ContentCard } from "./page-elements";
+import type { PointTier } from "@/lib/admin-api";
 
 type Settings = {
   shipping: { freeShippingThreshold: number; defaultShippingFee: number };
-  points: { threshold: number; earnedPoint: number };
+  points: { tiers: PointTier[] };
   payment: { gatewayFee: number };
 };
 
 type FormState = {
   freeShippingThreshold: string;
   defaultShippingFee: string;
-  pointThreshold: string;
-  earnedPoint: string;
   gatewayFee: string;
+  pointTiers: PointTier[];
 };
 
 function toForm(s: Settings): FormState {
   return {
     freeShippingThreshold: String(s.shipping.freeShippingThreshold),
     defaultShippingFee: String(s.shipping.defaultShippingFee),
-    pointThreshold: String(s.points.threshold),
-    earnedPoint: String(s.points.earnedPoint),
     gatewayFee: String(s.payment.gatewayFee),
+    pointTiers: [...s.points.tiers].sort((a, b) => a.minSpend - b.minSpend),
   };
 }
 
@@ -65,12 +64,86 @@ function Field({
   );
 }
 
+function TierEditor({
+  tiers,
+  onChange,
+}: {
+  tiers: PointTier[];
+  onChange: (tiers: PointTier[]) => void;
+}) {
+  function updateTier(index: number, field: keyof PointTier, value: string) {
+    const updated = tiers.map((t, i) =>
+      i === index ? { ...t, [field]: Number(value) || 0 } : t,
+    );
+    onChange(updated);
+  }
+
+  function removeTier(index: number) {
+    onChange(tiers.filter((_, i) => i !== index));
+  }
+
+  function addTier() {
+    onChange([...tiers, { minSpend: 0, points: 0 }]);
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-[1fr_1fr_auto] gap-3 text-xs font-medium text-dark-5 dark:text-dark-6 px-1">
+        <span>ยอดซื้อตั้งแต่ (บาท)</span>
+        <span>แต้มที่ได้รับ</span>
+        <span />
+      </div>
+
+      {tiers.map((tier, i) => (
+        <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-3 items-center">
+          <div className="relative">
+            <input
+              type="number"
+              min={0}
+              className={inputCls + " pr-12"}
+              value={tier.minSpend}
+              onChange={(e) => updateTier(i, "minSpend", e.target.value)}
+            />
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-dark-5">บาท</span>
+          </div>
+          <div className="relative">
+            <input
+              type="number"
+              min={0}
+              className={inputCls + " pr-14"}
+              value={tier.points}
+              onChange={(e) => updateTier(i, "points", e.target.value)}
+            />
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-dark-5">แต้ม</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => removeTier(i)}
+            className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-red-200 text-red-500 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950 transition-colors"
+            aria-label="ลบ tier"
+          >
+            ×
+          </button>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={addTier}
+        className="mt-1 rounded-[10px] border border-dashed border-[#5f8f74] px-4 py-2 text-sm text-[#2f7a4f] hover:bg-[#f0f9f4] dark:hover:bg-dark-2 transition-colors"
+      >
+        + เพิ่ม tier
+      </button>
+    </div>
+  );
+}
+
 export function SettingsForm({ initial }: { initial: Settings }) {
   const [form, setForm] = useState<FormState>(toForm(initial));
   const [isSaving, setIsSaving] = useState(false);
   const { showToast } = useToast();
 
-  function set(key: keyof FormState) {
+  function set(key: keyof Omit<FormState, "pointTiers">) {
     return (v: string) => setForm((prev) => ({ ...prev, [key]: v }));
   }
 
@@ -84,9 +157,8 @@ export function SettingsForm({ initial }: { initial: Settings }) {
         body: JSON.stringify({
           freeShippingThreshold: Number(form.freeShippingThreshold),
           defaultShippingFee: Number(form.defaultShippingFee),
-          pointThreshold: Number(form.pointThreshold),
-          earnedPoint: Number(form.earnedPoint),
           gatewayFee: Number(form.gatewayFee),
+          pointTiers: form.pointTiers,
         }),
       });
       if (!res.ok) throw new Error("บันทึกไม่สำเร็จ");
@@ -114,10 +186,12 @@ export function SettingsForm({ initial }: { initial: Settings }) {
           </div>
         </ContentCard>
 
-        <ContentCard title="แต้มสะสม" description="เงื่อนไขการได้รับและใช้แต้ม">
-          <div className="grid gap-4 sm:grid-cols-2 max-w-lg">
-            <Field label="ยอดขั้นต่ำต่อการได้แต้ม" value={form.pointThreshold} unit="บาท" onChange={set("pointThreshold")} />
-            <Field label="แต้มที่ได้รับ" value={form.earnedPoint} unit="แต้ม" onChange={set("earnedPoint")} />
+        <ContentCard title="แต้มสะสม" description="กำหนดแต้มที่ได้รับตามระดับยอดซื้อ สามารถเพิ่ม/ลบ tier ได้">
+          <div className="max-w-md">
+            <TierEditor
+              tiers={form.pointTiers}
+              onChange={(tiers) => setForm((prev) => ({ ...prev, pointTiers: tiers }))}
+            />
           </div>
         </ContentCard>
 

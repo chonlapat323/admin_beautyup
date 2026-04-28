@@ -193,14 +193,15 @@ export type ApiPayment = {
   amount: number;
 };
 
+export type PointTier = { minSpend: number; points: number };
+
 export type ApiSettings = {
   shipping: {
     freeShippingThreshold: number;
     defaultShippingFee: number;
   };
   points: {
-    threshold: number;
-    earnedPoint: number;
+    tiers: PointTier[];
   };
   referral: {
     commissionRate: number;
@@ -723,7 +724,7 @@ export async function getSettings() {
       },
       {
         title: "กติกาแต้มสะสม",
-        description: `มอบ ${data.points.earnedPoint} แต้มทุกการใช้จ่ายสำเร็จครบ THB ${data.points.threshold}`,
+        description: data.points.tiers.map((t) => `THB ${t.minSpend.toLocaleString()} → ${t.points} แต้ม`).join(" | "),
         source: "api" as const,
       },
       {
