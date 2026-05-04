@@ -83,6 +83,12 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
+        title: "สินค้าแลกแต้ม",
+        url: "/reward-products",
+        icon: Icons.Table,
+        items: [],
+      },
+      {
         title: "Commission",
         url: "/commissions",
         icon: Icons.PieChart,
