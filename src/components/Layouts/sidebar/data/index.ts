@@ -41,6 +41,12 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
+        title: "สินค้าแลกแต้ม",
+        url: "/reward-products",
+        icon: Icons.Table,
+        items: [],
+      },
+      {
         title: "แบนเนอร์",
         url: "/banners",
         icon: Icons.Table,
@@ -80,12 +86,6 @@ export const NAV_DATA: NavSection[] = [
         title: "Salon Code",
         url: "/salon-codes",
         icon: Icons.User,
-        items: [],
-      },
-      {
-        title: "สินค้าแลกแต้ม",
-        url: "/reward-products",
-        icon: Icons.Table,
         items: [],
       },
       {
