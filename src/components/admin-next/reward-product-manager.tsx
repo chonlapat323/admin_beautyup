@@ -20,6 +20,8 @@ type FormState = {
   name: string;
   description: string;
   imageUrl: string;
+  tempFile: string;
+  imagePreview: string;
   pointCost: string;
   stock: string;
   isActive: boolean;
@@ -29,6 +31,8 @@ const INITIAL_FORM: FormState = {
   name: "",
   description: "",
   imageUrl: "",
+  tempFile: "",
+  imagePreview: "",
   pointCost: "",
   stock: "",
   isActive: true,
@@ -49,8 +53,30 @@ function RewardProductModal({
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => Promise<void>;
 }) {
+  const [isUploading, setIsUploading] = useState(false);
+
   const inputCls =
     "w-full rounded-[14px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark focus:border-[#5f8f74] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white";
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/uploads/temp", { method: "POST", body: fd });
+      const data = await res.json() as { filename: string; url: string };
+      if (!res.ok) throw new Error("อัปโหลดไม่สำเร็จ");
+      onChange({ tempFile: data.filename, imagePreview: data.url });
+    } catch {
+      // silently ignore — user can retry
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  const previewSrc = form.imagePreview || form.imageUrl;
 
   return createPortal(
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/55 px-4">
@@ -74,8 +100,17 @@ function RewardProductModal({
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">URL รูปภาพ</label>
-            <input className={inputCls} value={form.imageUrl} onChange={(e) => onChange({ imageUrl: e.target.value })} placeholder="https://..." />
+            <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">รูปภาพ</label>
+            <div className="flex items-center gap-3">
+              {previewSrc && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={previewSrc} alt="preview" className="h-16 w-16 rounded-xl object-cover border border-[#d8e6dd]" />
+              )}
+              <label className={`flex cursor-pointer items-center gap-2 rounded-[14px] border border-dashed border-[#5f8f74] bg-[#f8fbf9] px-4 py-3 text-sm text-[#5f8f74] hover:bg-[#f0f7f2] dark:bg-dark-2 ${isUploading ? "opacity-60 pointer-events-none" : ""}`}>
+                {isUploading ? "กำลังอัปโหลด..." : "เลือกรูปภาพ"}
+                <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} disabled={isUploading} />
+              </label>
+            </div>
           </div>
 
           <div className="flex gap-3">
@@ -135,6 +170,8 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
       name: item.name,
       description: item.description ?? "",
       imageUrl: item.imageUrl ?? "",
+      tempFile: "",
+      imagePreview: "",
       pointCost: String(item.pointCost),
       stock: String(item.stock),
       isActive: item.isActive,
@@ -158,7 +195,8 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
         isActive: form.isActive,
       };
       if (form.description) body.description = form.description;
-      if (form.imageUrl) body.imageUrl = form.imageUrl;
+      if (form.tempFile) body.tempFile = form.tempFile;
+      else if (form.imageUrl) body.imageUrl = form.imageUrl;
 
       const res = await fetch("/api/reward-products", {
         method: "POST",
@@ -188,8 +226,9 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
         stock: Number(form.stock),
         isActive: form.isActive,
         description: form.description || null,
-        imageUrl: form.imageUrl || null,
       };
+      if (form.tempFile) body.tempFile = form.tempFile;
+      else body.imageUrl = form.imageUrl || null;
       const res = await fetch(`/api/reward-products/${editItem.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
