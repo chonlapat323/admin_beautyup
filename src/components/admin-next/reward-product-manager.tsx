@@ -3,13 +3,21 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "@/components/shared/toast-provider";
+import { ProductImageManager, type PreviewImage } from "./product-image-manager";
 import { ContentCard, StatusPill } from "./page-elements";
+
+type RewardProductImage = {
+  id: string;
+  url: string;
+  sortOrder: number;
+};
 
 type RewardProduct = {
   id: string;
   name: string;
   description?: string | null;
   imageUrl?: string | null;
+  images: RewardProductImage[];
   pointCost: number;
   stock: number;
   isActive: boolean;
@@ -19,9 +27,6 @@ type RewardProduct = {
 type FormState = {
   name: string;
   description: string;
-  imageUrl: string;
-  tempFile: string;
-  imagePreview: string;
   pointCost: string;
   stock: string;
   isActive: boolean;
@@ -30,9 +35,6 @@ type FormState = {
 const INITIAL_FORM: FormState = {
   name: "",
   description: "",
-  imageUrl: "",
-  tempFile: "",
-  imagePreview: "",
   pointCost: "",
   stock: "",
   isActive: true,
@@ -41,46 +43,77 @@ const INITIAL_FORM: FormState = {
 function RewardProductModal({
   title,
   form,
+  images,
   isSubmitting,
   onChange,
+  onImagesChange,
   onClose,
   onSubmit,
 }: {
   title: string;
   form: FormState;
+  images: PreviewImage[];
   isSubmitting: boolean;
   onChange: (next: Partial<FormState>) => void;
+  onImagesChange: React.Dispatch<React.SetStateAction<PreviewImage[]>>;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => Promise<void>;
 }) {
-  const [isUploading, setIsUploading] = useState(false);
-
   const inputCls =
     "w-full rounded-[14px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark focus:border-[#5f8f74] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white";
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/uploads/temp", { method: "POST", body: fd });
-      const data = await res.json() as { filename: string; url: string };
-      if (!res.ok) throw new Error("อัปโหลดไม่สำเร็จ");
-      onChange({ tempFile: data.filename, imagePreview: data.url });
-    } catch {
-      // silently ignore — user can retry
-    } finally {
-      setIsUploading(false);
-    }
+  async function handleFilesDropped(files: File[]) {
+    const pending: PreviewImage[] = files.map((f) => ({
+      key: `${Date.now()}-${f.name}`,
+      url: URL.createObjectURL(f),
+      kind: "temp",
+      uploading: true,
+      error: false,
+    }));
+    onImagesChange([...images, ...pending]);
+
+    const results = await Promise.allSettled(
+      files.map(async (f, i) => {
+        const fd = new FormData();
+        fd.append("file", f);
+        const res = await fetch("/api/uploads/temp", { method: "POST", body: fd });
+        const data = await res.json() as { filename: string; url: string };
+        if (!res.ok) throw new Error("upload failed");
+        return { key: pending[i].key, filename: data.filename, url: data.url };
+      }),
+    );
+
+    onImagesChange((prev: PreviewImage[]) =>
+      prev.map((img) => {
+        const idx = pending.findIndex((p) => p.key === img.key);
+        if (idx === -1) return img;
+        const r = results[idx];
+        if (r.status === "fulfilled") {
+          return { ...img, url: r.value.url, tempFilename: r.value.filename, uploading: false };
+        }
+        return { ...img, uploading: false, error: true };
+      }),
+    );
   }
 
-  const previewSrc = form.imagePreview || form.imageUrl;
+  async function handleRemove(key: string) {
+    const img = images.find((i) => i.key === key);
+    if (img?.kind === "temp" && img.tempFilename) {
+      void fetch(`/api/uploads/temp/${img.tempFilename}`, { method: "DELETE" });
+    }
+    onImagesChange(images.filter((i) => i.key !== key));
+  }
+
+  function handleReorder(from: number, to: number) {
+    const next = [...images];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    onImagesChange(next);
+  }
 
   return createPortal(
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/55 px-4">
-      <div className="w-full max-w-md rounded-[24px] border border-[#dce9e1] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark">
+      <div className="w-full max-w-lg rounded-[24px] border border-[#dce9e1] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark">
         <div className="flex items-center justify-between border-b border-[#edf4ef] px-6 py-5 dark:border-dark-3">
           <h3 className="text-lg font-semibold text-dark dark:text-white">{title}</h3>
           <button onClick={onClose} type="button" className="flex h-8 w-8 items-center justify-center rounded-full text-dark-4 hover:bg-[#f0f7f2]">
@@ -101,16 +134,12 @@ function RewardProductModal({
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">รูปภาพ</label>
-            <div className="flex items-center gap-3">
-              {previewSrc && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={previewSrc} alt="preview" className="h-16 w-16 rounded-xl object-cover border border-[#d8e6dd]" />
-              )}
-              <label className={`flex cursor-pointer items-center gap-2 rounded-[14px] border border-dashed border-[#5f8f74] bg-[#f8fbf9] px-4 py-3 text-sm text-[#5f8f74] hover:bg-[#f0f7f2] dark:bg-dark-2 ${isUploading ? "opacity-60 pointer-events-none" : ""}`}>
-                {isUploading ? "กำลังอัปโหลด..." : "เลือกรูปภาพ"}
-                <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} disabled={isUploading} />
-              </label>
-            </div>
+            <ProductImageManager
+              images={images}
+              onFilesDropped={handleFilesDropped}
+              onRemove={handleRemove}
+              onReorder={handleReorder}
+            />
           </div>
 
           <div className="flex gap-3">
@@ -155,6 +184,7 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
   const [showCreate, setShowCreate] = useState(false);
   const [editItem, setEditItem] = useState<RewardProduct | null>(null);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
+  const [modalImages, setModalImages] = useState<PreviewImage[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { showToast } = useToast();
 
@@ -169,25 +199,38 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
     setForm({
       name: item.name,
       description: item.description ?? "",
-      imageUrl: item.imageUrl ?? "",
-      tempFile: "",
-      imagePreview: "",
       pointCost: String(item.pointCost),
       stock: String(item.stock),
       isActive: item.isActive,
     });
+    setModalImages(
+      item.images.map((img) => ({
+        key: img.id,
+        url: img.url,
+        kind: "existing" as const,
+        existingId: img.id,
+        uploading: false,
+        error: false,
+      })),
+    );
   }
 
   function closeModal() {
     setShowCreate(false);
     setEditItem(null);
     setForm(INITIAL_FORM);
+    setModalImages([]);
   }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      const readyImages = modalImages.filter((i) => !i.uploading && !i.error);
+      const tempFiles = readyImages
+        .filter((i) => i.kind === "temp")
+        .map((i) => i.tempFilename!);
+
       const body: Record<string, unknown> = {
         name: form.name,
         pointCost: Number(form.pointCost),
@@ -195,8 +238,7 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
         isActive: form.isActive,
       };
       if (form.description) body.description = form.description;
-      if (form.tempFile) body.tempFile = form.tempFile;
-      else if (form.imageUrl) body.imageUrl = form.imageUrl;
+      if (tempFiles.length > 0) body.tempFiles = tempFiles;
 
       const res = await fetch("/api/reward-products", {
         method: "POST",
@@ -220,15 +262,22 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
     if (!editItem) return;
     setIsSubmitting(true);
     try {
+      const readyImages = modalImages.filter((i) => !i.uploading && !i.error);
+      const orderedImages = readyImages.map((img) =>
+        img.kind === "existing"
+          ? { kind: "existing" as const, id: img.existingId! }
+          : { kind: "temp" as const, filename: img.tempFilename! },
+      );
+
       const body: Record<string, unknown> = {
         name: form.name,
         pointCost: Number(form.pointCost),
         stock: Number(form.stock),
         isActive: form.isActive,
         description: form.description || null,
+        orderedImages,
       };
-      if (form.tempFile) body.tempFile = form.tempFile;
-      else body.imageUrl = form.imageUrl || null;
+
       const res = await fetch(`/api/reward-products/${editItem.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -282,7 +331,7 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-[#f8fbf9] dark:bg-dark-2">
-                  <th className="px-5 py-4 text-left font-semibold text-dark dark:text-white">ชื่อสินค้า</th>
+                  <th className="px-5 py-4 text-left font-semibold text-dark dark:text-white">สินค้า</th>
                   <th className="px-5 py-4 text-center font-semibold text-dark dark:text-white">แต้มที่ใช้</th>
                   <th className="px-5 py-4 text-center font-semibold text-dark dark:text-white">สต็อก</th>
                   <th className="px-5 py-4 text-center font-semibold text-dark dark:text-white">สถานะ</th>
@@ -293,8 +342,18 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
                 {items.map((item) => (
                   <tr key={item.id} className="border-t border-stroke dark:border-dark-3">
                     <td className="px-5 py-4">
-                      <p className="font-medium text-dark dark:text-white">{item.name}</p>
-                      {item.description && <p className="text-xs text-dark-5 dark:text-dark-6">{item.description}</p>}
+                      <div className="flex items-center gap-3">
+                        {item.images[0] ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={item.images[0].url} alt="" className="h-10 w-10 rounded-lg object-cover border border-[#d8e6dd] flex-shrink-0" />
+                        ) : (
+                          <div className="h-10 w-10 rounded-lg bg-[#f0f7f2] flex-shrink-0" />
+                        )}
+                        <div>
+                          <p className="font-medium text-dark dark:text-white">{item.name}</p>
+                          {item.description && <p className="text-xs text-dark-5 dark:text-dark-6">{item.description}</p>}
+                        </div>
+                      </div>
                     </td>
                     <td className="px-5 py-4 text-center font-semibold text-[#5f8f74]">{item.pointCost.toLocaleString()} pts</td>
                     <td className="px-5 py-4 text-center text-dark dark:text-white">{item.stock}</td>
@@ -329,8 +388,10 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
         <RewardProductModal
           title="เพิ่มสินค้าแลกแต้ม"
           form={form}
+          images={modalImages}
           isSubmitting={isSubmitting}
           onChange={updateForm}
+          onImagesChange={setModalImages}
           onClose={closeModal}
           onSubmit={handleCreate}
         />
@@ -339,8 +400,10 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
         <RewardProductModal
           title="แก้ไขสินค้าแลกแต้ม"
           form={form}
+          images={modalImages}
           isSubmitting={isSubmitting}
           onChange={updateForm}
+          onImagesChange={setModalImages}
           onClose={closeModal}
           onSubmit={handleEdit}
         />
