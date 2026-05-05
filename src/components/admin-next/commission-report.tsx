@@ -34,11 +34,11 @@ function getPresetRange(preset: Preset) {
   return { from: "", to: "" };
 }
 
-const PERIOD_OPTIONS: { label: string; value: Period }[] = [
-  { label: "รายวัน", value: "day" },
-  { label: "รายสัปดาห์", value: "week" },
-  { label: "รายเดือน", value: "month" },
-];
+function autoPeriod(from: string, to: string): Period {
+  if (!from || !to) return "day";
+  const diff = (new Date(to).getTime() - new Date(from).getTime()) / 86400000;
+  return diff > 31 ? "month" : "day";
+}
 
 const PRESET_OPTIONS: { key: Preset; label: string }[] = [
   { key: "today", label: "วันนี้" },
@@ -90,20 +90,19 @@ export function CommissionReport() {
     setPreset(p);
     if (p !== "custom") {
       const range = getPresetRange(p);
+      const auto = autoPeriod(range.from, range.to);
       setFrom(range.from);
       setTo(range.to);
-      void load(range.from, range.to, period);
+      setPeriod(auto);
+      void load(range.from, range.to, auto);
     }
-  }
-
-  function handlePeriod(p: Period) {
-    setPeriod(p);
-    void load(from, to, p);
   }
 
   function handleSearch() {
     setPreset("custom");
-    void load(from, to, period);
+    const auto = autoPeriod(from, to);
+    setPeriod(auto);
+    void load(from, to, auto);
   }
 
   const grandTotal = rows.reduce((s, r) => s + r.totalAmount, 0);
@@ -115,8 +114,8 @@ export function CommissionReport() {
   return (
     <ContentCard title="รายงาน Commission" description="ยอด commission แยกตามช่วงเวลาและผู้รับ">
 
-      {/* Date preset */}
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      {/* Filter bar */}
+      <div className="mb-5 flex flex-wrap items-center gap-3">
         <div className="flex gap-2">
           {PRESET_OPTIONS.map((opt) => (
             <button key={opt.key} type="button" onClick={() => handlePreset(opt.key)}
@@ -138,16 +137,6 @@ export function CommissionReport() {
             ค้นหา
           </button>
         </div>
-      </div>
-
-      {/* Period grouping */}
-      <div className="mb-5 flex gap-2">
-        {PERIOD_OPTIONS.map((opt) => (
-          <button key={opt.value} type="button" onClick={() => handlePeriod(opt.value)}
-            className={`${btnBase} ${period === opt.value ? btnActive : ""}`}>
-            {opt.label}
-          </button>
-        ))}
       </div>
 
       {/* Summary */}
