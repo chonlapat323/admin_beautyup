@@ -47,12 +47,6 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
-        title: "Log แลกแต้ม",
-        url: "/reward-logs",
-        icon: Icons.Table,
-        items: [],
-      },
-      {
         title: "แบนเนอร์",
         url: "/banners",
         icon: Icons.Table,
@@ -101,16 +95,12 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
-        title: "รายงาน Commission",
-        url: "/commissions/report",
-        icon: Icons.PieChart,
-        items: [],
-      },
-      {
         title: "รายงาน",
-        url: "/reports",
-        icon: Icons.Table,
-        items: [],
+        icon: Icons.PieChart,
+        items: [
+          { title: "รายงาน Commission", url: "/commissions/report" },
+          { title: "รายงานการแลกแต้ม", url: "/reward-logs" },
+        ],
       },
       {
         title: "ตั้งค่า",
