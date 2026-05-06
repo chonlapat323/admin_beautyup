@@ -1,12 +1,5 @@
-import { DotIcon } from "@/assets/icons";
-import { formatMessageTime } from "@/lib/format-message-time";
-import { cn } from "@/lib/utils";
-import Image from "next/image";
-import Link from "next/link";
-import { getChatsData } from "../fetch";
-
 export async function ChatsCard() {
-  const data = await getChatsData();
+  const data: never[] = [];
 
   return (
     <div className="col-span-12 rounded-[10px] bg-white py-6 shadow-1 dark:bg-gray-dark dark:shadow-card xl:col-span-4">
