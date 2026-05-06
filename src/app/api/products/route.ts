@@ -37,6 +37,13 @@ export async function POST(request: Request) {
 
     const data = await response.json();
 
+    if (response.status === 500) {
+      return NextResponse.json(
+        { message: "ชื่อสินค้านี้มีอยู่แล้วในระบบ กรุณาเปลี่ยนชื่อสินค้า" },
+        { status: 409 },
+      );
+    }
+
     return NextResponse.json(data, { status: response.status });
   } catch {
     return NextResponse.json(

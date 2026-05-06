@@ -1269,3 +1269,67 @@ export async function getRolesList(): Promise<{ id: string; name: string }[]> {
     return [];
   }
 }
+
+// ===== Dashboard Stats =====
+
+export type RecentOrderItem = {
+  id: string;
+  code: string;
+  member: string;
+  total: number;
+  status: string;
+};
+
+export type OrderStatsResult = {
+  revenue: number;
+  orderCount: number;
+  pendingCount: number;
+  recentOrders: RecentOrderItem[];
+  source: "api" | "mock";
+};
+
+const PENDING_ORDER_STATUSES = new Set([
+  "pending", "processing", "preparing",
+  "Pending", "Processing", "Preparing",
+  "PENDING", "PROCESSING", "PREPARING",
+]);
+
+export async function getOrderStats(): Promise<OrderStatsResult> {
+  try {
+    const data = await fetchFromApi<ApiOrder[]>("/orders");
+    const revenue = data.reduce((sum, o) => sum + Number(o.totalAmount), 0);
+    const pendingCount = data.filter((o) => PENDING_ORDER_STATUSES.has(o.status)).length;
+    const recentOrders: RecentOrderItem[] = data.slice(0, 6).map((o) => ({
+      id: o.id,
+      code: o.orderNumber,
+      member: o.member?.fullName ?? o.member?.email ?? o.member?.phone ?? "-",
+      total: Number(o.totalAmount),
+      status: o.status,
+    }));
+    return { revenue, orderCount: data.length, pendingCount, recentOrders, source: "api" };
+  } catch {
+    return { revenue: 0, orderCount: 0, pendingCount: 0, recentOrders: [], source: "mock" };
+  }
+}
+
+type ApiCommissionListResponse = {
+  items: { id: string; status: string; amount: string | number }[];
+  meta: { totalItems: number };
+};
+
+export type CommissionStatsResult = {
+  pendingCount: number;
+  pendingTotal: number;
+  source: "api" | "mock";
+};
+
+export async function getCommissionStats(): Promise<CommissionStatsResult> {
+  try {
+    const data = await fetchFromApi<ApiCommissionListResponse>("/commissions?pageSize=200");
+    const pending = data.items.filter((c) => c.status === "PENDING");
+    const pendingTotal = pending.reduce((s, c) => s + Number(c.amount), 0);
+    return { pendingCount: pending.length, pendingTotal, source: "api" };
+  } catch {
+    return { pendingCount: 0, pendingTotal: 0, source: "mock" };
+  }
+}

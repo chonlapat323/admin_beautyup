@@ -101,13 +101,16 @@ export function StatCard({
   label,
   value,
   hint,
+  icon,
 }: {
   label: string;
   value: string;
   hint: string;
+  icon?: React.ReactNode;
 }) {
   return (
     <article className="rounded-[20px] border border-stroke bg-white p-5 shadow-1 dark:border-dark-3 dark:bg-gray-dark">
+      {icon ? <div className="mb-3">{icon}</div> : null}
       <p className="text-sm font-medium text-dark-5 dark:text-dark-6">{label}</p>
       <strong className="mt-3 block text-2xl font-bold text-dark dark:text-white">
         {value}
