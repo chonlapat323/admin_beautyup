@@ -270,6 +270,8 @@ export function BannerManager() {
   const [products, setProducts] = useState<{ id: string; name: string; sku: string }[]>([]);
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const [bannerToDelete, setBannerToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   async function loadBanners() {
     setIsLoading(true);
@@ -398,14 +400,18 @@ export function BannerManager() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("ต้องการลบแบนเนอร์นี้ใช่หรือไม่?")) return;
+  async function handleConfirmDelete() {
+    if (!bannerToDelete) return;
+    setIsDeleting(true);
     try {
-      await fetch(`/api/banners/${id}`, { method: "DELETE" });
+      await fetch(`/api/banners/${bannerToDelete}`, { method: "DELETE" });
       showToast("ลบแบนเนอร์สำเร็จ", "warning");
+      setBannerToDelete(null);
       await loadBanners();
     } catch {
       showToast("ไม่สามารถลบแบนเนอร์ได้", "error");
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -520,7 +526,7 @@ export function BannerManager() {
                       </button>
                       <button
                         className="rounded-full border border-[#f1d0cf] px-3 py-1 text-xs font-semibold text-[#b42318] hover:bg-[#fff5f4]"
-                        onClick={() => void handleDelete(banner.id)}
+                        onClick={() => setBannerToDelete(banner.id)}
                         type="button"
                       >
                         ลบ
@@ -533,6 +539,22 @@ export function BannerManager() {
           </table>
         </div>
       </ContentCard>
+
+      {bannerToDelete ? createPortal(
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-[#0f172a]/55 px-4">
+          <div className="w-full max-w-md rounded-[28px] border border-[#eadbda] bg-white p-6 shadow-1 dark:border-dark-3 dark:bg-gray-dark">
+            <h3 className="text-xl font-bold text-dark dark:text-white">ยืนยันการลบ</h3>
+            <p className="mt-3 text-sm leading-6 text-dark-5 dark:text-dark-6">ต้องการลบแบนเนอร์นี้ใช่หรือไม่? การลบไม่สามารถย้อนกลับได้</p>
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]" onClick={() => setBannerToDelete(null)} type="button">ยกเลิก</button>
+              <button className="inline-flex items-center justify-center rounded-full bg-[#c84b44] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#ad3d37] disabled:opacity-70" disabled={isDeleting} onClick={() => void handleConfirmDelete()} type="button">
+                {isDeleting ? "กำลังลบ..." : "ยืนยันการลบ"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      ) : null}
 
       {isModalOpen ? createPortal(
         <BannerFormModal

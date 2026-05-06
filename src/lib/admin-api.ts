@@ -675,22 +675,36 @@ export async function getOrders() {
   }
 }
 
-export async function getPayments() {
+const SUCCESS_STATUSES = new Set(["SUCCESS", "PAID", "COMPLETED", "success", "paid", "completed"]);
+
+export type PaymentSummary = {
+  method: string;
+  orders: number;
+  successCount: number;
+  totalAmount: number;
+  source: "api" | "mock";
+};
+
+export async function getPayments(): Promise<PaymentSummary[]> {
   try {
     const data = await fetchFromApi<ApiPayment[]>("/payments");
-    const grouped = new Map<string, { method: string; orders: number; successRate: string; note: string; source: "api" }>();
+    const grouped = new Map<string, PaymentSummary>();
 
     for (const payment of data) {
       const current = grouped.get(payment.method);
+      const isSuccess = SUCCESS_STATUSES.has(payment.status);
+      const amount = typeof payment.amount === "number" ? payment.amount : 0;
 
       if (current) {
         current.orders += 1;
+        if (isSuccess) current.successCount += 1;
+        current.totalAmount += amount;
       } else {
         grouped.set(payment.method, {
           method: payment.method,
           orders: 1,
-          successRate: "เชื่อมต่อหลังบ้าน",
-          note: "สรุปจากรายการชำระเงินจริง",
+          successCount: isSuccess ? 1 : 0,
+          totalAmount: amount,
           source: "api",
         });
       }
@@ -701,8 +715,8 @@ export async function getPayments() {
     return fallbackPayments.map((payment) => ({
       method: payment.method,
       orders: payment.orders,
-      successRate: payment.successRate,
-      note: payment.note,
+      successCount: payment.orders,
+      totalAmount: 0,
       source: "mock" as const,
     }));
   }
@@ -1318,18 +1332,20 @@ type ApiCommissionListResponse = {
 };
 
 export type CommissionStatsResult = {
-  pendingCount: number;
-  pendingTotal: number;
+  todayCount: number;
+  todayTotal: number;
   source: "api" | "mock";
 };
 
 export async function getCommissionStats(): Promise<CommissionStatsResult> {
   try {
-    const data = await fetchFromApi<ApiCommissionListResponse>("/commissions?pageSize=200");
-    const pending = data.items.filter((c) => c.status === "PENDING");
-    const pendingTotal = pending.reduce((s, c) => s + Number(c.amount), 0);
-    return { pendingCount: pending.length, pendingTotal, source: "api" };
+    const today = new Date().toISOString().slice(0, 10);
+    const data = await fetchFromApi<ApiCommissionListResponse>(
+      `/commissions?pageSize=200&from=${today}&to=${today}`,
+    );
+    const todayTotal = data.items.reduce((s, c) => s + Number(c.amount), 0);
+    return { todayCount: data.items.length, todayTotal, source: "api" };
   } catch {
-    return { pendingCount: 0, pendingTotal: 0, source: "mock" };
+    return { todayCount: 0, todayTotal: 0, source: "mock" };
   }
 }

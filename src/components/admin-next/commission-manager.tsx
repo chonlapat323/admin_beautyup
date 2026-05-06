@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useToast } from "@/components/shared/toast-provider";
 import { ContentCard, StatusPill } from "./page-elements";
 
 type SelectOption<T extends string | number> = { label: string; value: T };
@@ -106,7 +108,46 @@ function formatAmount(v: string) {
   return `฿${Number(v).toLocaleString("th-TH", { minimumFractionDigits: 2 })}`;
 }
 
+function ConfirmCancelModal({
+  isCancelling,
+  onClose,
+  onConfirm,
+}: {
+  isCancelling: boolean;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+}) {
+  return (
+    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-[#0f172a]/55 px-4">
+      <div className="w-full max-w-md rounded-[28px] border border-[#eadbda] bg-white p-6 shadow-1 dark:border-dark-3 dark:bg-gray-dark">
+        <h3 className="text-xl font-bold text-dark dark:text-white">ยืนยันการยกเลิก</h3>
+        <p className="mt-3 text-sm leading-6 text-dark-5 dark:text-dark-6">
+          ต้องการยกเลิก commission รายการนี้ใช่หรือไม่?
+        </p>
+        <div className="mt-6 flex flex-wrap justify-end gap-3">
+          <button
+            className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+            onClick={onClose}
+            type="button"
+          >
+            ไม่ยกเลิก
+          </button>
+          <button
+            className="inline-flex items-center justify-center rounded-full bg-[#c84b44] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#ad3d37] disabled:opacity-70"
+            disabled={isCancelling}
+            onClick={() => void onConfirm()}
+            type="button"
+          >
+            {isCancelling ? "กำลังยกเลิก..." : "ยืนยันยกเลิก"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function CommissionManager() {
+  const { showToast } = useToast();
   const [items, setItems] = useState<CommissionItem[]>([]);
   const [meta, setMeta] = useState<Meta>({ page: 1, pageSize: 20, totalItems: 0, totalPages: 1 });
   const [statusFilter, setStatusFilter] = useState("all");
@@ -114,7 +155,8 @@ export function CommissionManager() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // settings
   const [salonRate, setSalonRate] = useState<number>(10);
@@ -140,7 +182,7 @@ export function CommissionManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ salon: salonRate, regular: regularRate }),
       });
-      showToast("บันทึกอัตรา commission แล้ว");
+      showToast("บันทึกอัตรา commission แล้ว", "success");
       setShowSettings(false);
     } finally {
       setIsSavingRates(false);
@@ -163,11 +205,6 @@ export function CommissionManager() {
 
   useEffect(() => { void load(); }, [load]);
 
-  function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
-  }
-
   function toggleSelect(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -187,21 +224,35 @@ export function CommissionManager() {
 
   async function handlePay() {
     if (selected.size === 0) return;
-    await fetch("/api/commissions/pay", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: [...selected] }),
-    });
-    setSelected(new Set());
-    showToast(`จ่าย commission ${selected.size} รายการสำเร็จ`);
-    void load();
+    try {
+      const res = await fetch("/api/commissions/pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [...selected] }),
+      });
+      if (!res.ok) throw new Error("ไม่สามารถจ่าย commission ได้");
+      setSelected(new Set());
+      showToast(`จ่าย commission ${selected.size} รายการสำเร็จ`, "success");
+      void load();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error");
+    }
   }
 
-  async function handleCancel(id: string) {
-    if (!confirm("ยืนยันยกเลิก commission นี้?")) return;
-    await fetch(`/api/commissions/${id}/cancel`, { method: "PATCH" });
-    showToast("ยกเลิก commission แล้ว");
-    void load();
+  async function handleConfirmCancel() {
+    if (!cancelTargetId) return;
+    setIsCancelling(true);
+    try {
+      const res = await fetch(`/api/commissions/${cancelTargetId}/cancel`, { method: "PATCH" });
+      if (!res.ok) throw new Error("ไม่สามารถยกเลิก commission ได้");
+      showToast("ยกเลิก commission แล้ว", "warning");
+      setCancelTargetId(null);
+      void load();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error");
+    } finally {
+      setIsCancelling(false);
+    }
   }
 
   const pendingItems = items.filter((i) => i.status === "PENDING");
@@ -211,12 +262,6 @@ export function CommissionManager() {
 
   return (
     <>
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-[#45745a] px-5 py-3 text-sm font-medium text-white shadow-lg">
-          {toast}
-        </div>
-      )}
-
       <ContentCard
         title="จัดการ Commission"
         description={`ค่าแนะนำจากการสั่งซื้อ — SALON ${salonRate}%, REGULAR ${regularRate}% (1 ระดับ)`}
@@ -389,7 +434,7 @@ export function CommissionManager() {
                     <td className="px-4 py-3">
                       {item.status === "PENDING" && (
                         <button
-                          onClick={() => void handleCancel(item.id)}
+                          onClick={() => setCancelTargetId(item.id)}
                           className="rounded-full border border-[#f1d0cf] px-3 py-1 text-xs font-semibold text-[#b42318] hover:bg-[#fff5f4]"
                         >
                           ยกเลิก
@@ -434,6 +479,17 @@ export function CommissionManager() {
           </div>
         </div>
       </ContentCard>
+
+      {cancelTargetId
+        ? createPortal(
+            <ConfirmCancelModal
+              isCancelling={isCancelling}
+              onClose={() => setCancelTargetId(null)}
+              onConfirm={handleConfirmCancel}
+            />,
+            document.body,
+          )
+        : null}
     </>
   );
 }

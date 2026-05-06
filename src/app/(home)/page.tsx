@@ -98,15 +98,15 @@ export default async function Home() {
           }
         />
         <StatCard
-          label="คอมมิชชันรอจ่าย"
+          label="คอมมิชชันวันนี้"
           value={
             data.commission.source === "api"
-              ? `฿${thb(data.commission.pendingTotal)}`
+              ? `฿${thb(data.commission.todayTotal)}`
               : "-"
           }
           hint={
             data.commission.source === "api"
-              ? `${data.commission.pendingCount} รายการรอดำเนินการ`
+              ? `${data.commission.todayCount} รายการที่จ่ายวันนี้`
               : "ไม่สามารถโหลดข้อมูลได้"
           }
           icon={
