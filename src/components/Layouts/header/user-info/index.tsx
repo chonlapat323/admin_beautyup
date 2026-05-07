@@ -10,18 +10,32 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LogOutIcon, SettingsIcon, UserIcon } from "./icons";
+
+type AdminInfo = {
+  email: string;
+  role: string;
+};
 
 export function UserInfo() {
   const [isOpen, setIsOpen] = useState(false);
+  const [admin, setAdmin] = useState<AdminInfo | null>(null);
   const router = useRouter();
 
-  const USER = {
-    name: "Beauty Up Admin",
-    email: "admin@beautyup-enterprise.com",
-    img: "/images/user/user-03.png",
-  };
+  useEffect(() => {
+    fetch("/api/session/me")
+      .then(async (r) => {
+        if (!r.ok) return;
+        const data = await r.json() as AdminInfo;
+        setAdmin(data);
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const displayName = admin?.email.split("@")[0] ?? "Admin";
+  const displayEmail = admin?.email ?? "";
+  const displayRole = admin?.role ?? "";
 
   async function handleLogout() {
     await fetch("/api/session/logout", { method: "POST" });
@@ -37,15 +51,15 @@ export function UserInfo() {
 
         <figure className="flex items-center gap-3">
           <Image
-            src={USER.img}
+            src="/images/user/user-03.png"
             className="size-12"
-            alt={`Avatar of ${USER.name}`}
+            alt={`Avatar of ${displayName}`}
             role="presentation"
             width={200}
             height={200}
           />
           <figcaption className="flex items-center gap-1 font-medium text-dark dark:text-dark-6 max-[1024px]:sr-only">
-            <span>{USER.name}</span>
+            <span>{displayName}</span>
 
             <ChevronUpIcon
               aria-hidden
@@ -67,20 +81,22 @@ export function UserInfo() {
 
         <figure className="flex items-center gap-2.5 px-5 py-3.5">
           <Image
-            src={USER.img}
+            src="/images/user/user-03.png"
             className="size-12"
-            alt={`Avatar for ${USER.name}`}
+            alt={`Avatar for ${displayName}`}
             role="presentation"
             width={200}
             height={200}
           />
 
           <figcaption className="min-w-0 space-y-1 text-base font-medium">
-            <div className="mb-2 truncate leading-none text-dark dark:text-white">
-              {USER.name}
+            <div className="mb-1 truncate leading-none text-dark dark:text-white">
+              {displayName}
             </div>
-
-            <div className="truncate leading-none text-gray-6">{USER.email}</div>
+            <div className="truncate leading-none text-gray-6">{displayEmail}</div>
+            {displayRole ? (
+              <div className="truncate text-xs leading-none text-[#5f8f74]">{displayRole}</div>
+            ) : null}
           </figcaption>
         </figure>
 
@@ -93,7 +109,6 @@ export function UserInfo() {
             className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-gray-2 hover:text-dark dark:hover:bg-dark-3 dark:hover:text-white"
           >
             <UserIcon />
-
             <span className="mr-auto text-base font-medium">ผู้ดูแลระบบ</span>
           </Link>
 
@@ -103,7 +118,6 @@ export function UserInfo() {
             className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[9px] hover:bg-gray-2 hover:text-dark dark:hover:bg-dark-3 dark:hover:text-white"
           >
             <SettingsIcon />
-
             <span className="mr-auto text-base font-medium">ตั้งค่าบัญชี</span>
           </Link>
         </div>
@@ -116,7 +130,6 @@ export function UserInfo() {
             onClick={handleLogout}
           >
             <LogOutIcon />
-
             <span className="text-base font-medium">ออกจากระบบ</span>
           </button>
         </div>

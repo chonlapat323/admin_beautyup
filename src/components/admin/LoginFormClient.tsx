@@ -3,11 +3,12 @@
 import { useToast } from "@/components/shared/toast-provider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+
 export function LoginFormClient() {
   const router = useRouter();
   const { showToast } = useToast();
-  const [email, setEmail] = useState("admin@beautyup.com");
-  const [password, setPassword] = useState("P@ssw0rd123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -52,6 +53,7 @@ export function LoginFormClient() {
           placeholder="กรอกอีเมล"
           type="email"
           value={email}
+          required
         />
       </div>
 
@@ -66,29 +68,8 @@ export function LoginFormClient() {
           placeholder="กรอกรหัสผ่าน"
           type="password"
           value={password}
+          required
         />
-      </div>
-
-      <div>
-        <label className="mb-2 block text-sm font-medium text-dark dark:text-white" htmlFor="role">
-          สิทธิ์การเข้าใช้งาน
-        </label>
-        <select
-          className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
-          defaultValue="admin"
-          id="role"
-        >
-          <option value="admin">แอดมิน</option>
-          <option value="super_admin">ซูเปอร์แอดมิน</option>
-        </select>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-dark-5 dark:text-dark-6">
-        <label className="flex items-center gap-2">
-          <input type="checkbox" />
-          <span>จดจำการเข้าสู่ระบบ</span>
-        </label>
-        <span>เชื่อมต่อผ่าน POST /auth/login</span>
       </div>
 
       <button
