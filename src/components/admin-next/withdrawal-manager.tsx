@@ -7,7 +7,13 @@ import { ContentCard, StatusPill } from "./page-elements";
 type WithdrawalItem = {
   id: string;
   memberId: string;
-  member: { id: string; fullName: string; phone: string | null; email: string | null };
+  member: {
+    id: string;
+    fullName: string;
+    phone: string | null;
+    email: string | null;
+    memberType: string | null;
+  };
   amount: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   note: string | null;
@@ -15,6 +21,7 @@ type WithdrawalItem = {
   bankAccountNumber: string | null;
   bankAccountName: string | null;
   processedAt: string | null;
+  processedByEmail: string | null;
   createdAt: string;
 };
 
@@ -37,8 +44,160 @@ function statusLabel(s: string) {
   return "รอดำเนินการ";
 }
 
+function memberTypeLabel(t: string | null) {
+  if (t === "SALON") return "Salon";
+  return "Regular";
+}
+
 function formatAmount(v: string) {
   return `฿${Number(v).toLocaleString("th-TH", { minimumFractionDigits: 2 })}`;
+}
+
+function formatDateTime(iso: string) {
+  const d = new Date(iso);
+  return {
+    date: d.toLocaleDateString("th-TH", { day: "2-digit", month: "2-digit", year: "2-digit" }),
+    time: d.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }),
+  };
+}
+
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex gap-2">
+      <span className="w-36 shrink-0 text-xs text-dark-5">{label}</span>
+      <span className="text-sm font-medium text-dark dark:text-white">{value}</span>
+    </div>
+  );
+}
+
+function WithdrawalDetailModal({
+  item,
+  onClose,
+  onApprove,
+  onReject,
+  actionId,
+}: {
+  item: WithdrawalItem;
+  onClose: () => void;
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
+  actionId: string | null;
+}) {
+  const req = formatDateTime(item.createdAt);
+  const proc = item.processedAt ? formatDateTime(item.processedAt) : null;
+
+  return (
+    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-[#0f172a]/55 px-4">
+      <div className="w-full max-w-lg rounded-[28px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-stroke px-6 py-4 dark:border-dark-3">
+          <div>
+            <h3 className="text-lg font-bold text-dark dark:text-white">รายละเอียดคำขอถอน</h3>
+            <p className="text-xs text-dark-5 font-mono mt-0.5">{item.id}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-dark-5 hover:bg-neutral-100 dark:hover:bg-dark-2"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-5 px-6 py-5">
+          {/* Customer info */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-dark-5">ข้อมูลลูกค้า</p>
+            <div className="rounded-2xl border border-stroke bg-[#f8fbf9] px-4 py-3 space-y-2 dark:border-dark-3 dark:bg-dark-2">
+              <DetailRow label="ชื่อ" value={item.member.fullName} />
+              {item.member.phone && <DetailRow label="เบอร์โทร" value={item.member.phone} />}
+              {item.member.email && <DetailRow label="อีเมล" value={item.member.email} />}
+              <DetailRow
+                label="ประเภทสมาชิก"
+                value={
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    item.member.memberType === "SALON"
+                      ? "bg-purple-100 text-purple-700"
+                      : "bg-neutral-100 text-neutral-600"
+                  }`}>
+                    {memberTypeLabel(item.member.memberType)}
+                  </span>
+                }
+              />
+            </div>
+          </div>
+
+          {/* Withdrawal info */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-dark-5">รายละเอียดการถอน</p>
+            <div className="rounded-2xl border border-stroke bg-[#f8fbf9] px-4 py-3 space-y-2 dark:border-dark-3 dark:bg-dark-2">
+              <DetailRow
+                label="จำนวนเงิน"
+                value={<span className="text-base font-bold text-[#45745a]">{formatAmount(item.amount)}</span>}
+              />
+              <DetailRow label="สถานะ" value={<StatusPill label={statusLabel(item.status)} tone={statusTone(item.status)} />} />
+              <DetailRow label="วันที่ขอ" value={`${req.date} เวลา ${req.time} น.`} />
+              {proc && (
+                <DetailRow label="วันที่ดำเนินการ" value={`${proc.date} เวลา ${proc.time} น.`} />
+              )}
+              {item.processedByEmail && (
+                <DetailRow label="ดำเนินการโดย" value={item.processedByEmail} />
+              )}
+              {item.note && (
+                <DetailRow label="หมายเหตุ" value={<span className="text-[#c84b44]">{item.note}</span>} />
+              )}
+            </div>
+          </div>
+
+          {/* Bank info */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-dark-5">บัญชีรับเงิน</p>
+            <div className="rounded-2xl border border-stroke bg-[#f8fbf9] px-4 py-3 space-y-2 dark:border-dark-3 dark:bg-dark-2">
+              {item.bankName ? (
+                <>
+                  <DetailRow label="ธนาคาร" value={item.bankName} />
+                  <DetailRow label="เลขที่บัญชี" value={<span className="font-mono">{item.bankAccountNumber}</span>} />
+                  <DetailRow label="ชื่อบัญชี" value={item.bankAccountName} />
+                </>
+              ) : (
+                <p className="text-sm text-dark-5">ไม่มีข้อมูลบัญชี</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-wrap justify-end gap-3 border-t border-stroke px-6 py-4 dark:border-dark-3">
+          <button
+            className="rounded-full border border-[#d7e7dc] px-5 py-2.5 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6]"
+            onClick={onClose}
+            type="button"
+          >
+            ปิด
+          </button>
+          {item.status === "PENDING" && (
+            <>
+              <button
+                onClick={() => onReject(item.id)}
+                disabled={actionId === item.id}
+                className="rounded-full border border-[#f1d0cf] px-5 py-2.5 text-sm font-semibold text-[#b42318] hover:bg-[#fff5f4] disabled:opacity-50"
+                type="button"
+              >
+                ปฏิเสธ
+              </button>
+              <button
+                onClick={() => onApprove(item.id)}
+                disabled={actionId === item.id}
+                className="rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#355846] disabled:opacity-50"
+                type="button"
+              >
+                {actionId === item.id ? "กำลังดำเนินการ..." : "อนุมัติ"}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function WithdrawalManager() {
@@ -47,6 +206,7 @@ export function WithdrawalManager() {
   const [statusFilter, setStatusFilter] = useState("PENDING");
   const [isLoading, setIsLoading] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<WithdrawalItem | null>(null);
   const [rejectNote, setRejectNote] = useState("");
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
 
@@ -70,6 +230,7 @@ export function WithdrawalManager() {
       const res = await fetch(`/api/withdrawals/${id}/approve`, { method: "PATCH" });
       if (!res.ok) throw new Error("ไม่สามารถอนุมัติได้");
       showToast("อนุมัติการถอน credit แล้ว", "success");
+      setSelectedItem(null);
       void load();
     } catch (err) {
       showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error");
@@ -91,6 +252,7 @@ export function WithdrawalManager() {
       showToast("ปฏิเสธการถอน credit แล้ว (credit ถูกคืนให้สมาชิก)", "warning");
       setRejectTargetId(null);
       setRejectNote("");
+      setSelectedItem(null);
       void load();
     } catch (err) {
       showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error");
@@ -138,10 +300,10 @@ export function WithdrawalManager() {
 
         {/* Table */}
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
-          <table className="w-full min-w-[640px] text-left">
+          <table className="w-full min-w-[700px] text-left">
             <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
-                <th className="px-4 py-3 font-medium">สมาชิก</th>
+                <th className="px-4 py-3 font-medium">ลูกค้า</th>
                 <th className="px-4 py-3 font-medium">จำนวน</th>
                 <th className="hidden px-4 py-3 font-medium md:table-cell">บัญชีรับเงิน</th>
                 <th className="px-4 py-3 font-medium">สถานะ</th>
@@ -167,71 +329,96 @@ export function WithdrawalManager() {
                   </td>
                 </tr>
               ) : (
-                items.map((item) => (
-                  <tr key={item.id} className="border-t border-stroke text-sm dark:border-dark-3">
-                    <td className="px-4 py-3">
-                      <div className="font-semibold text-dark dark:text-white">{item.member.fullName}</div>
-                      <div className="text-xs text-dark-5">{item.member.phone ?? item.member.email}</div>
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-[#45745a]">
-                      {formatAmount(item.amount)}
-                    </td>
-                    <td className="hidden px-4 py-3 md:table-cell">
-                      {item.bankName ? (
-                        <div>
-                          <div className="font-medium text-dark dark:text-white">{item.bankName}</div>
-                          <div className="font-mono text-xs text-dark-5">{item.bankAccountNumber}</div>
-                          <div className="text-xs text-dark-5">{item.bankAccountName}</div>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-dark-5">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusPill label={statusLabel(item.status)} tone={statusTone(item.status)} />
-                      {item.note && (
-                        <div className="mt-1 text-xs text-dark-5">{item.note}</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-dark-5">
-                      <div>{new Date(item.createdAt).toLocaleDateString("th-TH")}</div>
-                      <div className="text-xs">
-                        {new Date(item.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
-                      </div>
-                      {item.status !== "PENDING" && item.processedAt && (
-                        <div className="mt-1 text-xs text-dark-5">
-                          ดำเนินการ: {new Date(item.processedAt).toLocaleDateString("th-TH")}{" "}
-                          {new Date(item.processedAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      {item.status === "PENDING" && (
-                        <div className="flex flex-wrap gap-2">
+                items.map((item) => {
+                  const req = formatDateTime(item.createdAt);
+                  return (
+                    <tr
+                      key={item.id}
+                      className="cursor-pointer border-t border-stroke text-sm hover:bg-[#f8fbf9] dark:border-dark-3 dark:hover:bg-dark-2"
+                      onClick={() => setSelectedItem(item)}
+                    >
+                      <td className="px-4 py-3">
+                        <div className="font-semibold text-dark dark:text-white">{item.member.fullName}</div>
+                        <div className="text-xs text-dark-5">{item.member.phone ?? item.member.email}</div>
+                        <span className={`mt-0.5 inline-block rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                          item.member.memberType === "SALON"
+                            ? "bg-purple-100 text-purple-700"
+                            : "bg-neutral-100 text-neutral-500"
+                        }`}>
+                          {memberTypeLabel(item.member.memberType)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-[#45745a]">
+                        {formatAmount(item.amount)}
+                      </td>
+                      <td className="hidden px-4 py-3 md:table-cell">
+                        {item.bankName ? (
+                          <div>
+                            <div className="font-medium text-dark dark:text-white">{item.bankName}</div>
+                            <div className="font-mono text-xs text-dark-5">{item.bankAccountNumber}</div>
+                            <div className="text-xs text-dark-5">{item.bankAccountName}</div>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-dark-5">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusPill label={statusLabel(item.status)} tone={statusTone(item.status)} />
+                        {item.note && (
+                          <div className="mt-1 max-w-[120px] truncate text-xs text-dark-5">{item.note}</div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-dark-5">
+                        <div>{req.date}</div>
+                        <div className="text-xs">{req.time} น.</div>
+                      </td>
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                        {item.status === "PENDING" && (
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => void handleApprove(item.id)}
+                              disabled={actionId === item.id}
+                              className="rounded-full bg-[#45745a] px-3 py-1 text-xs font-semibold text-white hover:bg-[#355846] disabled:opacity-50"
+                            >
+                              อนุมัติ
+                            </button>
+                            <button
+                              onClick={() => { setRejectTargetId(item.id); setRejectNote(""); }}
+                              disabled={actionId === item.id}
+                              className="rounded-full border border-[#f1d0cf] px-3 py-1 text-xs font-semibold text-[#b42318] hover:bg-[#fff5f4] disabled:opacity-50"
+                            >
+                              ปฏิเสธ
+                            </button>
+                          </div>
+                        )}
+                        {item.status !== "PENDING" && (
                           <button
-                            onClick={() => void handleApprove(item.id)}
-                            disabled={actionId === item.id}
-                            className="rounded-full bg-[#45745a] px-3 py-1 text-xs font-semibold text-white hover:bg-[#355846] disabled:opacity-50"
+                            onClick={() => setSelectedItem(item)}
+                            className="text-xs text-[#45745a] underline"
                           >
-                            อนุมัติ
+                            รายละเอียด
                           </button>
-                          <button
-                            onClick={() => { setRejectTargetId(item.id); setRejectNote(""); }}
-                            disabled={actionId === item.id}
-                            className="rounded-full border border-[#f1d0cf] px-3 py-1 text-xs font-semibold text-[#b42318] hover:bg-[#fff5f4] disabled:opacity-50"
-                          >
-                            ปฏิเสธ
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </ContentCard>
+
+      {/* Detail modal */}
+      {selectedItem && (
+        <WithdrawalDetailModal
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onApprove={(id) => void handleApprove(id)}
+          onReject={(id) => { setRejectTargetId(id); setRejectNote(""); setSelectedItem(null); }}
+          actionId={actionId}
+        />
+      )}
 
       {/* Reject modal */}
       {rejectTargetId && (
