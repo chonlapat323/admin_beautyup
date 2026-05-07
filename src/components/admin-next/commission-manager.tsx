@@ -92,6 +92,7 @@ type OrderDetail = {
     quantity: number;
     unitPrice: number | string;
     totalPrice: number | string;
+    product?: { images: { url: string }[] };
   }[];
 };
 
@@ -559,7 +560,7 @@ function OrderDetailModal({
   order: OrderDetail;
   onClose: () => void;
 }) {
-  const orderTotal = Number(order.totalAmount);
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
   const rate = Number(commission.rate);
   const commissionAmt = Number(commission.amount);
 
@@ -595,6 +596,7 @@ function OrderDetailModal({
               <table className="w-full text-left text-sm">
                 <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
                   <tr>
+                    <th className="w-12 px-4 py-3" />
                     <th className="px-4 py-3 font-medium">สินค้า</th>
                     <th className="px-4 py-3 font-medium text-right">จำนวน</th>
                     <th className="px-4 py-3 font-medium text-right">ราคา/ชิ้น</th>
@@ -602,17 +604,35 @@ function OrderDetailModal({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stroke dark:divide-dark-3">
-                  {order.items.map((item) => (
-                    <tr key={item.id} className="text-dark-5 dark:text-dark-6">
-                      <td className="px-4 py-3">
-                        <p className="font-medium text-dark dark:text-white">{item.name}</p>
-                        <p className="text-xs text-dark-5">{item.sku}</p>
-                      </td>
-                      <td className="px-4 py-3 text-right">{item.quantity}</td>
-                      <td className="px-4 py-3 text-right">{fmt(item.unitPrice)}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-dark dark:text-white">{fmt(item.totalPrice)}</td>
-                    </tr>
-                  ))}
+                  {order.items.map((item) => {
+                    const imgUrl = item.product?.images?.[0]?.url ?? null;
+                    return (
+                      <tr key={item.id} className="text-dark-5 dark:text-dark-6">
+                        <td className="px-4 py-3">
+                          {imgUrl ? (
+                            <button
+                              type="button"
+                              onClick={() => setZoomImage(imgUrl)}
+                              className="block h-10 w-10 overflow-hidden rounded-xl border border-stroke bg-[#f8fbf9] transition-opacity hover:opacity-80 dark:border-dark-3"
+                            >
+                              <img src={imgUrl} alt={item.name} className="h-full w-full object-cover" />
+                            </button>
+                          ) : (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-stroke bg-[#f8fbf9] text-xs text-dark-5 dark:border-dark-3">
+                              –
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-dark dark:text-white">{item.name}</p>
+                          <p className="text-xs text-dark-5">{item.sku}</p>
+                        </td>
+                        <td className="px-4 py-3 text-right">{item.quantity}</td>
+                        <td className="px-4 py-3 text-right">{fmt(item.unitPrice)}</td>
+                        <td className="px-4 py-3 text-right font-semibold text-dark dark:text-white">{fmt(item.totalPrice)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -665,6 +685,21 @@ function OrderDetailModal({
           </div>
         </div>
       </div>
+
+      {/* Image lightbox */}
+      {zoomImage && (
+        <div
+          className="fixed inset-0 z-[140] flex items-center justify-center bg-[#0f172a]/80 px-4"
+          onClick={() => setZoomImage(null)}
+        >
+          <img
+            src={zoomImage}
+            alt="product"
+            className="max-h-[80vh] max-w-full rounded-2xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }
