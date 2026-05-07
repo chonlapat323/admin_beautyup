@@ -169,6 +169,7 @@ export type ApiMember = {
   referralCode?: string | null;
   isActive: boolean;
   pointBalance: number;
+  creditBalance?: number | null;
   referredById?: string | null;
   createdAt?: string;
   updatedAt?: string;
@@ -771,6 +772,7 @@ export type MemberRecord = {
   referralCode: string;
   isActive: boolean;
   pointBalance: number;
+  creditBalance: number;
   orders: number;
   referrals: number;
   createdAt: string;
@@ -803,6 +805,7 @@ function mapMemberRecord(member: ApiMember): MemberRecord {
     referralCode: member.referralCode ?? "",
     isActive: member.isActive,
     pointBalance: member.pointBalance,
+    creditBalance: Number(member.creditBalance ?? 0),
     orders: member._count?.orders ?? 0,
     referrals: member._count?.referrals ?? 0,
     createdAt: fmt(member.createdAt),
@@ -837,6 +840,7 @@ export async function getMembersPageData(
           referralCode: "",
           isActive: true,
           pointBalance: m.points,
+          creditBalance: 0,
           orders: 0,
           referrals: Number(m.referrals) || 0,
           createdAt: "-",

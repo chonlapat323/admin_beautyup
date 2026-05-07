@@ -15,6 +15,7 @@ import {
 } from "@/lib/admin-api";
 import { ContentCard, StatusPill } from "./page-elements";
 import { MemberAddressModal } from "./member-address-modal";
+import { MemberCreditModal } from "./member-credit-modal";
 
 type MemberManagerTableProps = {
   initialItems: MemberRecord[];
@@ -78,6 +79,7 @@ function mapMemberRecord(member: ApiMember): MemberRecord {
     referralCode: member.referralCode ?? "",
     isActive: member.isActive,
     pointBalance: member.pointBalance,
+    creditBalance: Number(member.creditBalance ?? 0),
     orders: member._count?.orders ?? 0,
     referrals: member._count?.referrals ?? 0,
     createdAt: fmt(member.createdAt),
@@ -367,6 +369,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
   const [memberToDelete, setMemberToDelete] = useState<MemberRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [addressMember, setAddressMember] = useState<{ id: string; name: string } | null>(null);
+  const [creditMember, setCreditMember] = useState<{ id: string; name: string; balance: number } | null>(null);
 
   const tableRows = useMemo(
     () => members.map((m, i) => ({ ...m, no: (meta.page - 1) * meta.pageSize + i + 1 })),
@@ -570,6 +573,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
                 <th className="hidden px-5 py-4 font-medium xl:table-cell">ออเดอร์</th>
                 <th className="hidden px-5 py-4 font-medium xl:table-cell">แนะนำ</th>
                 <th className="hidden px-5 py-4 font-medium xl:table-cell">แต้ม</th>
+                <th className="hidden px-5 py-4 font-medium xl:table-cell">Credit</th>
                 <th className="px-5 py-4 font-medium">สถานะ</th>
                 <th className="px-5 py-4 font-medium">จัดการ</th>
               </tr>
@@ -602,6 +606,15 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
                   <td className="hidden px-5 py-4 text-center xl:table-cell">{member.orders}</td>
                   <td className="hidden px-5 py-4 text-center xl:table-cell">{member.referrals}</td>
                   <td className="hidden px-5 py-4 xl:table-cell">{member.pointBalance.toLocaleString()}</td>
+                  <td className="hidden px-5 py-4 xl:table-cell">
+                    {member.creditBalance > 0 ? (
+                      <span className="font-semibold text-[#2a7a4b]">
+                        ฿{member.creditBalance.toLocaleString("th-TH", { minimumFractionDigits: 2 })}
+                      </span>
+                    ) : (
+                      <span className="text-dark-5">-</span>
+                    )}
+                  </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <button
@@ -641,6 +654,13 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
                         ที่อยู่
                       </button>
                       <button
+                        className="rounded-full border border-[#c6e2d2] px-3 py-1 text-xs font-semibold text-[#2a7a4b] transition-colors hover:bg-[#eef8f1]"
+                        onClick={() => setCreditMember({ id: member.id, name: member.fullName, balance: member.creditBalance })}
+                        type="button"
+                      >
+                        Credit
+                      </button>
+                      <button
                         className="rounded-full border border-[#f1d0cf] px-3 py-1 text-xs font-semibold text-[#b42318] transition-colors hover:bg-[#fff5f4]"
                         onClick={() => handleDelete(member)}
                         type="button"
@@ -654,7 +674,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
 
               {!isLoading && tableRows.length === 0 ? (
                 <tr className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6">
-                  <td className="px-5 py-6 text-center" colSpan={9}>
+                  <td className="px-5 py-6 text-center" colSpan={10}>
                     ไม่พบข้อมูลสมาชิก
                   </td>
                 </tr>
@@ -724,6 +744,15 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
           memberId={addressMember.id}
           memberName={addressMember.name}
           onClose={() => setAddressMember(null)}
+        />
+      ) : null}
+
+      {creditMember ? (
+        <MemberCreditModal
+          memberId={creditMember.id}
+          memberName={creditMember.name}
+          creditBalance={creditMember.balance}
+          onClose={() => setCreditMember(null)}
         />
       ) : null}
     </>
