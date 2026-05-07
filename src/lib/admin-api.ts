@@ -184,6 +184,7 @@ export type ApiOrder = {
   orderNumber: string;
   status: string;
   totalAmount: number | string;
+  paymentMethod?: string | null;
   member?: { fullName: string; email: string | null; phone: string | null } | null;
 };
 

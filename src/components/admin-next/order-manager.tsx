@@ -11,6 +11,7 @@ type OrderListItem = {
   status: string;
   totalAmount: number | string;
   createdAt: string;
+  paymentMethod?: string | null;
   member?: { fullName: string; email: string | null; phone: string | null } | null;
 };
 
@@ -71,6 +72,29 @@ function fmtDate(s: string) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(s));
+}
+
+const PAYMENT_METHOD_LABEL: Record<string, string> = {
+  CARD: "บัตรเครดิต",
+  PROMPTPAY: "PromptPay",
+  CREDIT: "Credit",
+};
+
+const PAYMENT_METHOD_CLASS: Record<string, string> = {
+  CARD: "bg-[#eff6ff] text-[#1d4ed8]",
+  PROMPTPAY: "bg-[#f0fdf4] text-[#15803d]",
+  CREDIT: "bg-[#fefce8] text-[#92400e]",
+};
+
+function PaymentBadge({ method }: { method?: string | null }) {
+  if (!method) return <span className="text-dark-5">-</span>;
+  const label = PAYMENT_METHOD_LABEL[method] ?? method;
+  const cls = PAYMENT_METHOD_CLASS[method] ?? "bg-[#f3f4f6] text-[#374151]";
+  return (
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold ${cls}`}>
+      {label}
+    </span>
+  );
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -224,6 +248,7 @@ export function OrderManager() {
                   <th className="px-5 py-4 font-medium">คำสั่งซื้อ</th>
                   <th className="px-5 py-4 font-medium">สมาชิก</th>
                   <th className="px-5 py-4 font-medium">ยอดรวม</th>
+                  <th className="hidden px-5 py-4 font-medium md:table-cell">ช่องทาง</th>
                   <th className="px-5 py-4 font-medium">วันที่</th>
                   <th className="px-5 py-4 font-medium">สถานะ</th>
                 </tr>
@@ -238,6 +263,7 @@ export function OrderManager() {
                     <td className="px-5 py-4 font-semibold text-dark dark:text-white">{order.orderNumber}</td>
                     <td className="px-5 py-4">{order.member?.fullName ?? order.member?.email ?? "-"}</td>
                     <td className="px-5 py-4">{fmt(order.totalAmount)}</td>
+                    <td className="hidden px-5 py-4 md:table-cell"><PaymentBadge method={order.paymentMethod} /></td>
                     <td className="px-5 py-4">{order.createdAt ? fmtDate(order.createdAt) : "-"}</td>
                     <td className="px-5 py-4">
                       <StatusPill label={STATUS_LABELS[order.status] ?? order.status} tone={statusTone(order.status)} />
@@ -336,6 +362,12 @@ export function OrderManager() {
                           <span className="font-semibold text-dark dark:text-white">รวมทั้งหมด</span>
                           <span className="text-lg font-bold text-[#2f7a4f]">{fmt(detail.totalAmount)}</span>
                         </div>
+                        {detail.paymentMethod && (
+                          <div className="flex items-center justify-between pt-1">
+                            <span className="text-sm text-dark-5">ช่องทางชำระเงิน</span>
+                            <PaymentBadge method={detail.paymentMethod} />
+                          </div>
+                        )}
                       </div>
                     </div>
 
