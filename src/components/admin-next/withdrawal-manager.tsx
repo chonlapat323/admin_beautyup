@@ -11,6 +11,9 @@ type WithdrawalItem = {
   amount: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   note: string | null;
+  bankName: string | null;
+  bankAccountNumber: string | null;
+  bankAccountName: string | null;
   processedAt: string | null;
   createdAt: string;
 };
@@ -135,13 +138,14 @@ export function WithdrawalManager() {
 
         {/* Table */}
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
-          <table className="w-full min-w-[500px] text-left">
+          <table className="w-full min-w-[640px] text-left">
             <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
                 <th className="px-4 py-3 font-medium">สมาชิก</th>
                 <th className="px-4 py-3 font-medium">จำนวน</th>
+                <th className="hidden px-4 py-3 font-medium md:table-cell">บัญชีรับเงิน</th>
                 <th className="px-4 py-3 font-medium">สถานะ</th>
-                <th className="hidden px-4 py-3 font-medium sm:table-cell">วันที่ขอ</th>
+                <th className="px-4 py-3 font-medium">วันที่ขอ</th>
                 <th className="px-4 py-3 font-medium">จัดการ</th>
               </tr>
             </thead>
@@ -149,7 +153,7 @@ export function WithdrawalManager() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-t border-stroke dark:border-dark-3">
-                    {Array.from({ length: 5 }).map((__, j) => (
+                    {Array.from({ length: 6 }).map((__, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
                       </td>
@@ -158,7 +162,7 @@ export function WithdrawalManager() {
                 ))
               ) : items.length === 0 ? (
                 <tr>
-                  <td className="px-4 py-8 text-center text-sm text-dark-5" colSpan={5}>
+                  <td className="px-4 py-8 text-center text-sm text-dark-5" colSpan={6}>
                     ไม่พบรายการ
                   </td>
                 </tr>
@@ -172,14 +176,34 @@ export function WithdrawalManager() {
                     <td className="px-4 py-3 font-semibold text-[#45745a]">
                       {formatAmount(item.amount)}
                     </td>
+                    <td className="hidden px-4 py-3 md:table-cell">
+                      {item.bankName ? (
+                        <div>
+                          <div className="font-medium text-dark dark:text-white">{item.bankName}</div>
+                          <div className="font-mono text-xs text-dark-5">{item.bankAccountNumber}</div>
+                          <div className="text-xs text-dark-5">{item.bankAccountName}</div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-dark-5">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <StatusPill label={statusLabel(item.status)} tone={statusTone(item.status)} />
                       {item.note && (
                         <div className="mt-1 text-xs text-dark-5">{item.note}</div>
                       )}
                     </td>
-                    <td className="hidden px-4 py-3 text-dark-5 sm:table-cell">
-                      {new Date(item.createdAt).toLocaleDateString("th-TH")}
+                    <td className="px-4 py-3 text-dark-5">
+                      <div>{new Date(item.createdAt).toLocaleDateString("th-TH")}</div>
+                      <div className="text-xs">
+                        {new Date(item.createdAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                      {item.status !== "PENDING" && item.processedAt && (
+                        <div className="mt-1 text-xs text-dark-5">
+                          ดำเนินการ: {new Date(item.processedAt).toLocaleDateString("th-TH")}{" "}
+                          {new Date(item.processedAt).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })}
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {item.status === "PENDING" && (
@@ -199,11 +223,6 @@ export function WithdrawalManager() {
                             ปฏิเสธ
                           </button>
                         </div>
-                      )}
-                      {item.status !== "PENDING" && item.processedAt && (
-                        <span className="text-xs text-dark-5">
-                          {new Date(item.processedAt).toLocaleDateString("th-TH")}
-                        </span>
                       )}
                     </td>
                   </tr>
