@@ -207,6 +207,7 @@ export function WithdrawalManager() {
   const [isLoading, setIsLoading] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<WithdrawalItem | null>(null);
+  const [confirmApproveItem, setConfirmApproveItem] = useState<WithdrawalItem | null>(null);
   const [rejectNote, setRejectNote] = useState("");
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
 
@@ -230,6 +231,7 @@ export function WithdrawalManager() {
       const res = await fetch(`/api/withdrawals/${id}/approve`, { method: "PATCH" });
       if (!res.ok) throw new Error("ไม่สามารถอนุมัติได้");
       showToast("อนุมัติการถอน credit แล้ว", "success");
+      setConfirmApproveItem(null);
       setSelectedItem(null);
       void load();
     } catch (err) {
@@ -384,7 +386,7 @@ export function WithdrawalManager() {
                         {item.status === "PENDING" && (
                           <div className="flex flex-wrap gap-2">
                             <button
-                              onClick={() => void handleApprove(item.id)}
+                              onClick={() => setConfirmApproveItem(item)}
                               disabled={actionId === item.id}
                               className="rounded-full bg-[#45745a] px-3 py-1 text-xs font-semibold text-white hover:bg-[#355846] disabled:opacity-50"
                             >
@@ -422,10 +424,68 @@ export function WithdrawalManager() {
         <WithdrawalDetailModal
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
-          onApprove={(id) => void handleApprove(id)}
+          onApprove={(id) => { const it = items.find((i) => i.id === id); if (it) setConfirmApproveItem(it); setSelectedItem(null); }}
           onReject={(id) => { setRejectTargetId(id); setRejectNote(""); setSelectedItem(null); }}
           actionId={actionId}
         />
+      )}
+
+      {/* Approve confirm modal */}
+      {confirmApproveItem && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-[#0f172a]/55 px-4">
+          <div className="w-full max-w-md rounded-[28px] border border-[#b7ddc7] bg-white p-6 shadow-1 dark:border-dark-3 dark:bg-gray-dark">
+            <h3 className="text-xl font-bold text-dark dark:text-white">ยืนยันการอนุมัติ</h3>
+            <p className="mt-1 text-sm text-dark-5">ตรวจสอบข้อมูลก่อนยืนยันการโอนเงิน</p>
+
+            {/* Amount */}
+            <div className="mt-4 rounded-2xl bg-[#f0faf4] border border-[#b7ddc7] px-5 py-4 text-center">
+              <div className="text-xs text-[#2f7a4f] font-semibold uppercase tracking-wide">จำนวนที่ต้องโอน</div>
+              <div className="mt-1 text-3xl font-bold text-[#45745a]">{formatAmount(confirmApproveItem.amount)}</div>
+              <div className="mt-1 text-sm text-dark-5">ให้กับ {confirmApproveItem.member.fullName}</div>
+            </div>
+
+            {/* Bank details */}
+            <div className="mt-4 rounded-2xl border border-stroke bg-neutral-50 px-4 py-3 space-y-2 dark:border-dark-3 dark:bg-dark-2">
+              <div className="text-xs font-semibold uppercase tracking-wide text-dark-5">บัญชีปลายทาง</div>
+              {confirmApproveItem.bankName ? (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-dark-5">ธนาคาร</span>
+                    <span className="text-sm font-semibold text-dark dark:text-white">{confirmApproveItem.bankName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-dark-5">เลขที่บัญชี</span>
+                    <span className="font-mono text-sm font-semibold text-dark dark:text-white">{confirmApproveItem.bankAccountNumber}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-dark-5">ชื่อบัญชี</span>
+                    <span className="text-sm font-semibold text-dark dark:text-white">{confirmApproveItem.bankAccountName}</span>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-[#c84b44]">ไม่มีข้อมูลบัญชีธนาคาร</p>
+              )}
+            </div>
+
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button
+                className="rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6]"
+                onClick={() => setConfirmApproveItem(null)}
+                type="button"
+              >
+                ยกเลิก
+              </button>
+              <button
+                className="rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white hover:bg-[#355846] disabled:opacity-70"
+                disabled={actionId === confirmApproveItem.id}
+                onClick={() => void handleApprove(confirmApproveItem.id)}
+                type="button"
+              >
+                {actionId === confirmApproveItem.id ? "กำลังดำเนินการ..." : "ยืนยันอนุมัติ"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Reject modal */}
