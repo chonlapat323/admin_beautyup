@@ -68,6 +68,7 @@ function SelectField<T extends string | number>({
 
 type CommissionItem = {
   id: string;
+  orderId: string;
   earner: { id: string; fullName: string; memberType: "REGULAR" | "SALON" };
   order: { orderNumber: string; totalAmount: string };
   orderAmount: string;
@@ -76,6 +77,22 @@ type CommissionItem = {
   status: "PENDING" | "PAID" | "CANCELLED";
   paidAt: string | null;
   createdAt: string;
+};
+
+type OrderDetail = {
+  orderNumber: string;
+  subtotalAmount: number | string;
+  shippingAmount: number | string;
+  gatewayFee: number | string;
+  totalAmount: number | string;
+  items: {
+    id: string;
+    name: string;
+    sku: string;
+    quantity: number;
+    unitPrice: number | string;
+    totalPrice: number | string;
+  }[];
 };
 
 type Meta = { page: number; pageSize: number; totalItems: number; totalPages: number };
@@ -157,6 +174,8 @@ export function CommissionManager() {
   const [isLoading, setIsLoading] = useState(false);
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [orderDetail, setOrderDetail] = useState<{ commission: CommissionItem; order: OrderDetail } | null>(null);
+  const [isLoadingOrder, setIsLoadingOrder] = useState(false);
 
   // settings
   const [salonRate, setSalonRate] = useState<number>(10);
@@ -252,6 +271,19 @@ export function CommissionManager() {
       showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error");
     } finally {
       setIsCancelling(false);
+    }
+  }
+
+  async function openOrderDetail(item: CommissionItem) {
+    setIsLoadingOrder(true);
+    try {
+      const r = await fetch(`/api/orders/${item.orderId}`);
+      const data = await r.json() as OrderDetail;
+      setOrderDetail({ commission: item, order: data });
+    } catch {
+      showToast("ไม่สามารถโหลดรายละเอียดออเดอร์ได้", "error");
+    } finally {
+      setIsLoadingOrder(false);
     }
   }
 
@@ -423,7 +455,16 @@ export function CommissionManager() {
                         {item.earner.memberType === "SALON" ? "Salon" : "Regular"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs">{item.order.orderNumber}</td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => void openOrderDetail(item)}
+                        disabled={isLoadingOrder}
+                        className="font-mono text-xs text-[#2563a8] underline-offset-2 hover:underline disabled:opacity-50"
+                        type="button"
+                      >
+                        {item.order.orderNumber}
+                      </button>
+                    </td>
                     <td className="hidden px-4 py-3 md:table-cell">{Number(item.rate)}%</td>
                     <td className="px-4 py-3 font-semibold text-[#45745a]">
                       {formatAmount(item.amount)}
@@ -490,6 +531,140 @@ export function CommissionManager() {
             document.body,
           )
         : null}
+
+      {orderDetail
+        ? createPortal(
+            <OrderDetailModal
+              commission={orderDetail.commission}
+              order={orderDetail.order}
+              onClose={() => setOrderDetail(null)}
+            />,
+            document.body,
+          )
+        : null}
     </>
+  );
+}
+
+function fmt(n: number | string) {
+  return `฿${Number(n).toLocaleString("th-TH", { minimumFractionDigits: 2 })}`;
+}
+
+function OrderDetailModal({
+  commission,
+  order,
+  onClose,
+}: {
+  commission: CommissionItem;
+  order: OrderDetail;
+  onClose: () => void;
+}) {
+  const orderTotal = Number(order.totalAmount);
+  const rate = Number(commission.rate);
+  const commissionAmt = Number(commission.amount);
+
+  return (
+    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-[#0f172a]/55 px-4 py-8">
+      <div
+        className="w-full max-w-lg overflow-y-auto rounded-[30px] border border-[#dce9e1] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark"
+        style={{ maxHeight: "90vh" }}
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 border-b border-[#edf4ef] px-7 py-6 dark:border-dark-3">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-[#5f8f74]">รายละเอียดออเดอร์</p>
+            <h3 className="mt-1 font-mono text-xl font-bold text-dark dark:text-white">{order.orderNumber}</h3>
+            <p className="mt-0.5 text-sm text-dark-5">Commission ของ {commission.earner.fullName}</p>
+          </div>
+          <button
+            className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+            onClick={onClose}
+            type="button"
+          >
+            ปิด
+          </button>
+        </div>
+
+        <div className="space-y-5 px-7 py-6">
+          {/* Order items */}
+          <div>
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-[#5f8f74]">
+              รายการสินค้า ({order.items.length} รายการ)
+            </p>
+            <div className="overflow-hidden rounded-2xl border border-stroke dark:border-dark-3">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">สินค้า</th>
+                    <th className="px-4 py-3 font-medium text-right">จำนวน</th>
+                    <th className="px-4 py-3 font-medium text-right">ราคา/ชิ้น</th>
+                    <th className="px-4 py-3 font-medium text-right">รวม</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stroke dark:divide-dark-3">
+                  {order.items.map((item) => (
+                    <tr key={item.id} className="text-dark-5 dark:text-dark-6">
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-dark dark:text-white">{item.name}</p>
+                        <p className="text-xs text-dark-5">{item.sku}</p>
+                      </td>
+                      <td className="px-4 py-3 text-right">{item.quantity}</td>
+                      <td className="px-4 py-3 text-right">{fmt(item.unitPrice)}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-dark dark:text-white">{fmt(item.totalPrice)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Order summary */}
+          <div className="rounded-2xl border border-stroke bg-[#f8fbf9] px-5 py-4 dark:border-dark-3 dark:bg-dark-2">
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-[#5f8f74]">สรุปยอดออเดอร์</p>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-dark-5">ยอดสินค้า</span>
+                <span className="text-dark dark:text-white">{fmt(order.subtotalAmount)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-dark-5">ค่าจัดส่ง</span>
+                <span className="text-dark dark:text-white">{fmt(order.shippingAmount)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-dark-5">ค่าธรรมเนียม</span>
+                <span className="text-dark dark:text-white">{fmt(order.gatewayFee ?? 0)}</span>
+              </div>
+              <div className="flex justify-between border-t border-stroke pt-2 dark:border-dark-3">
+                <span className="font-semibold text-dark dark:text-white">ยอดรวม</span>
+                <span className="font-bold text-dark dark:text-white">{fmt(order.totalAmount)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Commission calculation */}
+          <div className="rounded-2xl border border-[#b7ddc7] bg-[#f0faf4] px-5 py-4">
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-[#5f8f74]">การคำนวณ Commission</p>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-dark-5">ยอดออเดอร์ที่ใช้คำนวณ</span>
+                <span className="font-medium text-dark">{fmt(commission.orderAmount)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-dark-5">
+                  อัตรา ({commission.earner.memberType === "SALON" ? "Salon" : "Regular"})
+                </span>
+                <span className="font-medium text-dark">{rate}%</span>
+              </div>
+              <div className="flex justify-between border-t border-[#b7ddc7] pt-2">
+                <span className="font-semibold text-dark">
+                  {fmt(commission.orderAmount)} × {rate}% =
+                </span>
+                <span className="text-lg font-bold text-[#2a7a4b]">{fmt(commissionAmt)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
