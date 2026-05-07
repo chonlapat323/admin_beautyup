@@ -4,10 +4,11 @@ function backend() {
   return process.env.ADMIN_API_URL || process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000/api";
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   try {
     const body = await req.json().catch(() => ({}));
-    const response = await fetch(`${backend()}/commissions/withdrawals/${params.id}/reject`, {
+    const response = await fetch(`${backend()}/commissions/withdrawals/${id}/reject`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
