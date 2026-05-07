@@ -1340,11 +1340,12 @@ export type CommissionStatsResult = {
 export async function getCommissionStats(): Promise<CommissionStatsResult> {
   try {
     const today = new Date().toISOString().slice(0, 10);
-    const data = await fetchFromApi<ApiCommissionListResponse>(
-      `/commissions?pageSize=200&from=${today}&to=${today}`,
+    const data = await fetchFromApi<{ bucket: string; count: number; totalAmount: number }[]>(
+      `/commissions/report?period=day&from=${today}&to=${today}`,
     );
-    const todayTotal = data.items.reduce((s, c) => s + Number(c.amount), 0);
-    return { todayCount: data.items.length, todayTotal, source: "api" };
+    const todayCount = data.reduce((s, r) => s + r.count, 0);
+    const todayTotal = data.reduce((s, r) => s + r.totalAmount, 0);
+    return { todayCount, todayTotal, source: "api" };
   } catch {
     return { todayCount: 0, todayTotal: 0, source: "mock" };
   }
