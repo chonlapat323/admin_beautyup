@@ -364,8 +364,13 @@ export function WithdrawalManager() {
                       </td>
                       <td className="px-4 py-3">
                         <StatusPill label={statusLabel(item.status)} tone={statusTone(item.status)} />
+                        {item.processedByEmail && (
+                          <div className="mt-1 text-xs text-dark-5">
+                            โดย: <span className="font-medium">{item.processedByEmail}</span>
+                          </div>
+                        )}
                         {item.note && (
-                          <div className="mt-1 max-w-[120px] truncate text-xs text-dark-5">{item.note}</div>
+                          <div className="mt-0.5 max-w-[140px] truncate text-xs text-[#c84b44]">{item.note}</div>
                         )}
                       </td>
                       <td className="px-4 py-3 text-dark-5">
