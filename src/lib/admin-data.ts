@@ -87,9 +87,9 @@ export const orders = [
 ];
 
 export const payments = [
-  { method: "PromptPay QR", orders: 162, successRate: "98.1%", note: "ช่องทางหลักสำหรับการชำระเงินผ่านมือถือ" },
-  { method: "บัตรเครดิต / เดบิต", orders: 94, successRate: "96.4%", note: "รองรับการชำระเงินแบบพรีเมียม" },
-  { method: "TrueMoney Wallet", orders: 68, successRate: "95.8%", note: "ได้รับความนิยมในกลุ่มสมาชิกที่กลับมาซื้อซ้ำ" },
+  { method: "PROMPTPAY", orders: 0, successRate: "-" },
+  { method: "CARD", orders: 0, successRate: "-" },
+  { method: "CREDIT", orders: 0, successRate: "-" },
 ];
 
 export const reportCards = [

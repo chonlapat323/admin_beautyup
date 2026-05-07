@@ -2,12 +2,9 @@ import { ContentCard } from "@/components/admin-next/page-elements";
 import { getPayments } from "@/lib/admin-api";
 
 const METHOD_LABELS: Record<string, string> = {
-  PROMPTPAY_QR: "พร้อมเพย์ QR",
   CARD: "บัตรเครดิต / เดบิต",
-  BANK_TRANSFER: "โอนเงินผ่านธนาคาร",
-  CASH: "เงินสด",
-  OMISE: "Omise",
-  CREDIT_CARD: "บัตรเครดิต",
+  PROMPTPAY: "PromptPay QR",
+  CREDIT: "Credit Wallet",
 };
 
 function thb(n: number) {
