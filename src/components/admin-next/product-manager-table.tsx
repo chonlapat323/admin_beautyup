@@ -81,6 +81,9 @@ const PRODUCT_STATUS_OPTIONS: SelectOption<ProductStatus>[] = [
   { label: "ปิดใช้งาน", value: "INACTIVE" },
 ];
 
+// Number of always-visible + responsive columns
+const NUM_COLS = 8;
+
 function formatProductDate(value?: string | null) {
   if (!value) return "-";
   return new Intl.DateTimeFormat("th-TH", {
@@ -176,20 +179,30 @@ function SelectField<T extends string | number>({
         <label className="mb-2 block text-sm font-medium text-dark dark:text-white">{label}</label>
       ) : null}
       <button
-        className="flex w-full items-center justify-between rounded-[20px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark transition-colors hover:border-[#bfd6c7] focus:border-[#5f8f74] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+        className="flex w-full items-center justify-between rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-2.5 text-sm text-dark transition-colors hover:border-[#bfd6c7] focus:border-[#5f8f74] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
         onClick={() => setIsOpen((c) => !c)}
         type="button"
       >
         <span>{selectedOption?.label}</span>
-        <span className={`text-xs text-dark-5 transition-transform ${isOpen ? "rotate-180" : ""}`}>▼</span>
+        <svg
+          className={`h-4 w-4 shrink-0 text-dark-5 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          viewBox="0 0 24 24"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
       </button>
       {isOpen ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-30 overflow-hidden rounded-[20px] border border-[#d8e6dd] bg-white shadow-1 dark:border-dark-3 dark:bg-dark-2">
+        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-2xl border border-[#d8e6dd] bg-white shadow-1 dark:border-dark-3 dark:bg-dark-2">
           {options.map((option) => {
             const isSelected = option.value === value;
             return (
               <button
-                className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors ${
+                className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors ${
                   isSelected
                     ? "bg-[#eef8f1] font-semibold text-[#355846]"
                     : "text-dark hover:bg-[#f8fbf9] dark:text-white dark:hover:bg-dark-3"
@@ -202,7 +215,11 @@ function SelectField<T extends string | number>({
                 type="button"
               >
                 <span>{option.label}</span>
-                {isSelected ? <span className="text-[#58cf94]">●</span> : null}
+                {isSelected ? (
+                  <svg className="h-4 w-4 text-[#45745a]" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 0 1 0 1.414l-8 8a1 1 0 0 1-1.414 0l-4-4a1 1 0 0 1 1.414-1.414L8 12.586l7.293-7.293a1 1 0 0 1 1.414 0Z" clipRule="evenodd" />
+                  </svg>
+                ) : null}
               </button>
             );
           })}
@@ -225,23 +242,39 @@ function ConfirmDeleteModal({
 }) {
   return (
     <div className="fixed inset-0 z-[130] flex items-center justify-center bg-[#0f172a]/55 px-4">
-      <div className="w-full max-w-md rounded-[28px] border border-[#eadbda] bg-white p-6 shadow-1 dark:border-dark-3 dark:bg-gray-dark">
-        <h3 className="text-xl font-bold text-dark dark:text-white">ยืนยันการลบสินค้า</h3>
-        <p className="mt-3 text-sm leading-6 text-dark-5 dark:text-dark-6">
-          ต้องการลบสินค้า{" "}
-          <span className="font-semibold text-dark dark:text-white">"{productName}"</span> ใช่หรือไม่?
-          การลบจะไม่สามารถกู้คืนได้
-        </p>
-        <div className="mt-6 flex flex-wrap justify-end gap-3">
+      <div className="w-full max-w-md rounded-[28px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark">
+        <div className="flex items-center justify-between border-b border-stroke px-6 py-4 dark:border-dark-3">
+          <h3 className="text-lg font-bold text-dark dark:text-white">ยืนยันการลบสินค้า</h3>
           <button
-            className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-dark-5 hover:bg-neutral-100 dark:hover:bg-dark-2"
+            onClick={onClose}
+            type="button"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="px-6 py-5">
+          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fef2f1]">
+            <svg className="h-5 w-5 text-[#b42318]" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+          </div>
+          <p className="text-sm leading-6 text-dark-5 dark:text-dark-6">
+            ต้องการลบสินค้า{" "}
+            <span className="font-semibold text-dark dark:text-white">"{productName}"</span> ใช่หรือไม่?
+            การลบจะไม่สามารถกู้คืนได้
+          </p>
+        </div>
+        <div className="flex justify-end gap-3 border-t border-stroke px-6 py-4 dark:border-dark-3">
+          <button
+            className="rounded-full border border-[#d7e7dc] px-5 py-2.5 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
             onClick={onClose}
             type="button"
           >
             ยกเลิก
           </button>
           <button
-            className="inline-flex items-center justify-center rounded-full bg-[#c84b44] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#ad3d37] disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded-full bg-[#c84b44] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#ad3d37] disabled:cursor-not-allowed disabled:opacity-70"
             disabled={isDeleting}
             onClick={() => void onConfirm()}
             type="button"
@@ -253,6 +286,9 @@ function ConfirmDeleteModal({
     </div>
   );
 }
+
+const INPUT_CLS = "w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-2.5 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white";
+const LABEL_CLS = "mb-1.5 block text-sm font-medium text-dark dark:text-white";
 
 function ProductFormModal({
   editingId,
@@ -305,46 +341,54 @@ function ProductFormModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/55 px-4 py-8">
-      <div className="w-full max-w-2xl overflow-y-auto rounded-[30px] border border-[#dce9e1] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark" style={{ maxHeight: "90vh" }}>
-        <div className="flex items-start justify-between gap-4 border-b border-[#edf4ef] px-7 py-6 dark:border-dark-3">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/55 px-4 py-6">
+      <div
+        className="flex w-full max-w-2xl flex-col rounded-[28px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark"
+        style={{ maxHeight: "92vh" }}
+      >
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between border-b border-stroke px-6 py-4 dark:border-dark-3">
           <div>
-            <h3 className="text-2xl font-bold text-dark dark:text-white">
-              {editingId ? "แก้ไขสินค้า" : "เพิ่มสินค้า"}
+            <h3 className="text-lg font-bold text-dark dark:text-white">
+              {editingId ? "แก้ไขสินค้า" : "เพิ่มสินค้าใหม่"}
             </h3>
-            <p className="mt-2 text-sm leading-6 text-dark-5 dark:text-dark-6">
-              กรอกข้อมูลพื้นฐานของสินค้าเพื่อเริ่มต้นใช้งาน
+            <p className="mt-0.5 text-xs text-dark-5 dark:text-dark-6">
+              {editingId ? "แก้ไขข้อมูลสินค้าที่เลือก" : "กรอกข้อมูลพื้นฐานเพื่อสร้างสินค้า"}
             </p>
           </div>
           <button
-            className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-dark-5 transition-colors hover:bg-neutral-100 dark:hover:bg-dark-2"
             onClick={onClose}
             type="button"
           >
-            ปิด
+            ✕
           </button>
         </div>
 
-        <form className="space-y-5 px-7 py-7" onSubmit={onSubmit}>
-          <div className="grid gap-5 sm:grid-cols-2">
+        {/* Scrollable body */}
+        <form
+          className="flex-1 space-y-4 overflow-y-auto px-6 py-5"
+          id="product-form"
+          onSubmit={onSubmit}
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+              <label className={LABEL_CLS}>
                 ชื่อสินค้า <span className="text-red-500">*</span>
               </label>
               <input
-                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                className={INPUT_CLS}
                 onChange={(e) => onChange({ name: e.target.value })}
                 placeholder="เช่น Koleston Perfect"
                 value={form.name}
               />
             </div>
-
             <div>
-              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+              <label className={LABEL_CLS}>
                 SKU <span className="text-red-500">*</span>
               </label>
               <input
-                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                className={INPUT_CLS}
                 onChange={(e) => onChange({ sku: e.target.value })}
                 placeholder="เช่น BU-CLR-001"
                 value={form.sku}
@@ -353,11 +397,11 @@ function ProductFormModal({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+            <label className={LABEL_CLS}>
               Slug <span className="text-red-500">*</span>
             </label>
             <input
-              className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+              className={INPUT_CLS}
               onChange={(e) => onChange({ slug: e.target.value })}
               placeholder="เช่น koleston-perfect"
               value={form.slug}
@@ -372,7 +416,7 @@ function ProductFormModal({
           />
 
           {requiresShade ? (
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               <SelectField
                 label="กลุ่มเฉดสี *"
                 options={shadeGroupOptions}
@@ -388,13 +432,13 @@ function ProductFormModal({
             </div>
           ) : null}
 
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+              <label className={LABEL_CLS}>
                 ราคา (บาท) <span className="text-red-500">*</span>
               </label>
               <input
-                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                className={INPUT_CLS}
                 min="0"
                 onChange={(e) => onChange({ price: e.target.value })}
                 placeholder="0"
@@ -403,13 +447,10 @@ function ProductFormModal({
                 value={form.price}
               />
             </div>
-
             <div>
-              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-                ราคาพิเศษ (บาท)
-              </label>
+              <label className={LABEL_CLS}>ราคาพิเศษ (บาท)</label>
               <input
-                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                className={INPUT_CLS}
                 min="0"
                 onChange={(e) => onChange({ specialPrice: e.target.value })}
                 placeholder="ไม่บังคับ"
@@ -418,13 +459,10 @@ function ProductFormModal({
                 value={form.specialPrice}
               />
             </div>
-          </div>
-
-          <div className="grid gap-5 sm:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">สต็อก</label>
+              <label className={LABEL_CLS}>สต็อก</label>
               <input
-                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                className={INPUT_CLS}
                 min="0"
                 onChange={(e) => onChange({ stock: e.target.value })}
                 placeholder="0"
@@ -432,19 +470,19 @@ function ProductFormModal({
                 value={form.stock}
               />
             </div>
-
-            <SelectField
-              label="สถานะ"
-              options={PRODUCT_STATUS_OPTIONS}
-              onChange={(v) => onChange({ status: v })}
-              value={form.status}
-            />
           </div>
 
+          <SelectField
+            label="สถานะ"
+            options={PRODUCT_STATUS_OPTIONS}
+            onChange={(v) => onChange({ status: v })}
+            value={form.status}
+          />
+
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark dark:text-white">คำอธิบาย</label>
+            <label className={LABEL_CLS}>คำอธิบาย</label>
             <textarea
-              className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+              className={INPUT_CLS}
               onChange={(e) => onChange({ description: e.target.value })}
               placeholder="คำอธิบายสินค้า (ไม่บังคับ)"
               rows={3}
@@ -452,67 +490,70 @@ function ProductFormModal({
             />
           </div>
 
-          <div className="flex items-center justify-between rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 dark:border-dark-3 dark:bg-dark-2">
+          {/* Featured toggle */}
+          <div className="flex items-center justify-between rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 dark:border-dark-3 dark:bg-dark-2">
             <div>
               <p className="text-sm font-medium text-dark dark:text-white">แนะนำในหน้าแรก</p>
-              <p className="mt-0.5 text-xs text-dark-5">สินค้านี้จะแสดงในส่วน "The Selection" ของ mobile app</p>
+              <p className="mt-0.5 text-xs text-dark-5">แสดงในส่วน "The Selection" ของ mobile app</p>
             </div>
             <button
-              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${form.isFeatured ? "bg-[#58cf94]" : "bg-[#d7e2db]"}`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.isFeatured ? "bg-[#45745a]" : "bg-[#d7e2db]"}`}
               onClick={() => onChange({ isFeatured: !form.isFeatured })}
               type="button"
             >
-              <span className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${form.isFeatured ? "translate-x-6" : "translate-x-1"}`} />
+              <span className={`inline-block h-4.5 w-4.5 rounded-full bg-white shadow transition-transform ${form.isFeatured ? "translate-x-5.5" : "translate-x-0.5"}`} />
             </button>
           </div>
 
+          {/* Badge */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-dark dark:text-white">Badge สินค้า</label>
+            <label className={LABEL_CLS}>Badge สินค้า</label>
             <select
-              className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+              className={INPUT_CLS}
               onChange={(e) => onChange({ tag: e.target.value })}
               value={form.tag}
             >
-              <option value="">ไม่มี badge</option>
+              <option value="">ไม่มี Badge</option>
               <option value="NEW">NEW — สินค้าใหม่</option>
               <option value="BEST SELLER">BEST SELLER — ขายดี</option>
             </select>
           </div>
 
+          {/* Images */}
           <div>
-            <label className="mb-3 block text-sm font-medium text-dark dark:text-white">รูปภาพสินค้า</label>
+            <label className={LABEL_CLS}>รูปภาพสินค้า</label>
             <ProductImageManager
               images={previewImages}
               onFilesDropped={onFilesDropped}
               onRemove={onRemoveImage}
               onReorder={onReorderImages}
             />
-            <p className="mt-2 text-xs text-dark-5">รองรับ JPG, PNG, WEBP, GIF ขนาดสูงสุด 5MB · ลากเพื่อเรียงลำดับ</p>
-          </div>
-
-          <div className="flex flex-wrap gap-3 pt-2">
-            <button
-              className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:cursor-not-allowed disabled:opacity-70"
-              disabled={isSubmitting}
-              type="submit"
-            >
-              {isSubmitting
-                ? editingId
-                  ? "กำลังบันทึก..."
-                  : "กำลังเพิ่ม..."
-                : editingId
-                  ? "บันทึกการเปลี่ยนแปลง"
-                  : "เพิ่มสินค้า"}
-            </button>
-            <button
-              className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
-              onClick={onClose}
-              type="button"
-            >
-              ยกเลิก
-            </button>
+            <p className="mt-2 text-xs text-dark-5">
+              รองรับ JPG, PNG, WEBP, GIF ขนาดสูงสุด 5MB · ลากเพื่อเรียงลำดับ
+            </p>
           </div>
         </form>
+
+        {/* Footer */}
+        <div className="flex shrink-0 justify-end gap-3 border-t border-stroke px-6 py-4 dark:border-dark-3">
+          <button
+            className="rounded-full border border-[#d7e7dc] px-5 py-2.5 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+            onClick={onClose}
+            type="button"
+          >
+            ยกเลิก
+          </button>
+          <button
+            className="rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={isSubmitting}
+            form="product-form"
+            type="submit"
+          >
+            {isSubmitting
+              ? editingId ? "กำลังบันทึก..." : "กำลังเพิ่ม..."
+              : editingId ? "บันทึกการเปลี่ยนแปลง" : "เพิ่มสินค้า"}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -640,7 +681,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
   }
 
   function closeModal() {
-    // Clean up any temp files that were uploaded but not saved
     for (const img of previewImages) {
       if (img.kind === "temp" && img.tempFilename) {
         void fetch(`/api/uploads/temp/${img.tempFilename}`, { method: "DELETE" }).catch(() => {});
@@ -668,7 +708,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
     });
     if (product.shadeGroupId) setFormShadeGroupId(product.shadeGroupId);
     setIsModalOpen(true);
-    // Load existing images
     void fetch(`/api/products/${product.id}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((data: ApiProduct) => {
@@ -687,7 +726,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
   }
 
   async function handleFilesDropped(files: File[]) {
-    // Upload all files in parallel; each starts with a placeholder
     await Promise.all(
       files.map(async (file) => {
         const key = `temp-${Date.now()}-${Math.random()}`;
@@ -761,8 +799,8 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
       }
 
       const readyImages = previewImages.filter((img) => !img.uploading && !img.error);
-
       const selectedCat = formCategories.find((c) => c.id === form.categoryId);
+
       const payload: ProductFormPayload = {
         name: form.name.trim(),
         slug: form.slug.trim() ? slugify(form.slug) : slugify(form.name),
@@ -804,17 +842,14 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
 
   async function handleToggleStatus(product: ProductRecord) {
     const nextStatus: ProductStatus = product.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-
     try {
       const response = await updateProductStatus(product.id, nextStatus);
       const updatedStatus = response.status;
-
       setProducts((current) =>
         current.map((p) =>
           p.id === product.id ? { ...p, status: updatedStatus, updatedAt: formatProductDate(response.updatedAt) } : p,
         ),
       );
-
       showToast(updatedStatus === "ACTIVE" ? "เผยแพร่สินค้าแล้ว" : "ปิดใช้งานสินค้าแล้ว", "success");
     } catch (err) {
       showToast(err instanceof Error ? err.message : "ไม่สามารถเปลี่ยนสถานะสินค้าได้", "error");
@@ -828,7 +863,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
   async function handleConfirmDelete() {
     if (!productToDelete) return;
     setIsDeleting(true);
-
     try {
       await deleteProduct(productToDelete.id);
       showToast("ลบสินค้าสำเร็จ", "warning");
@@ -846,10 +880,9 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
     <>
       <ContentCard
         title="จัดการสินค้า"
-        description="ค้นหา กรองข้อมูล และแบ่งหน้าได้จากหน้าจัดการเดียว"
         aside={
           <button
-            className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
+            className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
             onClick={openCreateModal}
             type="button"
           >
@@ -857,97 +890,171 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
           </button>
         }
       >
-        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-4xl lg:grid-cols-[minmax(0,1fr)_200px_160px_130px]">
+        {/* Filter bar */}
+        <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_180px_160px_130px]">
+          {/* Search */}
+          <div className="relative">
+            <svg
+              className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-5"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
             <input
-              className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+              className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] py-2.5 pl-9 pr-4 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
               onChange={(e) => { setPage(1); setSearchTerm(e.target.value); }}
               placeholder="ค้นหาชื่อสินค้าหรือ SKU"
               value={searchTerm}
             />
-            <SelectField
-              options={STATUS_OPTIONS}
-              onChange={(v) => { setPage(1); setStatusFilter(v); }}
-              value={statusFilter}
-            />
-            <SelectField
-              options={[{ label: "ทุกประเภท", value: "all" }, { label: "แนะนำหน้าแรก", value: "featured" }]}
-              onChange={(v: "all" | "featured") => { setPage(1); setFeaturedFilter(v); }}
-              value={featuredFilter}
-            />
-            <SelectField
-              options={PAGE_SIZE_OPTIONS}
-              onChange={(v) => { setPage(1); setPageSize(v); }}
-              value={pageSize}
-            />
           </div>
+          <SelectField
+            options={STATUS_OPTIONS}
+            onChange={(v) => { setPage(1); setStatusFilter(v); }}
+            value={statusFilter}
+          />
+          <SelectField
+            options={[{ label: "ทุกประเภท", value: "all" }, { label: "แนะนำหน้าแรก", value: "featured" }]}
+            onChange={(v: "all" | "featured") => { setPage(1); setFeaturedFilter(v); }}
+            value={featuredFilter}
+          />
+          <SelectField
+            options={PAGE_SIZE_OPTIONS}
+            onChange={(v) => { setPage(1); setPageSize(v); }}
+            value={pageSize}
+          />
         </div>
 
+        {/* Table */}
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
-          <table className="w-full min-w-[360px] text-left">
-            <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
+          <table className="w-full min-w-[640px] text-left">
+            <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
-                <th className="hidden px-5 py-4 font-medium md:table-cell">ลำดับ</th>
-                <th className="px-5 py-4 font-medium">รูป</th>
-                <th className="hidden px-5 py-4 font-medium sm:table-cell">SKU</th>
-                <th className="px-5 py-4 font-medium">ชื่อสินค้า</th>
-                <th className="hidden px-5 py-4 font-medium lg:table-cell">หมวดหมู่</th>
-                <th className="hidden px-5 py-4 font-medium xl:table-cell">เฉดสี</th>
-                <th className="px-5 py-4 font-medium">ราคา</th>
-                <th className="hidden px-5 py-4 font-medium lg:table-cell">สต็อก</th>
-                <th className="px-5 py-4 font-medium">สถานะ</th>
-                <th className="hidden px-5 py-4 font-medium xl:table-cell">แนะนำ</th>
-                <th className="hidden px-5 py-4 font-medium xl:table-cell">Badge</th>
-                <th className="px-5 py-4 font-medium">จัดการ</th>
+                <th className="px-4 py-3 font-semibold">รูป</th>
+                <th className="w-full px-4 py-3 font-semibold">สินค้า / SKU</th>
+                <th className="whitespace-nowrap px-4 py-3 font-semibold">ราคา</th>
+                <th className="hidden px-4 py-3 font-semibold md:table-cell">สต็อก</th>
+                <th className="hidden px-4 py-3 font-semibold lg:table-cell">หมวดหมู่</th>
+                <th className="px-4 py-3 font-semibold">สถานะ</th>
+                <th className="hidden px-4 py-3 font-semibold xl:table-cell">แนะนำ / Badge</th>
+                <th className="px-4 py-3 font-semibold">จัดการ</th>
               </tr>
             </thead>
             <tbody>
-              {tableRows.map((product) => (
+              {/* Loading skeleton */}
+              {isLoading && Array.from({ length: 5 }).map((_, i) => (
+                <tr key={`sk-${i}`} className="border-t border-stroke dark:border-dark-3">
+                  <td className="px-4 py-3">
+                    <div className="h-10 w-10 animate-pulse rounded-lg bg-neutral-100 dark:bg-dark-2" />
+                  </td>
+                  <td className="w-full px-4 py-3">
+                    <div className="space-y-1.5">
+                      <div className="h-3.5 w-3/4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+                      <div className="h-3 w-1/3 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-3.5 w-14 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+                  </td>
+                  <td className="hidden px-4 py-3 md:table-cell">
+                    <div className="h-3.5 w-10 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+                  </td>
+                  <td className="hidden px-4 py-3 lg:table-cell">
+                    <div className="h-3.5 w-20 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-6 w-10 animate-pulse rounded-full bg-neutral-100 dark:bg-dark-2" />
+                  </td>
+                  <td className="hidden px-4 py-3 xl:table-cell">
+                    <div className="h-5 w-16 animate-pulse rounded-full bg-neutral-100 dark:bg-dark-2" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="h-6 w-16 animate-pulse rounded-full bg-neutral-100 dark:bg-dark-2" />
+                  </td>
+                </tr>
+              ))}
+
+              {/* Data rows */}
+              {!isLoading && tableRows.map((product) => (
                 <tr
                   key={product.id}
-                  className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6"
+                  className="border-t border-stroke text-sm transition-colors hover:bg-[#fafcfb] dark:border-dark-3 dark:hover:bg-dark-2/50"
                 >
-                  <td className="hidden px-5 py-4 md:table-cell">{product.no}</td>
-                  <td className="px-3 py-2">
+                  {/* Thumbnail */}
+                  <td className="px-4 py-3">
                     {product.thumbnail ? (
-                      <button type="button" onClick={() => setLightboxUrl(product.thumbnail)}>
+                      <button
+                        className="block transition-opacity hover:opacity-80"
+                        onClick={() => setLightboxUrl(product.thumbnail)}
+                        type="button"
+                      >
                         <img
                           alt={product.name}
-                          className="h-12 w-12 rounded-lg object-cover border border-[#d8e6dd] cursor-zoom-in hover:opacity-80 transition-opacity"
+                          className="h-10 w-10 cursor-zoom-in rounded-lg border border-[#d8e6dd] object-cover"
                           src={product.thumbnail}
                         />
                       </button>
                     ) : (
-                      <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-[#c8ddd1] bg-[#f8fbf9] text-lg text-[#b8d4c1]">
-                        🖼
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-dashed border-[#c8ddd1] bg-[#f8fbf9] dark:border-dark-3 dark:bg-dark-2">
+                        <svg className="h-4 w-4 text-[#b8d4c1]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                        </svg>
                       </div>
                     )}
                   </td>
-                  <td className="hidden px-5 py-4 font-mono text-xs font-semibold text-dark sm:table-cell dark:text-white">
-                    {product.sku}
+
+                  {/* Name + SKU */}
+                  <td className="w-full min-w-0 px-4 py-3">
+                    <p className="truncate font-semibold text-dark dark:text-white">{product.name}</p>
+                    <p className="mt-0.5 font-mono text-xs text-dark-5 dark:text-dark-6">{product.sku}</p>
                   </td>
-                  <td className="px-5 py-4 font-semibold text-dark dark:text-white">{product.name}</td>
-                  <td className="hidden px-5 py-4 lg:table-cell">{product.categoryName}</td>
-                  <td className="hidden px-5 py-4 text-xs text-dark-5 xl:table-cell">{product.shadeName ?? "-"}</td>
-                  <td className="px-5 py-4">
-                    <div className="font-medium text-dark dark:text-white">{formatPrice(product.price)}</div>
+
+                  {/* Price */}
+                  <td className="whitespace-nowrap px-4 py-3 tabular-nums">
+                    <p className="font-medium text-dark dark:text-white">{formatPrice(product.price)}</p>
                     {product.specialPrice !== null ? (
-                      <div className="mt-0.5 text-xs text-[#5f8f74]">{formatPrice(product.specialPrice)}</div>
+                      <p className="mt-0.5 text-xs text-[#5f8f74]">{formatPrice(product.specialPrice)}</p>
                     ) : null}
                   </td>
-                  <td className="hidden px-5 py-4 lg:table-cell">{product.stock}</td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
+
+                  {/* Stock */}
+                  <td className="hidden px-4 py-3 md:table-cell">
+                    <span className={`tabular-nums text-sm ${product.stock <= 10 ? "font-semibold text-[#9a6a12]" : "text-dark-5 dark:text-dark-6"}`}>
+                      {product.stock}
+                    </span>
+                    {product.stock <= 10 && product.stock > 0 ? (
+                      <p className="text-xs text-[#9a6a12]">ใกล้หมด</p>
+                    ) : product.stock === 0 ? (
+                      <p className="text-xs text-[#b42318]">หมด</p>
+                    ) : null}
+                  </td>
+
+                  {/* Category */}
+                  <td className="hidden px-4 py-3 lg:table-cell">
+                    <p className="text-sm text-dark-5 dark:text-dark-6">{product.categoryName}</p>
+                    {product.shadeName ? (
+                      <p className="mt-0.5 text-xs text-dark-5 dark:text-dark-6">{product.shadeName}</p>
+                    ) : null}
+                  </td>
+
+                  {/* Status toggle */}
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col gap-1.5">
                       <button
                         aria-label={product.status === "ACTIVE" ? "ปิดใช้งาน" : "เปิดใช้งาน"}
-                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-                          product.status === "ACTIVE" ? "bg-[#58cf94]" : "bg-[#d7e2db]"
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          product.status === "ACTIVE" ? "bg-[#45745a]" : "bg-[#d7e2db]"
                         }`}
                         onClick={() => handleToggleStatus(product)}
                         type="button"
                       >
                         <span
-                          className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${
+                          className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
                             product.status === "ACTIVE" ? "translate-x-6" : "translate-x-1"
                           }`}
                         />
@@ -955,37 +1062,44 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                       <StatusPill label={statusLabel(product.status)} tone={statusTone(product.status)} />
                     </div>
                   </td>
-                  <td className="hidden px-5 py-4 xl:table-cell">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${product.isFeatured ? "bg-[#fef9c3] text-[#854d0e]" : "bg-[#f1f5f9] text-[#94a3b8]"}`}>
-                      {product.isFeatured ? "★ แนะนำ" : "—"}
-                    </span>
+
+                  {/* Featured + Badge */}
+                  <td className="hidden px-4 py-3 xl:table-cell">
+                    <div className="flex flex-col gap-1.5">
+                      {product.isFeatured ? (
+                        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-[#fef9c3] px-2.5 py-1 text-xs font-semibold text-[#854d0e]">
+                          <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 0 0-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 0 0 .951-.69l1.07-3.292Z" /></svg>
+                          แนะนำ
+                        </span>
+                      ) : null}
+                      {product.tag === "NEW" && (
+                        <span className="inline-flex w-fit items-center rounded-full bg-[#e0f2fe] px-2.5 py-1 text-xs font-semibold text-[#0369a1]">
+                          NEW
+                        </span>
+                      )}
+                      {product.tag === "BEST SELLER" && (
+                        <span className="inline-flex w-fit items-center rounded-full bg-[#fff7ed] px-2.5 py-1 text-xs font-semibold text-[#c2410c]">
+                          BEST SELLER
+                        </span>
+                      )}
+                      {!product.isFeatured && !product.tag && (
+                        <span className="text-xs text-dark-5">—</span>
+                      )}
+                    </div>
                   </td>
-                  <td className="hidden px-5 py-4 xl:table-cell">
-                    {product.tag === "NEW" && (
-                      <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
-                        🆕 NEW
-                      </span>
-                    )}
-                    {product.tag === "BEST SELLER" && (
-                      <span className="inline-flex items-center rounded-full bg-orange-100 px-2.5 py-1 text-xs font-semibold text-orange-700">
-                        🔥 BEST SELLER
-                      </span>
-                    )}
-                    {!product.tag && (
-                      <span className="text-xs text-[#94a3b8]">—</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex flex-wrap gap-2">
+
+                  {/* Actions */}
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1.5">
                       <button
-                        className="rounded-full border border-[#d7e7dc] px-3 py-1 text-xs font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+                        className="rounded-full border border-[#d7e7dc] px-3 py-1 text-xs font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:opacity-50"
                         onClick={() => startEdit(product)}
                         type="button"
                       >
                         แก้ไข
                       </button>
                       <button
-                        className="rounded-full border border-[#f1d0cf] px-3 py-1 text-xs font-semibold text-[#b42318] transition-colors hover:bg-[#fff5f4]"
+                        className="rounded-full border border-[#f1d0cf] px-3 py-1 text-xs font-semibold text-[#b42318] transition-colors hover:bg-[#fff5f4] disabled:opacity-50"
                         onClick={() => handleDelete(product)}
                         type="button"
                       >
@@ -996,21 +1110,33 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                 </tr>
               ))}
 
-              {!isLoading && tableRows.length === 0 ? (
-                <tr className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6">
-                  <td className="px-5 py-6 text-center" colSpan={11}>
-                    ไม่พบข้อมูลสินค้า
+              {/* Empty state */}
+              {!isLoading && tableRows.length === 0 && (
+                <tr>
+                  <td colSpan={NUM_COLS} className="px-4 py-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0f6f2]">
+                        <svg className="h-6 w-6 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-dark dark:text-white">ไม่พบสินค้า</p>
+                        <p className="mt-1 text-sm text-dark-5">ลองเปลี่ยนคำค้นหาหรือตัวกรอง</p>
+                      </div>
+                    </div>
                   </td>
                 </tr>
-              ) : null}
+              )}
             </tbody>
           </table>
         </div>
 
-        <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        {/* Pagination */}
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-dark-5">
             {isLoading
-              ? "กำลังโหลดข้อมูล..."
+              ? "กำลังโหลด..."
               : `แสดง ${tableRows.length} จากทั้งหมด ${meta.totalItems} รายการ`}
           </p>
           <div className="flex items-center gap-2">
@@ -1073,7 +1199,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
           onClick={() => setLightboxUrl(null)}
         >
           <button
-            className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/40 transition-colors"
+            className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white transition-colors hover:bg-white/40"
             onClick={() => setLightboxUrl(null)}
             type="button"
           >
