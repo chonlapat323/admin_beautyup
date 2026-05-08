@@ -172,6 +172,8 @@ function ItemRow({ item }: { item: OrderDetail["items"][number] }) {
   );
 }
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
+
 export function OrderManager() {
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -180,6 +182,10 @@ export function OrderManager() {
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus>("PAID");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   useEffect(() => {
     fetch("/api/orders")
@@ -233,47 +239,155 @@ export function OrderManager() {
     }
   }
 
+  const filteredOrders = orders.filter((o) => {
+    const q = search.trim().toLowerCase();
+    const matchSearch = !q ||
+      o.orderNumber.toLowerCase().includes(q) ||
+      (o.member?.fullName ?? "").toLowerCase().includes(q) ||
+      (o.member?.email ?? "").toLowerCase().includes(q) ||
+      (o.member?.phone ?? "").toLowerCase().includes(q);
+    const matchStatus = !statusFilter || o.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+  const totalItems = filteredOrders.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const pagedOrders = filteredOrders.slice((page - 1) * pageSize, page * pageSize);
+  const hasFilter = search.trim() !== "" || statusFilter !== "";
+
   return (
     <>
       <ContentCard title="คำสั่งซื้อทั้งหมด" description="คลิกที่แถวเพื่อดูรายละเอียดและเปลี่ยนสถานะ">
-        {loading ? (
-          <p className="py-10 text-center text-sm text-dark-5">กำลังโหลด...</p>
-        ) : orders.length === 0 ? (
-          <p className="py-10 text-center text-sm text-dark-5">ยังไม่มีคำสั่งซื้อ</p>
-        ) : (
-          <div className="overflow-hidden rounded-2xl border border-stroke dark:border-dark-3">
-            <table className="w-full text-left">
-              <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-60">
+              <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" /><path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] py-2.5 pl-9 pr-4 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                placeholder="ค้นหาเลขออเดอร์ / สมาชิก..."
+                value={search}
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                className={`rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${statusFilter === "" ? "bg-[#45745a] text-white" : "border border-[#d7e7dc] text-[#355846] hover:bg-[#f4fbf6]"}`}
+                onClick={() => { setStatusFilter(""); setPage(1); }}
+                type="button"
+              >ทั้งหมด</button>
+              {ALL_STATUSES.map((s) => (
+                <button
+                  key={s}
+                  className={`rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${statusFilter === s ? "bg-[#45745a] text-white" : "border border-[#d7e7dc] text-[#355846] hover:bg-[#f4fbf6]"}`}
+                  onClick={() => { setStatusFilter(s); setPage(1); }}
+                  type="button"
+                >{STATUS_LABELS[s]}</button>
+              ))}
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <select
+              className="rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+              onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+              value={pageSize}
+            >
+              {PAGE_SIZE_OPTIONS.map((n) => (
+                <option key={n} value={n}>{n} รายการ</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
+          <table className="w-full min-w-[640px] text-left">
+            <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
+              <tr>
+                <th className="px-4 py-3 font-semibold">คำสั่งซื้อ</th>
+                <th className="px-4 py-3 font-semibold">สมาชิก</th>
+                <th className="px-4 py-3 font-semibold">ยอดรวม</th>
+                <th className="hidden px-4 py-3 font-semibold md:table-cell">ช่องทาง</th>
+                <th className="px-4 py-3 font-semibold">วันที่</th>
+                <th className="px-4 py-3 font-semibold">สถานะ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-t border-stroke dark:border-dark-3">
+                    <td className="px-4 py-3"><div className="h-4 w-24 animate-pulse rounded bg-dark-5/20" /></td>
+                    <td className="px-4 py-3"><div className="h-4 w-32 animate-pulse rounded bg-dark-5/20" /></td>
+                    <td className="px-4 py-3"><div className="h-4 w-20 animate-pulse rounded bg-dark-5/20" /></td>
+                    <td className="hidden px-4 py-3 md:table-cell"><div className="h-6 w-20 animate-pulse rounded-full bg-dark-5/20" /></td>
+                    <td className="px-4 py-3"><div className="h-4 w-28 animate-pulse rounded bg-dark-5/20" /></td>
+                    <td className="px-4 py-3"><div className="h-6 w-20 animate-pulse rounded-full bg-dark-5/20" /></td>
+                  </tr>
+                ))
+              ) : pagedOrders.length === 0 ? (
                 <tr>
-                  <th className="px-5 py-4 font-medium">คำสั่งซื้อ</th>
-                  <th className="px-5 py-4 font-medium">สมาชิก</th>
-                  <th className="px-5 py-4 font-medium">ยอดรวม</th>
-                  <th className="hidden px-5 py-4 font-medium md:table-cell">ช่องทาง</th>
-                  <th className="px-5 py-4 font-medium">วันที่</th>
-                  <th className="px-5 py-4 font-medium">สถานะ</th>
+                  <td colSpan={6} className="px-4 py-16 text-center">
+                    <div className="flex flex-col items-center">
+                      <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f6f2] dark:bg-dark-2">
+                        <svg className="h-7 w-7 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" x2="21" y1="6" y2="6" /><path strokeLinecap="round" strokeLinejoin="round" d="M16 10a4 4 0 0 1-8 0" /></svg>
+                      </div>
+                      <p className="font-semibold text-dark dark:text-white">{hasFilter ? "ไม่พบรายการ" : "ยังไม่มีคำสั่งซื้อ"}</p>
+                      <p className="mt-1 text-sm text-dark-5">{hasFilter ? "ลองเปลี่ยนคำค้นหาหรือตัวกรอง" : "คำสั่งซื้อจากลูกค้าจะแสดงที่นี่"}</p>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => (
+              ) : (
+                pagedOrders.map((order) => (
                   <tr
                     key={order.id}
                     onClick={() => void openDetail(order.id)}
                     className="cursor-pointer border-t border-stroke text-sm text-dark-5 transition-colors hover:bg-[#f4faf6] dark:border-dark-3 dark:text-dark-6 dark:hover:bg-dark-2"
                   >
-                    <td className="px-5 py-4 font-semibold text-dark dark:text-white">{order.orderNumber}</td>
-                    <td className="px-5 py-4">{order.member?.fullName ?? order.member?.email ?? "-"}</td>
-                    <td className="px-5 py-4">{fmt(order.totalAmount)}</td>
-                    <td className="hidden px-5 py-4 md:table-cell"><PaymentBadge method={order.paymentMethod} /></td>
-                    <td className="px-5 py-4">{order.createdAt ? fmtDate(order.createdAt) : "-"}</td>
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-3 font-semibold text-dark dark:text-white">{order.orderNumber}</td>
+                    <td className="px-4 py-3">{order.member?.fullName ?? order.member?.email ?? "-"}</td>
+                    <td className="px-4 py-3">{fmt(order.totalAmount)}</td>
+                    <td className="hidden px-4 py-3 md:table-cell"><PaymentBadge method={order.paymentMethod} /></td>
+                    <td className="px-4 py-3">{order.createdAt ? fmtDate(order.createdAt) : "-"}</td>
+                    <td className="px-4 py-3">
                       <StatusPill label={STATUS_LABELS[order.status] ?? order.status} tone={statusTone(order.status)} />
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-dark-5">
+            {loading ? (
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-[#d8e6dd] border-t-[#45745a]" />
+                กำลังโหลด...
+              </span>
+            ) : (
+              <>
+                <span className="font-semibold text-dark dark:text-white">{totalItems}</span>
+                {" รายการ"}
+                {totalPages > 1 ? ` · หน้า ${page}/${totalPages}` : ""}
+              </>
+            )}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={page <= 1 || loading}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              type="button"
+            >← ก่อนหน้า</button>
+            <span className="min-w-[3rem] text-center text-sm font-medium text-dark dark:text-white">
+              {page} / {totalPages}
+            </span>
+            <button
+              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={page >= totalPages || loading}
+              onClick={() => setPage((p) => p + 1)}
+              type="button"
+            >ถัดไป →</button>
           </div>
-        )}
+        </div>
       </ContentCard>
 
       {/* Detail modal */}
@@ -305,11 +419,7 @@ export function OrderManager() {
                   <button
                     onClick={closeModal}
                     className="ml-4 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-dark-5 transition-colors hover:bg-white hover:text-dark dark:hover:bg-dark-3"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+                  >✕</button>
                 </div>
 
                 {/* Scrollable body */}
@@ -387,7 +497,7 @@ export function OrderManager() {
                         <button
                           disabled={saving || selectedStatus === detail.status}
                           onClick={() => void saveStatus()}
-                          className="flex-shrink-0 rounded-xl bg-[#45745a] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#355846] disabled:opacity-40"
+                          className="flex-shrink-0 rounded-xl bg-[#45745a] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#355846] disabled:opacity-70"
                         >
                           {saving ? "กำลังบันทึก..." : "บันทึก"}
                         </button>

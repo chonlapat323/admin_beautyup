@@ -56,6 +56,12 @@ const STATUS_OPTIONS: SelectOption<StatusFilter>[] = [
   { label: "ปิดใช้งาน", value: "inactive" },
 ];
 
+const PAGE_SIZE_OPTIONS: SelectOption<number>[] = [
+  { label: "10 รายการ", value: 10 },
+  { label: "20 รายการ", value: 20 },
+  { label: "50 รายการ", value: 50 },
+];
+
 function formatDate(value?: string | null) {
   if (!value) return "-";
   return new Intl.DateTimeFormat("th-TH", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value));
@@ -96,10 +102,12 @@ function SelectField<T extends string | number>({
         type="button"
       >
         <span>{selected?.label}</span>
-        <span className={`text-xs text-dark-5 transition-transform ${isOpen ? "rotate-180" : ""}`}>▼</span>
+        <svg className={`h-4 w-4 text-dark-5 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+        </svg>
       </button>
       {isOpen ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-30 overflow-hidden rounded-[20px] border border-[#d8e6dd] bg-white shadow-1 dark:border-dark-3 dark:bg-dark-2">
+        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-2xl border border-[#d8e6dd] bg-white shadow-1 dark:border-dark-3 dark:bg-dark-2">
           {options.map((o) => (
             <button
               className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors ${o.value === value ? "bg-[#eef8f1] font-semibold text-[#355846]" : "text-dark hover:bg-[#f8fbf9] dark:text-white dark:hover:bg-dark-3"}`}
@@ -108,7 +116,7 @@ function SelectField<T extends string | number>({
               type="button"
             >
               <span>{o.label}</span>
-              {o.value === value ? <span className="text-[#58cf94]">●</span> : null}
+              {o.value === value ? <svg className="h-4 w-4 shrink-0 text-[#45745a]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg> : null}
             </button>
           ))}
         </div>
@@ -197,13 +205,25 @@ function ConfirmDeleteModal({
 }: { roleName: string; isDeleting: boolean; onClose: () => void; onConfirm: () => Promise<void> }) {
   return (
     <div className="fixed inset-0 z-[130] flex items-center justify-center bg-[#0f172a]/55 px-4">
-      <div className="w-full max-w-md rounded-[28px] border border-[#eadbda] bg-white p-6 shadow-1 dark:border-dark-3 dark:bg-gray-dark">
-        <h3 className="text-xl font-bold text-dark dark:text-white">ยืนยันการลบสิทธิ์</h3>
-        <p className="mt-3 text-sm leading-6 text-dark-5 dark:text-dark-6">
-          ต้องการลบสิทธิ์{" "}
-          <span className="font-semibold text-dark dark:text-white">"{roleName}"</span> ใช่หรือไม่?
-        </p>
-        <div className="mt-6 flex flex-wrap justify-end gap-3">
+      <div className="w-full max-w-md rounded-[28px] border border-[#eadbda] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark">
+        <div className="flex items-center justify-between gap-3 border-b border-[#f3e5e4] px-6 py-5 dark:border-dark-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fef2f1]">
+              <svg className="h-4 w-4 text-[#c84b44]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-dark dark:text-white">ยืนยันการลบสิทธิ์</h3>
+          </div>
+          <button className="flex h-8 w-8 items-center justify-center rounded-full text-dark-4 hover:bg-[#f0f7f2] dark:text-dark-6 dark:hover:bg-dark-3" onClick={onClose} type="button">✕</button>
+        </div>
+        <div className="px-6 py-5">
+          <p className="text-sm leading-6 text-dark-5 dark:text-dark-6">
+            ต้องการลบสิทธิ์{" "}
+            <span className="font-semibold text-dark dark:text-white">"{roleName}"</span> ใช่หรือไม่?
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-end gap-3 border-t border-stroke px-6 py-4 dark:border-dark-3">
           <button className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]" onClick={onClose} type="button">ยกเลิก</button>
           <button className="inline-flex items-center justify-center rounded-full bg-[#c84b44] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#ad3d37] disabled:opacity-70" disabled={isDeleting} onClick={() => void onConfirm()} type="button">
             {isDeleting ? "กำลังลบ..." : "ยืนยันการลบ"}
@@ -226,18 +246,19 @@ function RoleFormModal({
 }) {
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/55 px-4 py-8">
-      <div className="w-full max-w-2xl overflow-y-auto rounded-[30px] border border-[#dce9e1] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark" style={{ maxHeight: "90vh" }}>
-        <div className="flex items-start justify-between gap-4 border-b border-[#edf4ef] px-7 py-6 dark:border-dark-3">
+      <div className="flex w-full max-w-2xl flex-col rounded-[30px] border border-[#dce9e1] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark" style={{ maxHeight: "90vh" }}>
+        <div className="shrink-0 flex items-center justify-between gap-4 border-b border-[#edf4ef] px-7 py-6 dark:border-dark-3">
           <div>
             <h3 className="text-2xl font-bold text-dark dark:text-white">
               {editingId ? "แก้ไขสิทธิ์การใช้งาน" : "เพิ่มสิทธิ์การใช้งาน"}
             </h3>
             <p className="mt-2 text-sm text-dark-5 dark:text-dark-6">กำหนดชื่อและสิทธิ์แต่ละเมนู</p>
           </div>
-          <button className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6]" onClick={onClose} type="button">ปิด</button>
+          <button className="flex h-8 w-8 items-center justify-center rounded-full text-dark-4 hover:bg-[#f0f7f2] dark:text-dark-6 dark:hover:bg-dark-3" onClick={onClose} type="button">✕</button>
         </div>
 
-        <form className="space-y-6 px-7 py-7" onSubmit={onSubmit}>
+        <div className="flex-1 overflow-y-auto">
+        <form className="space-y-6 px-7 py-7" id="role-form" onSubmit={onSubmit}>
           <div>
             <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
               ชื่อสิทธิ์ <span className="text-red-500">*</span>
@@ -257,22 +278,25 @@ function RoleFormModal({
               onChange={(p) => onChange({ permissions: p })}
             />
           </div>
-
-          <div className="flex flex-wrap gap-3 pt-2">
-            <button
-              className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:opacity-70"
-              disabled={isSubmitting}
-              type="submit"
-            >
-              {isSubmitting ? (editingId ? "กำลังบันทึก..." : "กำลังเพิ่ม...") : (editingId ? "บันทึกการเปลี่ยนแปลง" : "เพิ่มสิทธิ์")}
-            </button>
-            <button className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6]" onClick={onClose} type="button">ยกเลิก</button>
-          </div>
         </form>
+        </div>
+        <div className="shrink-0 flex flex-wrap gap-3 border-t border-[#edf4ef] px-7 py-5 dark:border-dark-3">
+          <button
+            className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:opacity-70"
+            disabled={isSubmitting}
+            form="role-form"
+            type="submit"
+          >
+            {isSubmitting ? (editingId ? "กำลังบันทึก..." : "กำลังเพิ่ม...") : (editingId ? "บันทึกการเปลี่ยนแปลง" : "เพิ่มสิทธิ์")}
+          </button>
+          <button className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6]" onClick={onClose} type="button">ยกเลิก</button>
+        </div>
       </div>
     </div>
   );
 }
+
+const NUM_COLS = 6;
 
 export function RoleManagerTable({ initialItems, initialMeta }: RoleManagerTableProps) {
   const { showToast } = useToast();
@@ -289,18 +313,20 @@ export function RoleManagerTable({ initialItems, initialMeta }: RoleManagerTable
   const [page, setPage] = useState(initialMeta.page);
   const [roleToDelete, setRoleToDelete] = useState<RoleRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [pageSize, setPageSize] = useState(20);
 
   const tableRows = useMemo(
     () => roles.map((r, i) => ({ ...r, no: (meta.page - 1) * meta.pageSize + i + 1 })),
     [roles, meta],
   );
 
-  async function loadRoles(overrides?: Partial<Record<"page" | "searchTerm" | "statusFilter", string | number>>) {
+  async function loadRoles(overrides?: Partial<Record<"page" | "searchTerm" | "statusFilter" | "pageSize", string | number>>) {
     const nextPage = typeof overrides?.page === "number" ? overrides.page : page;
     const nextSearch = typeof overrides?.searchTerm === "string" ? overrides.searchTerm : searchTerm;
     const nextStatus = typeof overrides?.statusFilter === "string" ? overrides.statusFilter : statusFilter;
+    const nextPageSize = typeof overrides?.pageSize === "number" ? overrides.pageSize : pageSize;
 
-    const params = new URLSearchParams({ page: String(nextPage), pageSize: "20" });
+    const params = new URLSearchParams({ page: String(nextPage), pageSize: String(nextPageSize) });
     if (nextSearch.trim()) params.set("search", nextSearch.trim());
     if (nextStatus !== "all") params.set("status", nextStatus);
 
@@ -321,7 +347,7 @@ export function RoleManagerTable({ initialItems, initialMeta }: RoleManagerTable
   useEffect(() => {
     if (isFirstLoad.current) { isFirstLoad.current = false; return; }
     void loadRoles();
-  }, [page, searchTerm, statusFilter]);
+  }, [page, searchTerm, statusFilter, pageSize]);
 
   async function refreshAfterMutation(targetPage = page) {
     await loadRoles({ page: targetPage });
@@ -393,21 +419,27 @@ export function RoleManagerTable({ initialItems, initialMeta }: RoleManagerTable
       <ContentCard
         title="จัดการสิทธิ์การใช้งาน"
         description="กำหนดสิทธิ์การเข้าถึงแต่ละเมนูสำหรับแต่ละบทบาท"
-        aside={
-          <button className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846]" onClick={openCreateModal} type="button">
-            + เพิ่มสิทธิ์
-          </button>
-        }
       >
-        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center">
-          <div className="grid w-full gap-3 lg:max-w-xl lg:grid-cols-[minmax(0,1fr)_180px]">
-            <input
-              className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-              onChange={(e) => { setPage(1); setSearchTerm(e.target.value); }}
-              placeholder="ค้นหาชื่อสิทธิ์"
-              value={searchTerm}
-            />
-            <SelectField options={STATUS_OPTIONS} onChange={(v) => { setPage(1); setStatusFilter(v); }} value={statusFilter} />
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-60">
+              <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" /><path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] py-2.5 pl-9 pr-4 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                onChange={(e) => { setPage(1); setSearchTerm(e.target.value); }}
+                placeholder="ค้นหาชื่อสิทธิ์"
+                value={searchTerm}
+              />
+            </div>
+            <SelectField className="w-full sm:w-44" options={STATUS_OPTIONS} onChange={(v) => { setPage(1); setStatusFilter(v); }} value={statusFilter} />
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <SelectField className="w-36" options={PAGE_SIZE_OPTIONS} onChange={(v) => { setPage(1); setPageSize(v); }} value={pageSize} />
+            <button className="shrink-0 inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846]" onClick={openCreateModal} type="button">
+              + เพิ่มสิทธิ์
+            </button>
           </div>
         </div>
 
@@ -424,7 +456,40 @@ export function RoleManagerTable({ initialItems, initialMeta }: RoleManagerTable
               </tr>
             </thead>
             <tbody>
-              {tableRows.map((role) => {
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-t border-stroke dark:border-dark-3">
+                    <td className="px-5 py-4"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="px-5 py-4"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="px-5 py-4"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="px-5 py-4"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="px-5 py-4"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="px-5 py-4"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                  </tr>
+                ))
+              ) : tableRows.length === 0 ? (
+                <tr>
+                  <td colSpan={NUM_COLS} className="px-5 py-16 text-center">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f7f2] dark:bg-dark-2">
+                      <svg className="h-7 w-7 text-[#5f8f74]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                      </svg>
+                    </div>
+                    <p className="mt-4 text-sm font-medium text-dark dark:text-white">
+                      {searchTerm || statusFilter !== "all" ? "ไม่พบสิทธิ์ที่ตรงกับเงื่อนไข" : "ยังไม่มีสิทธิ์การใช้งาน"}
+                    </p>
+                    {!searchTerm && statusFilter === "all" && (
+                      <button
+                        className="mt-3 inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
+                        onClick={openCreateModal}
+                        type="button"
+                      >
+                        + เพิ่มสิทธิ์
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ) : tableRows.map((role) => {
                 const viewable = role.permissions.filter((p) => p.canView).map((p) => p.label);
                 return (
                   <tr key={role.id} className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6">
@@ -446,17 +511,9 @@ export function RoleManagerTable({ initialItems, initialMeta }: RoleManagerTable
                     </td>
                     <td className="px-5 py-4">{role.adminCount} คน</td>
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <button
-                          aria-label={role.isActive ? "ปิดใช้งาน" : "เปิดใช้งาน"}
-                          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${role.isActive ? "bg-[#58cf94]" : "bg-[#d7e2db]"}`}
-                          onClick={() => handleToggleStatus(role)}
-                          type="button"
-                        >
-                          <span className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${role.isActive ? "translate-x-6" : "translate-x-1"}`} />
-                        </button>
+                      <button onClick={() => void handleToggleStatus(role)} type="button">
                         <StatusPill label={role.isActive ? "ใช้งาน" : "ปิดใช้งาน"} tone={role.isActive ? "success" : "warning"} />
-                      </div>
+                      </button>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap gap-2">
@@ -467,23 +524,22 @@ export function RoleManagerTable({ initialItems, initialMeta }: RoleManagerTable
                   </tr>
                 );
               })}
-              {!isLoading && tableRows.length === 0 ? (
-                <tr className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6">
-                  <td className="px-5 py-6 text-center" colSpan={6}>ไม่พบข้อมูลสิทธิ์การใช้งาน</td>
-                </tr>
-              ) : null}
             </tbody>
           </table>
         </div>
 
         <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <p className="text-sm text-dark-5">
-            {isLoading ? "กำลังโหลดข้อมูล..." : `แสดง ${tableRows.length} จากทั้งหมด ${meta.totalItems} รายการ`}
+            {isLoading ? (
+              <span className="inline-block h-4 w-40 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+            ) : (
+              <>แสดง {tableRows.length} จากทั้งหมด <strong className="font-semibold text-dark dark:text-white">{meta.totalItems}</strong> รายการ</>
+            )}
           </p>
           <div className="flex items-center gap-2">
-            <button className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6] disabled:opacity-50" disabled={!meta.hasPreviousPage || isLoading} onClick={() => setPage((c) => Math.max(1, c - 1))} type="button">ก่อนหน้า</button>
-            <span className="text-sm font-medium text-dark dark:text-white">หน้า {meta.page} / {meta.totalPages}</span>
-            <button className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6] disabled:opacity-50" disabled={!meta.hasNextPage || isLoading} onClick={() => setPage((c) => c + 1)} type="button">ถัดไป</button>
+            <button className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6] disabled:opacity-40" disabled={!meta.hasPreviousPage || isLoading} onClick={() => setPage((c) => Math.max(1, c - 1))} type="button">← ก่อนหน้า</button>
+            <span className="min-w-[3rem] text-center text-sm font-medium text-dark dark:text-white">{meta.page} / {meta.totalPages}</span>
+            <button className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6] disabled:opacity-40" disabled={!meta.hasNextPage || isLoading} onClick={() => setPage((c) => c + 1)} type="button">ถัดไป →</button>
           </div>
         </div>
       </ContentCard>

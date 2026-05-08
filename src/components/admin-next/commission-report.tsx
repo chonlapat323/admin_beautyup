@@ -62,6 +62,8 @@ function formatAmount(v: number) {
   return `฿${v.toLocaleString("th-TH", { minimumFractionDigits: 2 })}`;
 }
 
+const PAGE_SIZE_OPTIONS = [20, 50, 100];
+
 export function CommissionReport() {
   const [rows, setRows] = useState<ReportRow[]>([]);
   const [period, setPeriod] = useState<Period>("day");
@@ -69,6 +71,9 @@ export function CommissionReport() {
   const [from, setFrom] = useState(() => getPresetRange("month").from);
   const [to, setTo] = useState(() => getPresetRange("month").to);
   const [isLoading, setIsLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const load = useCallback(async (f: string, t: string, p: Period) => {
     setIsLoading(true);
@@ -108,35 +113,63 @@ export function CommissionReport() {
   const grandTotal = rows.reduce((s, r) => s + r.totalAmount, 0);
   const grandCount = rows.reduce((s, r) => s + r.count, 0);
 
-  const btnBase = "rounded-full px-4 py-2 text-sm font-medium transition-colors border border-[#d8e6dd] text-dark hover:bg-[#f0f7f2] dark:border-dark-3 dark:text-white";
-  const btnActive = "bg-[#5f8f74] text-white border-[#5f8f74] hover:bg-[#4e7a61]";
+  const filteredRows = rows.filter((r) => {
+    const q = search.trim().toLowerCase();
+    return !q || r.earnerName.toLowerCase().includes(q) || (r.referralCode ?? "").toLowerCase().includes(q);
+  });
+  const totalItems = filteredRows.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const pagedRows = filteredRows.slice((page - 1) * pageSize, page * pageSize);
+
+  const btnBase = "rounded-full px-3.5 py-2 text-xs font-semibold transition-colors border border-[#d7e7dc] text-[#355846] hover:bg-[#f4fbf6]";
+  const btnActive = "bg-[#45745a] text-white border-[#45745a] hover:bg-[#355846]";
 
   return (
     <ContentCard title="รายงาน Commission" description="ยอด commission แยกตามช่วงเวลาและผู้รับ">
 
-      {/* Filter bar */}
-      <div className="mb-5 flex flex-wrap items-center gap-3">
-        <div className="flex gap-2">
-          {PRESET_OPTIONS.map((opt) => (
-            <button key={opt.key} type="button" onClick={() => handlePreset(opt.key)}
-              className={`${btnBase} ${preset === opt.key ? btnActive : ""}`}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
+      {/* Date filter */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        {PRESET_OPTIONS.map((opt) => (
+          <button key={opt.key} type="button" onClick={() => handlePreset(opt.key)}
+            className={`${btnBase} ${preset === opt.key ? btnActive : ""}`}>
+            {opt.label}
+          </button>
+        ))}
         <div className="flex items-center gap-2">
           <input type="date" value={from}
             onChange={(e) => { setFrom(e.target.value); setPreset("custom"); }}
-            className="rounded-[10px] border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2 text-sm text-dark focus:border-[#5f8f74] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white" />
-          <span className="text-sm text-dark-5">ถึง</span>
+            className="rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white" />
+          <span className="text-sm text-dark-5">—</span>
           <input type="date" value={to}
             onChange={(e) => { setTo(e.target.value); setPreset("custom"); }}
-            className="rounded-[10px] border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2 text-sm text-dark focus:border-[#5f8f74] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white" />
+            className="rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white" />
           <button type="button" onClick={handleSearch}
-            className="rounded-full bg-[#5f8f74] px-4 py-2 text-sm font-medium text-white hover:bg-[#4e7a61]">
+            className="rounded-full bg-[#45745a] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#355846]">
             ค้นหา
           </button>
         </div>
+      </div>
+
+      {/* Search + page size */}
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:w-60">
+          <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7" /><path d="m21 21-4.35-4.35" />
+          </svg>
+          <input
+            className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] py-2.5 pl-9 pr-4 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            placeholder="ค้นหาชื่อ / รหัสแนะนำ..."
+            value={search}
+          />
+        </div>
+        <select
+          className="rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+          onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+          value={pageSize}
+        >
+          {PAGE_SIZE_OPTIONS.map((n) => <option key={n} value={n}>{n} รายการ</option>)}
+        </select>
       </div>
 
       {/* Summary */}
@@ -155,12 +188,12 @@ export function CommissionReport() {
         <table className="w-full min-w-[360px] text-left text-sm">
           <thead className="bg-[#f8fbf9] text-dark-5 dark:bg-dark-2 dark:text-dark-6">
             <tr>
-              <th className="px-4 py-3 font-medium">ช่วงเวลา</th>
-              <th className="px-4 py-3 font-medium">ผู้รับ</th>
-              <th className="hidden px-4 py-3 font-medium sm:table-cell">รหัสแนะนำ</th>
-              <th className="hidden px-4 py-3 font-medium sm:table-cell">ประเภท</th>
-              <th className="px-4 py-3 font-medium text-right">จำนวน</th>
-              <th className="px-4 py-3 font-medium text-right">ยอดรวม</th>
+              <th className="px-4 py-3 font-semibold">ช่วงเวลา</th>
+              <th className="px-4 py-3 font-semibold">ผู้รับ</th>
+              <th className="hidden px-4 py-3 font-semibold sm:table-cell">รหัสแนะนำ</th>
+              <th className="hidden px-4 py-3 font-semibold sm:table-cell">ประเภท</th>
+              <th className="px-4 py-3 font-semibold text-right">จำนวน</th>
+              <th className="px-4 py-3 font-semibold text-right">ยอดรวม</th>
             </tr>
           </thead>
           <tbody>
@@ -174,12 +207,20 @@ export function CommissionReport() {
                   ))}
                 </tr>
               ))
-            ) : rows.length === 0 ? (
+            ) : pagedRows.length === 0 ? (
               <tr>
-                <td className="px-4 py-8 text-center text-dark-5" colSpan={6}>ไม่มีข้อมูลในช่วงที่เลือก</td>
+                <td colSpan={6} className="px-4 py-16 text-center">
+                  <div className="flex flex-col items-center">
+                    <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f6f2] dark:bg-dark-2">
+                      <svg className="h-7 w-7 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z" /></svg>
+                    </div>
+                    <p className="font-semibold text-dark dark:text-white">{search.trim() ? "ไม่พบรายการ" : "ไม่มีข้อมูลในช่วงที่เลือก"}</p>
+                    <p className="mt-1 text-sm text-dark-5">{search.trim() ? "ลองเปลี่ยนคำค้นหา" : "ลองเปลี่ยนช่วงวันที่"}</p>
+                  </div>
+                </td>
               </tr>
             ) : (
-              rows.map((row, i) => (
+              pagedRows.map((row, i) => (
                 <tr key={i} className="border-t border-stroke text-sm dark:border-dark-3">
                   <td className="px-4 py-3 font-medium text-dark dark:text-white">{formatBucket(row.bucket, period)}</td>
                   <td className="px-4 py-3 font-semibold text-dark dark:text-white">{row.earnerName}</td>
@@ -200,6 +241,37 @@ export function CommissionReport() {
             )}
           </tbody>
         </table>
+      </div>
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-dark-5">
+          {isLoading ? (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-[#d8e6dd] border-t-[#45745a]" />
+              กำลังโหลด...
+            </span>
+          ) : (
+            <>
+              <span className="font-semibold text-dark dark:text-white">{totalItems}</span>
+              {" รายการ"}
+              {totalPages > 1 ? ` · หน้า ${page}/${totalPages}` : ""}
+            </>
+          )}
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={page <= 1 || isLoading}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            type="button"
+          >← ก่อนหน้า</button>
+          <span className="min-w-[3rem] text-center text-sm font-medium text-dark dark:text-white">{page} / {totalPages}</span>
+          <button
+            className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={page >= totalPages || isLoading}
+            onClick={() => setPage((p) => p + 1)}
+            type="button"
+          >ถัดไป →</button>
+        </div>
       </div>
     </ContentCard>
   );

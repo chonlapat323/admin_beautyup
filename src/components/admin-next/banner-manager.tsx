@@ -77,184 +77,189 @@ function BannerFormModal({
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/55 px-4 py-8">
       <div
-        className="w-full max-w-xl overflow-y-auto rounded-[30px] border border-[#dce9e1] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark"
+        className="flex w-full max-w-xl flex-col rounded-[30px] border border-[#dce9e1] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark"
         style={{ maxHeight: "90vh" }}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-[#edf4ef] px-7 py-6 dark:border-dark-3">
+        <div className="shrink-0 flex items-start justify-between gap-4 border-b border-[#edf4ef] px-7 py-6 dark:border-dark-3">
           <h3 className="text-2xl font-bold text-dark dark:text-white">
             {editingId ? "แก้ไขแบนเนอร์" : "เพิ่มแบนเนอร์"}
           </h3>
           <button
-            className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#d7e7dc] text-dark-5 transition-colors hover:bg-[#f4fbf6] dark:border-dark-3 dark:text-dark-6 dark:hover:bg-dark-2"
             onClick={onClose}
             type="button"
           >
-            ปิด
+            ✕
           </button>
         </div>
 
-        <form className="space-y-5 px-7 py-7" onSubmit={onSubmit}>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-              Eyebrow <span className="text-red-500">*</span>
-            </label>
-            <input
-              className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-              onChange={(e) => onChange({ eyebrow: e.target.value })}
-              placeholder="เช่น Spring Ritual"
-              value={form.eyebrow}
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-              หัวข้อหลัก <span className="text-red-500">*</span>
-            </label>
-            <input
-              className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-              onChange={(e) => onChange({ title: e.target.value })}
-              placeholder="เช่น Care That Feels Premium"
-              value={form.title}
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-dark dark:text-white">คำอธิบาย</label>
-            <textarea
-              className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-              onChange={(e) => onChange({ body: e.target.value })}
-              placeholder="คำอธิบายสั้นๆ (ไม่บังคับ)"
-              rows={2}
-              value={form.body}
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-              Badge <span className="text-xs font-normal text-dark-5">(เช่น NEW, BEST SELLER — แสดงมุมบนขวาของ banner)</span>
-            </label>
-            <input
-              className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-              onChange={(e) => onChange({ tag: e.target.value })}
-              placeholder="NEW / BEST SELLER (ไม่บังคับ)"
-              value={form.tag}
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-dark dark:text-white">ชื่อปุ่ม</label>
-            <input
-              className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-              onChange={(e) => onChange({ buttonLabel: e.target.value })}
-              placeholder="Shop Now"
-              value={form.buttonLabel}
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-dark dark:text-white">ลิงก์ปุ่ม</label>
-            <select
-              className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-              onChange={(e) => onChange({ linkType: e.target.value, linkId: "" })}
-              value={form.linkType}
-            >
-              {LINK_TYPE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
-
-          {form.linkType === "product" ? (
+        <div className="flex-1 overflow-y-auto">
+          <form className="space-y-5 px-7 py-7" id="banner-form" onSubmit={onSubmit}>
             <div>
               <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-                เลือกสินค้า <span className="text-red-500">*</span>
+                Eyebrow <span className="text-red-500">*</span>
               </label>
+              <input
+                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                onChange={(e) => onChange({ eyebrow: e.target.value })}
+                placeholder="เช่น Spring Ritual"
+                value={form.eyebrow}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+                หัวข้อหลัก <span className="text-red-500">*</span>
+              </label>
+              <input
+                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                onChange={(e) => onChange({ title: e.target.value })}
+                placeholder="เช่น Care That Feels Premium"
+                value={form.title}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">คำอธิบาย</label>
+              <textarea
+                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                onChange={(e) => onChange({ body: e.target.value })}
+                placeholder="คำอธิบายสั้นๆ (ไม่บังคับ)"
+                rows={2}
+                value={form.body}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+                Badge <span className="text-xs font-normal text-dark-5">(เช่น NEW, BEST SELLER — แสดงมุมบนขวาของ banner)</span>
+              </label>
+              <input
+                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                onChange={(e) => onChange({ tag: e.target.value })}
+                placeholder="NEW / BEST SELLER (ไม่บังคับ)"
+                value={form.tag}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">ชื่อปุ่ม</label>
+              <input
+                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                onChange={(e) => onChange({ buttonLabel: e.target.value })}
+                placeholder="Shop Now"
+                value={form.buttonLabel}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">ลิงก์ปุ่ม</label>
               <select
                 className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                onChange={(e) => onChange({ linkId: e.target.value })}
-                value={form.linkId}
+                onChange={(e) => onChange({ linkType: e.target.value, linkId: "" })}
+                value={form.linkType}
               >
-                <option value="">เลือกสินค้า</option>
-                {products.map((p) => (
-                  <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>
+                {LINK_TYPE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
             </div>
-          ) : form.linkType === "category" ? (
-            <div>
-              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-                เลือกหมวดหมู่ <span className="text-red-500">*</span>
-              </label>
-              <select
-                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                onChange={(e) => onChange({ linkId: e.target.value })}
-                value={form.linkId}
-              >
-                <option value="">เลือกหมวดหมู่</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-          ) : null}
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-dark dark:text-white">รูปภาพ</label>
-            <input
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) onImageChange(f); }}
-              ref={fileRef}
-              type="file"
-            />
-            <button
-              className="flex h-14 w-full items-center justify-center rounded-[18px] border-2 border-dashed border-[#c8ddd1] bg-[#f8fbf9] text-sm text-[#5f8f74] transition-colors hover:border-[#5f8f74]"
-              onClick={() => fileRef.current?.click()}
-              type="button"
-            >
-              {imagePreview ? (
-                <img alt="preview" className="h-12 w-auto rounded-lg object-cover" src={imagePreview} />
-              ) : (
-                "คลิกเพื่อเลือกรูป"
-              )}
-            </button>
-            {imageFile ? (
-              <p className="mt-1 text-xs text-dark-5">{imageFile.name}</p>
+            {form.linkType === "product" ? (
+              <div>
+                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+                  เลือกสินค้า <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                  onChange={(e) => onChange({ linkId: e.target.value })}
+                  value={form.linkId}
+                >
+                  <option value="">เลือกสินค้า</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>
+                  ))}
+                </select>
+              </div>
+            ) : form.linkType === "category" ? (
+              <div>
+                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+                  เลือกหมวดหมู่ <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                  onChange={(e) => onChange({ linkId: e.target.value })}
+                  value={form.linkId}
+                >
+                  <option value="">เลือกหมวดหมู่</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
             ) : null}
-          </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${form.isActive ? "bg-[#58cf94]" : "bg-[#d7e2db]"}`}
-              onClick={() => onChange({ isActive: !form.isActive })}
-              type="button"
-            >
-              <span className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${form.isActive ? "translate-x-6" : "translate-x-1"}`} />
-            </button>
-            <span className="text-sm text-dark dark:text-white">{form.isActive ? "เผยแพร่" : "ซ่อน"}</span>
-          </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">รูปภาพ</label>
+              <input
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) onImageChange(f); }}
+                ref={fileRef}
+                type="file"
+              />
+              <button
+                className="flex h-14 w-full items-center justify-center rounded-[18px] border-2 border-dashed border-[#c8ddd1] bg-[#f8fbf9] text-sm text-[#5f8f74] transition-colors hover:border-[#5f8f74]"
+                onClick={() => fileRef.current?.click()}
+                type="button"
+              >
+                {imagePreview ? (
+                  <img alt="preview" className="h-12 w-auto rounded-lg object-cover" src={imagePreview} />
+                ) : (
+                  "คลิกเพื่อเลือกรูป"
+                )}
+              </button>
+              {imageFile ? (
+                <p className="mt-1 text-xs text-dark-5">{imageFile.name}</p>
+              ) : null}
+            </div>
 
-          <div className="flex flex-wrap gap-3 pt-2">
-            <button
-              className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:opacity-70"
-              disabled={isSubmitting}
-              type="submit"
-            >
-              {isSubmitting ? "กำลังบันทึก..." : editingId ? "บันทึกการเปลี่ยนแปลง" : "เพิ่มแบนเนอร์"}
-            </button>
-            <button
-              className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
-              onClick={onClose}
-              type="button"
-            >
-              ยกเลิก
-            </button>
-          </div>
-        </form>
+            <div className="flex items-center gap-3">
+              <button
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.isActive ? "bg-[#45745a]" : "bg-[#d7e2db]"}`}
+                onClick={() => onChange({ isActive: !form.isActive })}
+                type="button"
+              >
+                <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${form.isActive ? "translate-x-6" : "translate-x-1"}`} />
+              </button>
+              <span className="text-sm text-dark dark:text-white">{form.isActive ? "เผยแพร่" : "ซ่อน"}</span>
+            </div>
+          </form>
+        </div>
+
+        <div className="shrink-0 flex flex-wrap gap-3 border-t border-[#edf4ef] px-7 py-5 dark:border-dark-3">
+          <button
+            className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:opacity-70"
+            disabled={isSubmitting}
+            form="banner-form"
+            type="submit"
+          >
+            {isSubmitting ? "กำลังบันทึก..." : editingId ? "บันทึกการเปลี่ยนแปลง" : "เพิ่มแบนเนอร์"}
+          </button>
+          <button
+            className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+            onClick={onClose}
+            type="button"
+          >
+            ยกเลิก
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
 export function BannerManager() {
   const { showToast } = useToast();
@@ -272,6 +277,9 @@ export function BannerManager() {
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [bannerToDelete, setBannerToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   async function loadBanners() {
     setIsLoading(true);
@@ -442,57 +450,101 @@ export function BannerManager() {
     return "-";
   };
 
+  const filteredBanners = banners.filter((b) =>
+    !search.trim() ||
+    b.title.toLowerCase().includes(search.trim().toLowerCase()) ||
+    b.eyebrow.toLowerCase().includes(search.trim().toLowerCase())
+  );
+  const totalItems = filteredBanners.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const pagedBanners = filteredBanners.slice((page - 1) * pageSize, page * pageSize);
+  const hasFilter = search.trim() !== "";
+  const dragEnabled = !hasFilter && totalPages === 1;
+
   return (
     <>
       <ContentCard
         title="จัดการแบนเนอร์"
         description="แบนเนอร์แสดงบนหน้าแรก mobile app ลากเพื่อเรียงลำดับ"
-        aside={
-          <button
-            className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
-            onClick={() => { resetForm(); setIsModalOpen(true); }}
-            type="button"
-          >
-            + เพิ่มแบนเนอร์
-          </button>
-        }
       >
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:w-60">
+            <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="7" /><path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] py-2.5 pl-9 pr-4 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              placeholder="ค้นหา..."
+              value={search}
+            />
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <select
+              className="rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+              onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+              value={pageSize}
+            >
+              {PAGE_SIZE_OPTIONS.map((n) => (
+                <option key={n} value={n}>{n} รายการ</option>
+              ))}
+            </select>
+            <button
+              className="shrink-0 inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
+              onClick={() => { resetForm(); setIsModalOpen(true); }}
+              type="button"
+            >
+              + เพิ่มแบนเนอร์
+            </button>
+          </div>
+        </div>
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
           <table className="w-full min-w-[360px] text-left">
-            <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
+            <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
-                <th className="hidden px-4 py-4 font-medium w-8 sm:table-cell"></th>
-                <th className="px-4 py-4 font-medium">รูป</th>
-                <th className="px-4 py-4 font-medium">Eyebrow / หัวข้อ</th>
-                <th className="hidden px-4 py-4 font-medium md:table-cell">ลิงก์</th>
-                <th className="px-4 py-4 font-medium">สถานะ</th>
-                <th className="px-4 py-4 font-medium">จัดการ</th>
+                <th className="hidden px-4 py-3 font-semibold w-8 sm:table-cell"></th>
+                <th className="px-4 py-3 font-semibold">รูป</th>
+                <th className="px-4 py-3 font-semibold">Eyebrow / หัวข้อ</th>
+                <th className="hidden px-4 py-3 font-semibold md:table-cell">ลิงก์</th>
+                <th className="px-4 py-3 font-semibold">สถานะ</th>
+                <th className="px-4 py-3 font-semibold">จัดการ</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-t border-stroke dark:border-dark-3">
-                    {Array.from({ length: 6 }).map((__, j) => (
-                      <td key={j} className="px-4 py-4">
-                        <div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
-                      </td>
-                    ))}
+                    <td className="hidden px-4 py-4 sm:table-cell"><div className="h-4 w-4 animate-pulse rounded bg-dark-5/20" /></td>
+                    <td className="px-3 py-2"><div className="h-12 w-20 animate-pulse rounded-lg bg-dark-5/20" /></td>
+                    <td className="px-4 py-4"><div className="h-4 w-36 animate-pulse rounded bg-dark-5/20" /></td>
+                    <td className="hidden px-4 py-4 md:table-cell"><div className="h-4 w-28 animate-pulse rounded bg-dark-5/20" /></td>
+                    <td className="px-4 py-4"><div className="h-6 w-11 animate-pulse rounded-full bg-dark-5/20" /></td>
+                    <td className="px-4 py-4"><div className="h-7 w-20 animate-pulse rounded-full bg-dark-5/20" /></td>
                   </tr>
                 ))
-              ) : banners.length === 0 ? (
-                <tr><td className="px-4 py-6 text-center text-sm text-dark-5" colSpan={6}>ยังไม่มีแบนเนอร์</td></tr>
-              ) : banners.map((banner, idx) => (
+              ) : pagedBanners.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-16 text-center">
+                    <div className="flex flex-col items-center">
+                      <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f6f2] dark:bg-dark-2">
+                        <svg className="h-7 w-7 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><rect height="18" rx="3" width="18" x="3" y="3" /><path d="M3 9h18M9 21V9" /></svg>
+                      </div>
+                      <p className="font-semibold text-dark dark:text-white">{hasFilter ? "ไม่พบรายการ" : "ยังไม่มีแบนเนอร์"}</p>
+                      <p className="mt-1 text-sm text-dark-5">{hasFilter ? "ลองเปลี่ยนคำค้นหา" : "เพิ่มแบนเนอร์แรกเพื่อแสดงบนหน้าแรก mobile app"}</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : pagedBanners.map((banner, idx) => (
                 <tr
                   key={banner.id}
-                  className={`border-t border-stroke text-sm dark:border-dark-3 transition-colors ${draggingIdx === idx ? "opacity-40" : ""} ${dragOverIdx === idx ? "bg-[#eef8f1]" : ""}`}
-                  draggable
+                  className={`group border-t border-stroke text-sm dark:border-dark-3 transition-colors ${draggingIdx === idx ? "opacity-40" : ""} ${dragOverIdx === idx && draggingIdx !== idx ? "bg-[#eef8f1]" : ""}`}
+                  draggable={dragEnabled}
                   onDragEnd={() => { setDraggingIdx(null); setDragOverIdx(null); }}
-                  onDragOver={(e) => { e.preventDefault(); setDragOverIdx(idx); }}
-                  onDragStart={() => setDraggingIdx(idx)}
-                  onDrop={() => void handleDrop(idx)}
+                  onDragOver={(e) => { e.preventDefault(); if (dragEnabled) setDragOverIdx(idx); }}
+                  onDragStart={() => { if (dragEnabled) setDraggingIdx(idx); }}
+                  onDrop={() => { if (dragEnabled) void handleDrop(idx); }}
                 >
-                  <td className="hidden px-4 py-4 text-center text-lg text-dark-5 cursor-grab sm:table-cell">⠿</td>
+                  <td className="hidden cursor-grab select-none px-3 py-3 text-center text-dark-5 opacity-30 transition-opacity group-hover:opacity-70 sm:table-cell">⠿</td>
                   <td className="px-3 py-2">
                     {banner.imageUrl ? (
                       <img alt={banner.title} className="h-12 w-20 rounded-lg object-cover border border-[#d8e6dd]" src={banner.imageUrl} />
@@ -508,11 +560,11 @@ export function BannerManager() {
                   <td className="hidden px-4 py-4 text-xs text-dark-5 md:table-cell">{linkLabel(banner)}</td>
                   <td className="px-4 py-4">
                     <button
-                      className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${banner.isActive ? "bg-[#58cf94]" : "bg-[#d7e2db]"}`}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${banner.isActive ? "bg-[#45745a]" : "bg-[#d7e2db]"}`}
                       onClick={() => void handleToggleActive(banner)}
                       type="button"
                     >
-                      <span className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${banner.isActive ? "translate-x-6" : "translate-x-1"}`} />
+                      <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${banner.isActive ? "translate-x-6" : "translate-x-1"}`} />
                     </button>
                   </td>
                   <td className="px-4 py-4">
@@ -538,16 +590,59 @@ export function BannerManager() {
             </tbody>
           </table>
         </div>
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-dark-5">
+            {isLoading ? (
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-[#d8e6dd] border-t-[#45745a]" />
+                กำลังโหลด...
+              </span>
+            ) : (
+              <>
+                <span className="font-semibold text-dark dark:text-white">{totalItems}</span>
+                {" รายการ"}
+                {totalPages > 1 ? ` · หน้า ${page}/${totalPages}` : ""}
+              </>
+            )}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={page <= 1 || isLoading}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              type="button"
+            >← ก่อนหน้า</button>
+            <span className="min-w-[3rem] text-center text-sm font-medium text-dark dark:text-white">
+              {page} / {totalPages}
+            </span>
+            <button
+              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={page >= totalPages || isLoading}
+              onClick={() => setPage((p) => p + 1)}
+              type="button"
+            >ถัดไป →</button>
+          </div>
+        </div>
       </ContentCard>
 
       {bannerToDelete ? createPortal(
         <div className="fixed inset-0 z-[130] flex items-center justify-center bg-[#0f172a]/55 px-4">
-          <div className="w-full max-w-md rounded-[28px] border border-[#eadbda] bg-white p-6 shadow-1 dark:border-dark-3 dark:bg-gray-dark">
-            <h3 className="text-xl font-bold text-dark dark:text-white">ยืนยันการลบ</h3>
-            <p className="mt-3 text-sm leading-6 text-dark-5 dark:text-dark-6">ต้องการลบแบนเนอร์นี้ใช่หรือไม่? การลบไม่สามารถย้อนกลับได้</p>
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
-              <button className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]" onClick={() => setBannerToDelete(null)} type="button">ยกเลิก</button>
-              <button className="inline-flex items-center justify-center rounded-full bg-[#c84b44] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#ad3d37] disabled:opacity-70" disabled={isDeleting} onClick={() => void handleConfirmDelete()} type="button">
+          <div className="w-full max-w-md rounded-[28px] border border-[#eadbda] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark">
+            <div className="flex items-center justify-between gap-3 border-b border-[#f3e8e7] px-6 py-5 dark:border-dark-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fef2f1]">
+                  <svg fill="none" height="18" stroke="#c84b44" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="18"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" x2="12" y1="9" y2="13" /><line x1="12" x2="12.01" y1="17" y2="17" /></svg>
+                </div>
+                <h3 className="text-lg font-bold text-dark dark:text-white">ยืนยันการลบแบนเนอร์</h3>
+              </div>
+              <button className="flex h-8 w-8 items-center justify-center rounded-full text-dark-4 hover:bg-[#f0f7f2] dark:text-dark-6 dark:hover:bg-dark-3" onClick={() => setBannerToDelete(null)} type="button">✕</button>
+            </div>
+            <div className="px-6 py-5">
+              <p className="text-sm leading-6 text-dark-5 dark:text-dark-6">ต้องการลบแบนเนอร์นี้ใช่หรือไม่? การลบไม่สามารถย้อนกลับได้</p>
+            </div>
+            <div className="flex flex-wrap justify-end gap-3 border-t border-[#f3e8e7] px-6 py-4 dark:border-dark-3">
+              <button className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-2.5 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]" onClick={() => setBannerToDelete(null)} type="button">ยกเลิก</button>
+              <button className="inline-flex items-center justify-center rounded-full bg-[#c84b44] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#ad3d37] disabled:opacity-70" disabled={isDeleting} onClick={() => void handleConfirmDelete()} type="button">
                 {isDeleting ? "กำลังลบ..." : "ยืนยันการลบ"}
               </button>
             </div>

@@ -60,9 +60,9 @@ export default async function PaymentsPage() {
         {payments.length === 0 ? (
           <p className="py-8 text-center text-sm text-dark-5 dark:text-dark-6">ไม่พบข้อมูลการชำระเงิน</p>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-stroke dark:border-dark-3">
+          <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
             <table className="w-full text-left">
-              <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
+              <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
                 <tr>
                   <th className="px-5 py-4 font-medium">ช่องทาง</th>
                   <th className="px-5 py-4 font-medium">จำนวนรายการ</th>

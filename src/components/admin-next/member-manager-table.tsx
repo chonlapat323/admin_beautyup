@@ -126,10 +126,12 @@ function SelectField<T extends string | number>({
         type="button"
       >
         <span>{selectedOption?.label}</span>
-        <span className={`text-xs text-dark-5 transition-transform ${isOpen ? "rotate-180" : ""}`}>▼</span>
+        <svg className={`h-4 w-4 text-dark-5 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+        </svg>
       </button>
       {isOpen ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-30 overflow-hidden rounded-[20px] border border-[#d8e6dd] bg-white shadow-1 dark:border-dark-3 dark:bg-dark-2">
+        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-2xl border border-[#d8e6dd] bg-white shadow-1 dark:border-dark-3 dark:bg-dark-2">
           {options.map((option) => {
             const isSelected = option.value === value;
             return (
@@ -147,7 +149,7 @@ function SelectField<T extends string | number>({
                 type="button"
               >
                 <span>{option.label}</span>
-                {isSelected ? <span className="text-[#58cf94]">●</span> : null}
+                {isSelected ? <svg className="h-4 w-4 shrink-0 text-[#45745a]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg> : null}
               </button>
             );
           })}
@@ -170,14 +172,26 @@ function ConfirmDeleteModal({
 }) {
   return (
     <div className="fixed inset-0 z-[130] flex items-center justify-center bg-[#0f172a]/55 px-4">
-      <div className="w-full max-w-md rounded-[28px] border border-[#eadbda] bg-white p-6 shadow-1 dark:border-dark-3 dark:bg-gray-dark">
-        <h3 className="text-xl font-bold text-dark dark:text-white">ยืนยันการลบสมาชิก</h3>
-        <p className="mt-3 text-sm leading-6 text-dark-5 dark:text-dark-6">
-          ต้องการลบสมาชิก{" "}
-          <span className="font-semibold text-dark dark:text-white">"{memberName}"</span> ใช่หรือไม่?
-          การลบจะไม่สามารถกู้คืนได้
-        </p>
-        <div className="mt-6 flex flex-wrap justify-end gap-3">
+      <div className="w-full max-w-md rounded-[28px] border border-[#eadbda] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark">
+        <div className="flex items-center justify-between gap-3 border-b border-[#f3e5e4] px-6 py-5 dark:border-dark-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fef2f1]">
+              <svg className="h-4 w-4 text-[#c84b44]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-dark dark:text-white">ยืนยันการลบสมาชิก</h3>
+          </div>
+          <button className="flex h-8 w-8 items-center justify-center rounded-full text-dark-4 hover:bg-[#f0f7f2] dark:text-dark-6 dark:hover:bg-dark-3" onClick={onClose} type="button">✕</button>
+        </div>
+        <div className="px-6 py-5">
+          <p className="text-sm leading-6 text-dark-5 dark:text-dark-6">
+            ต้องการลบสมาชิก{" "}
+            <span className="font-semibold text-dark dark:text-white">"{memberName}"</span> ใช่หรือไม่?
+            การลบจะไม่สามารถกู้คืนได้
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-end gap-3 border-t border-stroke px-6 py-4 dark:border-dark-3">
           <button
             className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
             onClick={onClose}
@@ -186,7 +200,7 @@ function ConfirmDeleteModal({
             ยกเลิก
           </button>
           <button
-            className="inline-flex items-center justify-center rounded-full bg-[#c84b44] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#ad3d37] disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex items-center justify-center rounded-full bg-[#c84b44] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#ad3d37] disabled:opacity-70"
             disabled={isDeleting}
             onClick={() => void onConfirm()}
             type="button"
@@ -217,10 +231,10 @@ function MemberFormModal({
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/55 px-4 py-8">
       <div
-        className="w-full max-w-lg overflow-y-auto rounded-[30px] border border-[#dce9e1] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark"
+        className="flex w-full max-w-lg flex-col rounded-[30px] border border-[#dce9e1] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark"
         style={{ maxHeight: "90vh" }}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-[#edf4ef] px-7 py-6 dark:border-dark-3">
+        <div className="shrink-0 flex items-center justify-between gap-4 border-b border-[#edf4ef] px-7 py-6 dark:border-dark-3">
           <div>
             <h3 className="text-2xl font-bold text-dark dark:text-white">
               {editingId ? "แก้ไขสมาชิก" : "เพิ่มสมาชิก"}
@@ -230,15 +244,14 @@ function MemberFormModal({
             </p>
           </div>
           <button
-            className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-dark-4 hover:bg-[#f0f7f2] dark:text-dark-6 dark:hover:bg-dark-3"
             onClick={onClose}
             type="button"
-          >
-            ปิด
-          </button>
+          >✕</button>
         </div>
 
-        <form className="space-y-5 px-7 py-7" onSubmit={onSubmit}>
+        <div className="flex-1 overflow-y-auto">
+        <form className="space-y-5 px-7 py-7" id="member-form" onSubmit={onSubmit}>
           <div>
             <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
               ชื่อ-นามสกุล <span className="text-red-500">*</span>
@@ -324,33 +337,37 @@ function MemberFormModal({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3 pt-2">
-            <button
-              className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:cursor-not-allowed disabled:opacity-70"
-              disabled={isSubmitting}
-              type="submit"
-            >
-              {isSubmitting
-                ? editingId
-                  ? "กำลังบันทึก..."
-                  : "กำลังเพิ่ม..."
-                : editingId
-                  ? "บันทึกการเปลี่ยนแปลง"
-                  : "เพิ่มสมาชิก"}
-            </button>
-            <button
-              className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
-              onClick={onClose}
-              type="button"
-            >
-              ยกเลิก
-            </button>
-          </div>
         </form>
+        </div>
+        <div className="shrink-0 flex flex-wrap gap-3 border-t border-[#edf4ef] px-7 py-5 dark:border-dark-3">
+          <button
+            className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={isSubmitting}
+            form="member-form"
+            type="submit"
+          >
+            {isSubmitting
+              ? editingId
+                ? "กำลังบันทึก..."
+                : "กำลังเพิ่ม..."
+              : editingId
+                ? "บันทึกการเปลี่ยนแปลง"
+                : "เพิ่มสมาชิก"}
+          </button>
+          <button
+            className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+            onClick={onClose}
+            type="button"
+          >
+            ยกเลิก
+          </button>
+        </div>
       </div>
     </div>
   );
 }
+
+const NUM_COLS = 10;
 
 export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerTableProps) {
   const { showToast } = useToast();
@@ -579,7 +596,44 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
               </tr>
             </thead>
             <tbody>
-              {tableRows.map((member) => (
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-t border-stroke dark:border-dark-3">
+                    <td className="px-5 py-4"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="px-5 py-4"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="hidden px-5 py-4 lg:table-cell"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="hidden px-5 py-4 lg:table-cell"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="hidden px-5 py-4 xl:table-cell"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="hidden px-5 py-4 xl:table-cell"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="hidden px-5 py-4 xl:table-cell"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="hidden px-5 py-4 xl:table-cell"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="px-5 py-4"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="px-5 py-4"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                  </tr>
+                ))
+              ) : tableRows.length === 0 ? (
+                <tr>
+                  <td colSpan={NUM_COLS} className="px-5 py-16 text-center">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f7f2] dark:bg-dark-2">
+                      <svg className="h-7 w-7 text-[#5f8f74]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                      </svg>
+                    </div>
+                    <p className="mt-4 text-sm font-medium text-dark dark:text-white">
+                      {searchTerm || statusFilter !== "all" ? "ไม่พบสมาชิกที่ตรงกับเงื่อนไข" : "ยังไม่มีสมาชิก"}
+                    </p>
+                    {!searchTerm && statusFilter === "all" && (
+                      <button
+                        className="mt-3 inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
+                        onClick={openCreateModal}
+                        type="button"
+                      >
+                        + เพิ่มสมาชิก
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ) : tableRows.map((member) => (
                 <tr
                   key={member.id}
                   className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6"
@@ -616,26 +670,12 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
                     )}
                   </td>
                   <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <button
-                        aria-label={member.isActive ? "ระงับ" : "เปิดใช้งาน"}
-                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-                          member.isActive ? "bg-[#58cf94]" : "bg-[#d7e2db]"
-                        }`}
-                        onClick={() => handleToggleStatus(member)}
-                        type="button"
-                      >
-                        <span
-                          className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${
-                            member.isActive ? "translate-x-6" : "translate-x-1"
-                          }`}
-                        />
-                      </button>
+                    <button onClick={() => void handleToggleStatus(member)} type="button">
                       <StatusPill
                         label={member.isActive ? "ใช้งาน" : "ระงับ"}
                         tone={member.isActive ? "success" : "warning"}
                       />
-                    </div>
+                    </button>
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex flex-wrap gap-2">
@@ -671,43 +711,37 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
                   </td>
                 </tr>
               ))}
-
-              {!isLoading && tableRows.length === 0 ? (
-                <tr className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6">
-                  <td className="px-5 py-6 text-center" colSpan={10}>
-                    ไม่พบข้อมูลสมาชิก
-                  </td>
-                </tr>
-              ) : null}
             </tbody>
           </table>
         </div>
 
         <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <p className="text-sm text-dark-5">
-            {isLoading
-              ? "กำลังโหลดข้อมูล..."
-              : `แสดง ${tableRows.length} จากทั้งหมด ${meta.totalItems} รายการ`}
+            {isLoading ? (
+              <span className="inline-block h-4 w-40 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+            ) : (
+              <>แสดง {tableRows.length} จากทั้งหมด <strong className="font-semibold text-dark dark:text-white">{meta.totalItems}</strong> รายการ</>
+            )}
           </p>
           <div className="flex items-center gap-2">
             <button
-              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-40"
               disabled={!meta.hasPreviousPage || isLoading}
               onClick={() => setPage((c) => Math.max(1, c - 1))}
               type="button"
             >
-              ก่อนหน้า
+              ← ก่อนหน้า
             </button>
-            <span className="text-sm font-medium text-dark dark:text-white">
-              หน้า {meta.page} / {meta.totalPages}
+            <span className="min-w-[3rem] text-center text-sm font-medium text-dark dark:text-white">
+              {meta.page} / {meta.totalPages}
             </span>
             <button
-              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-40"
               disabled={!meta.hasNextPage || isLoading}
               onClick={() => setPage((c) => c + 1)}
               type="button"
             >
-              ถัดไป
+              ถัดไป →
             </button>
           </div>
         </div>
