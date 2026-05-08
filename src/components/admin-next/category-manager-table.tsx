@@ -64,6 +64,8 @@ const PAGE_SIZE_OPTIONS: SelectOption<number>[] = [
   { label: "50 รายการ", value: 50 },
 ];
 
+const NUM_COLS = 6;
+
 const FORM_STATUS_OPTIONS: SelectOption<"active" | "inactive">[] = [
   { label: "เปิดใช้งาน", value: "active" },
   { label: "ปิดใช้งาน", value: "inactive" },
@@ -150,28 +152,32 @@ function SelectField<T extends string | number>({
       ) : null}
 
       <button
-        className="flex w-full items-center justify-between rounded-[20px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark transition-colors hover:border-[#bfd6c7] focus:border-[#5f8f74] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+        className="flex w-full items-center justify-between rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-2.5 text-sm text-dark transition-colors hover:border-[#bfd6c7] focus:border-[#5f8f74] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
         onClick={() => setIsOpen((current) => !current)}
         type="button"
       >
         <span>{selectedOption?.label}</span>
-        <span
-          className={`text-xs text-dark-5 transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
+        <svg
+          className={`h-4 w-4 shrink-0 text-dark-5 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          viewBox="0 0 24 24"
         >
-          ▼
-        </span>
+          <path d="m6 9 6 6 6-6" />
+        </svg>
       </button>
 
       {isOpen ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+10px)] z-30 overflow-hidden rounded-[20px] border border-[#d8e6dd] bg-white shadow-1 dark:border-dark-3 dark:bg-dark-2">
+        <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-30 overflow-hidden rounded-2xl border border-[#d8e6dd] bg-white shadow-1 dark:border-dark-3 dark:bg-dark-2">
           {options.map((option) => {
             const isSelected = option.value === value;
 
             return (
               <button
-                className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors ${
+                className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors ${
                   isSelected
                     ? "bg-[#eef8f1] font-semibold text-[#355846]"
                     : "text-dark hover:bg-[#f8fbf9] dark:text-white dark:hover:bg-dark-3"
@@ -184,7 +190,11 @@ function SelectField<T extends string | number>({
                 type="button"
               >
                 <span>{option.label}</span>
-                {isSelected ? <span className="text-[#58cf94]">●</span> : null}
+                {isSelected ? (
+                  <svg className="h-4 w-4 text-[#45745a]" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 0 1 0 1.414l-8 8a1 1 0 0 1-1.414 0l-4-4a1 1 0 0 1 1.414-1.414L8 12.586l7.293-7.293a1 1 0 0 1 1.414 0Z" clipRule="evenodd" />
+                  </svg>
+                ) : null}
               </button>
             );
           })}
@@ -305,28 +315,42 @@ function ConfirmDeleteModal({
 }) {
   return (
     <div className="fixed inset-0 z-[130] flex items-center justify-center bg-[#0f172a]/55 px-4">
-      <div className="w-full max-w-md rounded-[28px] border border-[#eadbda] bg-white p-6 shadow-1 dark:border-dark-3 dark:bg-gray-dark">
-        <h3 className="text-xl font-bold text-dark dark:text-white">
-          ยืนยันการลบหมวดหมู่
-        </h3>
-        <p className="mt-3 text-sm leading-6 text-dark-5 dark:text-dark-6">
-          ต้องการลบหมวดหมู่{" "}
-          <span className="font-semibold text-dark dark:text-white">
-            "{categoryName}"
-          </span>{" "}
-          ใช่หรือไม่
-        </p>
-
-        <div className="mt-6 flex flex-wrap justify-end gap-3">
+      <div className="w-full max-w-md rounded-[28px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark">
+        <div className="flex items-center justify-between border-b border-stroke px-6 py-4 dark:border-dark-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fef2f1]">
+              <svg className="h-5 w-5 text-[#b42318]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-dark dark:text-white">ยืนยันการลบหมวดหมู่</h3>
+          </div>
           <button
-            className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-dark-5 hover:bg-neutral-100 dark:hover:bg-dark-2"
+            onClick={onClose}
+            type="button"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="px-6 py-5">
+          <p className="text-sm leading-6 text-dark-5 dark:text-dark-6">
+            ต้องการลบหมวดหมู่{" "}
+            <span className="font-semibold text-dark dark:text-white">"{categoryName}"</span>{" "}
+            ใช่หรือไม่?
+            <br />การลบจะไม่สามารถกู้คืนได้
+          </p>
+        </div>
+        <div className="flex justify-end gap-3 border-t border-stroke px-6 py-4 dark:border-dark-3">
+          <button
+            className="rounded-full border border-[#d7e7dc] px-5 py-2.5 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
             onClick={onClose}
             type="button"
           >
             ยกเลิก
           </button>
           <button
-            className="inline-flex items-center justify-center rounded-full bg-[#c84b44] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#ad3d37] disabled:cursor-not-allowed disabled:opacity-70"
+            className="rounded-full bg-[#c84b44] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#ad3d37] disabled:cursor-not-allowed disabled:opacity-70"
             disabled={isDeleting}
             onClick={() => void onConfirm()}
             type="button"
@@ -692,9 +716,9 @@ function ShadeManagerModal({ category, onClose }: { category: CategoryRecord; on
                       </td>
                       <td className="px-6 py-3 font-medium text-dark dark:text-white">{shade.name}</td>
                       <td className="px-6 py-3">
-                        <button className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors ${shade.isActive ? "bg-[#58cf94]" : "bg-[#d7e2db]"}`}
+                        <button className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${shade.isActive ? "bg-[#45745a]" : "bg-[#d7e2db]"}`}
                           onClick={() => void handleShadeToggle(shade)} type="button">
-                          <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${shade.isActive ? "translate-x-5" : "translate-x-1"}`} />
+                          <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${shade.isActive ? "translate-x-6" : "translate-x-1"}`} />
                         </button>
                       </td>
                       <td className="px-6 py-3">
@@ -1062,11 +1086,26 @@ export function CategoryManagerTable({
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-t border-stroke dark:border-dark-3">
-                    {Array.from({ length: 6 }).map((__, j) => (
-                      <td key={j} className="px-4 py-3">
-                        <div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
-                      </td>
-                    ))}
+                    <td className="w-8 px-3 py-3" />
+                    <td className="px-3 py-3">
+                      <div className="h-9 w-9 animate-pulse rounded-lg bg-neutral-100 dark:bg-dark-2" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+                      <div className="mt-1.5 h-3 w-24 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-6 w-20 animate-pulse rounded-full bg-neutral-100 dark:bg-dark-2" />
+                    </td>
+                    <td className="hidden px-4 py-3 lg:table-cell">
+                      <div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1.5">
+                        <div className="h-6 w-12 animate-pulse rounded-full bg-neutral-100 dark:bg-dark-2" />
+                        <div className="h-6 w-12 animate-pulse rounded-full bg-neutral-100 dark:bg-dark-2" />
+                      </div>
+                    </td>
                   </tr>
                 ))
               ) : tableRows.length === 0 ? (
