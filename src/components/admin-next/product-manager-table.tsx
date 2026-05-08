@@ -244,7 +244,14 @@ function ConfirmDeleteModal({
     <div className="fixed inset-0 z-[130] flex items-center justify-center bg-[#0f172a]/55 px-4">
       <div className="w-full max-w-md rounded-[28px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark">
         <div className="flex items-center justify-between border-b border-stroke px-6 py-4 dark:border-dark-3">
-          <h3 className="text-lg font-bold text-dark dark:text-white">ยืนยันการลบสินค้า</h3>
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fef2f1]">
+              <svg className="h-5 w-5 text-[#b42318]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-dark dark:text-white">ยืนยันการลบสินค้า</h3>
+          </div>
           <button
             className="flex h-8 w-8 items-center justify-center rounded-full text-dark-5 hover:bg-neutral-100 dark:hover:bg-dark-2"
             onClick={onClose}
@@ -254,15 +261,11 @@ function ConfirmDeleteModal({
           </button>
         </div>
         <div className="px-6 py-5">
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-[#fef2f1]">
-            <svg className="h-5 w-5 text-[#b42318]" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-            </svg>
-          </div>
           <p className="text-sm leading-6 text-dark-5 dark:text-dark-6">
             ต้องการลบสินค้า{" "}
-            <span className="font-semibold text-dark dark:text-white">"{productName}"</span> ใช่หรือไม่?
-            การลบจะไม่สามารถกู้คืนได้
+            <span className="font-semibold text-dark dark:text-white">"{productName}"</span>{" "}
+            ใช่หรือไม่?
+            <br />การลบจะไม่สามารถกู้คืนได้
           </p>
         </div>
         <div className="flex justify-end gap-3 border-t border-stroke px-6 py-4 dark:border-dark-3">
@@ -936,7 +939,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
             <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
                 <th className="px-4 py-3 font-semibold">รูป</th>
-                <th className="w-full px-4 py-3 font-semibold">สินค้า / SKU</th>
+                <th className="px-4 py-3 font-semibold">สินค้า / SKU</th>
                 <th className="whitespace-nowrap px-4 py-3 font-semibold">ราคา</th>
                 <th className="hidden px-4 py-3 font-semibold md:table-cell">สต็อก</th>
                 <th className="hidden px-4 py-3 font-semibold lg:table-cell">หมวดหมู่</th>
@@ -968,7 +971,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                     <div className="h-3.5 w-20 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
                   </td>
                   <td className="px-4 py-3">
-                    <div className="h-6 w-10 animate-pulse rounded-full bg-neutral-100 dark:bg-dark-2" />
+                    <div className="h-6 w-16 animate-pulse rounded-full bg-neutral-100 dark:bg-dark-2" />
                   </td>
                   <td className="hidden px-4 py-3 xl:table-cell">
                     <div className="h-5 w-16 animate-pulse rounded-full bg-neutral-100 dark:bg-dark-2" />
@@ -1009,7 +1012,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                   </td>
 
                   {/* Name + SKU */}
-                  <td className="w-full min-w-0 px-4 py-3">
+                  <td className="min-w-0 px-4 py-3">
                     <p className="truncate font-semibold text-dark dark:text-white">{product.name}</p>
                     <p className="mt-0.5 font-mono text-xs text-dark-5 dark:text-dark-6">{product.sku}</p>
                   </td>
@@ -1042,25 +1045,20 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                     ) : null}
                   </td>
 
-                  {/* Status toggle */}
+                  {/* Status */}
                   <td className="px-4 py-3">
-                    <div className="flex flex-col gap-1.5">
+                    {product.status !== "DRAFT" ? (
                       <button
-                        aria-label={product.status === "ACTIVE" ? "ปิดใช้งาน" : "เปิดใช้งาน"}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                          product.status === "ACTIVE" ? "bg-[#45745a]" : "bg-[#d7e2db]"
-                        }`}
+                        aria-label={product.status === "ACTIVE" ? "คลิกเพื่อปิดใช้งาน" : "คลิกเพื่อเปิดใช้งาน"}
+                        className="transition-opacity hover:opacity-75"
                         onClick={() => handleToggleStatus(product)}
                         type="button"
                       >
-                        <span
-                          className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                            product.status === "ACTIVE" ? "translate-x-6" : "translate-x-1"
-                          }`}
-                        />
+                        <StatusPill label={statusLabel(product.status)} tone={statusTone(product.status)} />
                       </button>
+                    ) : (
                       <StatusPill label={statusLabel(product.status)} tone={statusTone(product.status)} />
-                    </div>
+                    )}
                   </td>
 
                   {/* Featured + Badge */}
@@ -1089,8 +1087,8 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                   </td>
 
                   {/* Actions */}
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1.5">
+                  <td className="whitespace-nowrap px-4 py-3">
+                    <div className="flex gap-1.5">
                       <button
                         className="rounded-full border border-[#d7e7dc] px-3 py-1 text-xs font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:opacity-50"
                         onClick={() => startEdit(product)}
@@ -1113,17 +1111,30 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
               {/* Empty state */}
               {!isLoading && tableRows.length === 0 && (
                 <tr>
-                  <td colSpan={NUM_COLS} className="px-4 py-12 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0f6f2]">
-                        <svg className="h-6 w-6 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <td colSpan={NUM_COLS} className="px-4 py-16 text-center">
+                    <div className="flex flex-col items-center">
+                      <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f6f2]">
+                        <svg className="h-7 w-7 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z" />
                         </svg>
                       </div>
-                      <div>
-                        <p className="font-semibold text-dark dark:text-white">ไม่พบสินค้า</p>
-                        <p className="mt-1 text-sm text-dark-5">ลองเปลี่ยนคำค้นหาหรือตัวกรอง</p>
-                      </div>
+                      <p className="font-semibold text-dark dark:text-white">
+                        {searchTerm || statusFilter !== "all" || featuredFilter !== "all" ? "ไม่พบสินค้า" : "ยังไม่มีสินค้า"}
+                      </p>
+                      <p className="mt-1 text-sm text-dark-5">
+                        {searchTerm || statusFilter !== "all" || featuredFilter !== "all"
+                          ? "ลองเปลี่ยนคำค้นหาหรือตัวกรอง"
+                          : "เพิ่มสินค้าแรกเพื่อเริ่มต้น"}
+                      </p>
+                      {!searchTerm && statusFilter === "all" && featuredFilter === "all" ? (
+                        <button
+                          className="mt-4 rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
+                          onClick={openCreateModal}
+                          type="button"
+                        >
+                          + เพิ่มสินค้าแรก
+                        </button>
+                      ) : null}
                     </div>
                   </td>
                 </tr>
@@ -1135,29 +1146,40 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
         {/* Pagination */}
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-dark-5">
-            {isLoading
-              ? "กำลังโหลด..."
-              : `แสดง ${tableRows.length} จากทั้งหมด ${meta.totalItems} รายการ`}
+            {isLoading ? (
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-[#d8e6dd] border-t-[#45745a]" />
+                กำลังโหลด...
+              </span>
+            ) : (
+              <>
+                <span className="font-semibold text-dark dark:text-white">{meta.totalItems}</span>
+                {" รายการ"}
+                {meta.totalPages > 1 ? ` · หน้า ${meta.page}/${meta.totalPages}` : ""}
+              </>
+            )}
           </p>
           <div className="flex items-center gap-2">
             <button
-              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-40"
               disabled={!meta.hasPreviousPage || isLoading}
               onClick={() => setPage((c) => Math.max(1, c - 1))}
               type="button"
             >
-              ก่อนหน้า
+              ← ก่อนหน้า
             </button>
-            <span className="text-sm font-medium text-dark dark:text-white">
-              หน้า {meta.page} / {meta.totalPages}
-            </span>
+            {meta.totalPages > 1 && (
+              <span className="min-w-[3rem] text-center text-sm font-medium text-dark dark:text-white">
+                {meta.page} / {meta.totalPages}
+              </span>
+            )}
             <button
-              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-40"
               disabled={!meta.hasNextPage || isLoading}
               onClick={() => setPage((c) => c + 1)}
               type="button"
             >
-              ถัดไป
+              ถัดไป →
             </button>
           </div>
         </div>
