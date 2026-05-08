@@ -997,139 +997,147 @@ export function CategoryManagerTable({
           </button>
         }
       >
-        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="grid w-full gap-3 lg:max-w-3xl lg:grid-cols-[minmax(0,1fr)_180px_120px]">
-            <input
-              className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-              onChange={(event) => {
-                setPage(1);
-                setSearchTerm(event.target.value);
-              }}
-              placeholder="ค้นหาชื่อหมวดหมู่หรือ slug"
-              value={searchTerm}
-            />
+        <div className="mb-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_160px_110px]">
+          <input
+            className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+            onChange={(event) => {
+              setPage(1);
+              setSearchTerm(event.target.value);
+            }}
+            placeholder="ค้นหาชื่อหมวดหมู่หรือ slug"
+            value={searchTerm}
+          />
 
-            <SelectField
-              options={STATUS_OPTIONS}
-              onChange={(value) => {
-                setPage(1);
-                setStatusFilter(value);
-              }}
-              value={statusFilter}
-            />
+          <SelectField
+            options={STATUS_OPTIONS}
+            onChange={(value) => {
+              setPage(1);
+              setStatusFilter(value);
+            }}
+            value={statusFilter}
+          />
 
-            <SelectField
-              options={PAGE_SIZE_OPTIONS}
-              onChange={(value) => {
-                setPage(1);
-                setPageSize(value);
-              }}
-              value={pageSize}
-            />
-          </div>
+          <SelectField
+            options={PAGE_SIZE_OPTIONS}
+            onChange={(value) => {
+              setPage(1);
+              setPageSize(value);
+            }}
+            value={pageSize}
+          />
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-stroke dark:border-dark-3">
-          <table className="w-full text-left">
+        <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
+          <table className="w-full min-w-[820px] text-left">
             <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
                 <th className="w-8 px-3 py-4" />
                 <th className="px-3 py-4 font-medium">รูป</th>
                 <th className="px-5 py-4 font-medium">ชื่อหมวดหมู่</th>
-                <th className="px-5 py-4 font-medium">Slug</th>
+                <th className="hidden px-5 py-4 font-medium md:table-cell">Slug</th>
                 <th className="px-5 py-4 font-medium">สถานะ</th>
-                <th className="px-5 py-4 font-medium">จัดการโดยล่าสุด</th>
+                <th className="hidden px-5 py-4 font-medium lg:table-cell">จัดการโดยล่าสุด</th>
                 <th className="px-5 py-4 font-medium">จัดการ</th>
               </tr>
             </thead>
             <tbody>
-              {tableRows.map((category, idx) => (
-                <tr
-                  key={category.id}
-                  className={`border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6 transition-colors ${draggingIdx === idx ? "opacity-40" : ""} ${dragOverIdx === idx && draggingIdx !== idx ? "bg-[#eef8f1]" : ""}`}
-                  draggable
-                  onDragEnd={() => { setDraggingIdx(null); setDragOverIdx(null); }}
-                  onDragOver={(e) => { e.preventDefault(); setDragOverIdx(idx); }}
-                  onDragStart={() => setDraggingIdx(idx)}
-                  onDrop={() => void handleCategoryDrop(idx)}
-                >
-                  <td className="px-3 py-4 text-center text-dark-5 cursor-grab select-none">⠿</td>
-                  <td className="px-3 py-4">
-                    {category.imageUrl ? (
-                      <img alt={category.name} className="h-10 w-10 rounded-lg object-cover border border-stroke" src={category.imageUrl} />
-                    ) : (
-                      <div className="h-10 w-10 rounded-lg bg-[#f0f4f2] border border-stroke" />
-                    )}
-                  </td>
-                  <td className="px-5 py-4 font-semibold text-dark dark:text-white">
-                    {category.name}
-                  </td>
-                  <td className="px-5 py-4">{category.slug}</td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <button
-                        aria-label={category.isActive ? "ปิดใช้งาน" : "เปิดใช้งาน"}
-                        className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-                          category.isActive ? "bg-[#58cf94]" : "bg-[#d7e2db]"
-                        }`}
-                        onClick={() => handleToggleStatus(category)}
-                        type="button"
-                      >
-                        <span
-                          className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${
-                            category.isActive ? "translate-x-6" : "translate-x-1"
-                          }`}
-                        />
-                      </button>
-                      <StatusPill
-                        label={category.isActive ? "เปิดใช้งาน" : "ปิดใช้งาน"}
-                        tone={category.isActive ? "success" : "warning"}
-                      />
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="font-medium text-dark dark:text-white">
-                      {category.processedBy}
-                    </div>
-                    <div className="mt-1 text-xs text-dark-5">{category.processedAt}</div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex flex-wrap gap-2">
-                      {category.requiresShadeSelection ? (
-                        <button
-                          className="rounded-full border border-[#c8ddd1] px-3 py-1 text-xs font-semibold text-[#45745a] transition-colors hover:bg-[#eef8f1]"
-                          onClick={() => setShadeManagerCategory(category)}
-                          type="button"
-                        >
-                          เฉดสี
-                        </button>
-                      ) : null}
-                      <button
-                        className="rounded-full border border-[#d7e7dc] px-3 py-1 text-xs font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
-                        onClick={() => startEdit(category)}
-                        type="button"
-                      >
-                        แก้ไข
-                      </button>
-                      <button
-                        className="rounded-full border border-[#f1d0cf] px-3 py-1 text-xs font-semibold text-[#b42318] transition-colors hover:bg-[#fff5f4]"
-                        onClick={() => handleSoftDelete(category)}
-                        type="button"
-                      >
-                        ลบ
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-
-              {!isLoading && tableRows.length === 0 ? (
-                <tr className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6">
-                  <td className="px-5 py-6 text-center" colSpan={7}>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-t border-stroke dark:border-dark-3">
+                    {Array.from({ length: 7 }).map((__, j) => (
+                      <td key={j} className="px-4 py-4">
+                        <div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : tableRows.length === 0 ? (
+                <tr>
+                  <td className="px-5 py-8 text-center text-sm text-dark-5" colSpan={7}>
                     ไม่พบข้อมูลหมวดหมู่
                   </td>
                 </tr>
-              ) : null}
+              ) : (
+                tableRows.map((category, idx) => (
+                  <tr
+                    key={category.id}
+                    className={`border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6 transition-colors ${draggingIdx === idx ? "opacity-40" : ""} ${dragOverIdx === idx && draggingIdx !== idx ? "bg-[#eef8f1]" : ""}`}
+                    draggable
+                    onDragEnd={() => { setDraggingIdx(null); setDragOverIdx(null); }}
+                    onDragOver={(e) => { e.preventDefault(); setDragOverIdx(idx); }}
+                    onDragStart={() => setDraggingIdx(idx)}
+                    onDrop={() => void handleCategoryDrop(idx)}
+                  >
+                    <td className="px-3 py-4 text-center text-dark-5 cursor-grab select-none">⠿</td>
+                    <td className="px-3 py-4">
+                      {category.imageUrl ? (
+                        <img alt={category.name} className="h-10 w-10 rounded-lg object-cover border border-stroke" src={category.imageUrl} />
+                      ) : (
+                        <div className="h-10 w-10 rounded-lg bg-[#f0f4f2] border border-stroke" />
+                      )}
+                    </td>
+                    <td className="px-5 py-4 font-semibold text-dark dark:text-white">
+                      {category.name}
+                    </td>
+                    <td className="hidden px-5 py-4 md:table-cell">{category.slug}</td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <button
+                          aria-label={category.isActive ? "ปิดใช้งาน" : "เปิดใช้งาน"}
+                          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                            category.isActive ? "bg-[#58cf94]" : "bg-[#d7e2db]"
+                          }`}
+                          onClick={() => handleToggleStatus(category)}
+                          type="button"
+                        >
+                          <span
+                            className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${
+                              category.isActive ? "translate-x-6" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                        <StatusPill
+                          label={category.isActive ? "เปิดใช้งาน" : "ปิดใช้งาน"}
+                          tone={category.isActive ? "success" : "danger"}
+                        />
+                      </div>
+                    </td>
+                    <td className="hidden px-5 py-4 lg:table-cell">
+                      <div className="font-medium text-dark dark:text-white">
+                        {category.processedBy}
+                      </div>
+                      <div className="mt-1 text-xs text-dark-5">{category.processedAt}</div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex flex-wrap gap-2">
+                        {category.requiresShadeSelection ? (
+                          <button
+                            className="rounded-full border border-[#c8ddd1] px-3 py-1 text-xs font-semibold text-[#45745a] transition-colors hover:bg-[#eef8f1]"
+                            onClick={() => setShadeManagerCategory(category)}
+                            type="button"
+                          >
+                            เฉดสี
+                          </button>
+                        ) : null}
+                        <button
+                          className="rounded-full border border-[#d7e7dc] px-3 py-1 text-xs font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+                          onClick={() => startEdit(category)}
+                          type="button"
+                        >
+                          แก้ไข
+                        </button>
+                        <button
+                          className="rounded-full border border-[#f1d0cf] px-3 py-1 text-xs font-semibold text-[#b42318] transition-colors hover:bg-[#fff5f4]"
+                          onClick={() => handleSoftDelete(category)}
+                          type="button"
+                        >
+                          ลบ
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -1184,141 +1192,152 @@ export function CategoryManagerTable({
       ) : null}
 
       {isModalOpen ? createPortal(
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/50 px-4 py-8">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/50 px-4">
           <div className="w-full max-w-2xl rounded-[28px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark">
-            <div className="flex items-start justify-between gap-4 border-b border-stroke px-6 py-5 dark:border-dark-3">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-stroke px-6 py-4 dark:border-dark-3">
               <div>
-                <h3 className="text-2xl font-bold text-dark dark:text-white">
+                <h3 className="text-xl font-bold text-dark dark:text-white">
                   {editingId ? "แก้ไขหมวดหมู่" : "สร้างหมวดหมู่"}
                 </h3>
-                <p className="mt-2 text-sm leading-6 text-dark-5 dark:text-dark-6">
-                  ใช้เฉพาะข้อมูลพื้นฐานก่อน เพื่อให้เริ่มจัดการหมวดหมู่ได้เร็วและไม่ซับซ้อน
+                <p className="mt-1 text-sm text-dark-5 dark:text-dark-6">
+                  {editingId ? "แก้ไขข้อมูลหมวดหมู่ที่ต้องการ" : "กรอกข้อมูลเพื่อเพิ่มหมวดหมู่ใหม่"}
                 </p>
               </div>
               <button
-                className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-dark-5 hover:bg-neutral-100"
                 onClick={closeModal}
                 type="button"
               >
-                ปิด
+                ✕
               </button>
             </div>
 
-            <form className="space-y-4 px-6 py-6" onSubmit={handleSubmit}>
-              {/* ชื่อ + Slug */}
-              <div className="grid gap-4 sm:grid-cols-2">
+            <form onSubmit={handleSubmit}>
+              {/* Scrollable body */}
+              <div className="max-h-[60vh] space-y-4 overflow-y-auto px-6 py-5">
+                {/* ชื่อ + Slug */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-dark dark:text-white">ชื่อหมวดหมู่ <span className="text-[#c84b44]">*</span></label>
+                    <input
+                      className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
+                      onChange={(e) => setForm((c) => ({ ...c, name: e.target.value, slug: c.slug || slugify(e.target.value) }))}
+                      placeholder="เช่น สีผม"
+                      value={form.name ?? ""}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-dark dark:text-white">Slug <span className="text-[#c84b44]">*</span></label>
+                    <input
+                      className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm font-mono outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
+                      onChange={(e) => setForm((c) => ({ ...c, slug: e.target.value }))}
+                      placeholder="เช่น hair-color"
+                      value={form.slug ?? ""}
+                    />
+                  </div>
+                </div>
+
+                {/* Eyebrow */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-dark dark:text-white">ชื่อหมวดหมู่ <span className="text-[#c84b44]">*</span></label>
+                  <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+                    Eyebrow <span className="font-normal text-dark-5">(ป้ายเล็กเหนือชื่อในหน้าแรก)</span>
+                  </label>
                   <input
                     className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
-                    onChange={(e) => setForm((c) => ({ ...c, name: e.target.value, slug: c.slug || slugify(e.target.value) }))}
-                    placeholder="เช่น สีผม"
-                    value={form.name ?? ""}
+                    onChange={(e) => setForm((c) => ({ ...c, eyebrow: e.target.value }))}
+                    placeholder="เช่น Daily Essentials, Color Collection"
+                    value={form.eyebrow ?? ""}
                   />
                 </div>
+
+                {/* คำอธิบาย */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-dark dark:text-white">Slug <span className="text-[#c84b44]">*</span></label>
-                  <input
-                    className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm font-mono outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
-                    onChange={(e) => setForm((c) => ({ ...c, slug: e.target.value }))}
-                    placeholder="เช่น hair-color"
-                    value={form.slug ?? ""}
-                  />
-                </div>
-              </div>
-
-              {/* Eyebrow */}
-              <div>
-                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">Eyebrow <span className="text-dark-5 font-normal">(ป้ายเล็กเหนือชื่อในหน้าแรก)</span></label>
-                <input
-                  className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
-                  onChange={(e) => setForm((c) => ({ ...c, eyebrow: e.target.value }))}
-                  placeholder="เช่น Daily Essentials, Color Collection"
-                  value={form.eyebrow ?? ""}
-                />
-              </div>
-
-              {/* คำอธิบาย */}
-              <div>
-                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">คำอธิบาย <span className="text-dark-5 font-normal">(แสดงเป็น body text ในหน้าแรก)</span></label>
-                <textarea
-                  className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
-                  onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))}
-                  placeholder="อธิบายหมวดหมู่นี้..."
-                  rows={2}
-                  value={form.description ?? ""}
-                />
-              </div>
-
-              {/* รูปหมวดหมู่ */}
-              <div>
-                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">รูปหมวดหมู่</label>
-                <div className="flex items-center gap-4">
-                  {imagePreview ? (
-                    <div className="relative">
-                      <img alt="preview" className="h-20 w-20 rounded-xl border border-[#d8e6dd] object-cover" src={imagePreview} />
-                      <button
-                        className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#c84b44] text-xs text-white hover:bg-[#ad3d37]"
-                        onClick={() => { setImagePreview(null); setForm((c) => ({ ...c, tempImageFile: undefined, imageUrl: undefined })); }}
-                        type="button"
-                      >×</button>
-                    </div>
-                  ) : null}
-                  <label className={`cursor-pointer rounded-xl border-2 border-dashed border-[#c8ddd1] px-4 py-3 text-sm text-[#45745a] transition-colors hover:border-[#5f8f74] hover:bg-[#f4fbf6] ${isUploadingImage ? "opacity-60" : ""}`}>
-                    {isUploadingImage ? "กำลังอัปโหลด..." : imagePreview ? "เปลี่ยนรูป" : "เลือกรูป"}
-                    <input
-                      accept="image/jpeg,image/png,image/webp"
-                      className="sr-only"
-                      disabled={isUploadingImage}
-                      onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleImageUpload(f); e.target.value = ""; }}
-                      type="file"
-                    />
+                  <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+                    คำอธิบาย <span className="font-normal text-dark-5">(แสดงเป็น body text ในหน้าแรก)</span>
                   </label>
+                  <textarea
+                    className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
+                    onChange={(e) => setForm((c) => ({ ...c, description: e.target.value }))}
+                    placeholder="อธิบายหมวดหมู่นี้..."
+                    rows={2}
+                    value={form.description ?? ""}
+                  />
                 </div>
-              </div>
 
-              {/* ต้องเลือกเฉดสี */}
-              <div className="flex items-center gap-3 rounded-xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3">
-                <button
-                  className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${form.requiresShadeSelection ? "bg-[#58cf94]" : "bg-[#d7e2db]"}`}
-                  onClick={() => setForm((c) => ({ ...c, requiresShadeSelection: !c.requiresShadeSelection }))}
-                  type="button"
-                >
-                  <span className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${form.requiresShadeSelection ? "translate-x-6" : "translate-x-1"}`} />
-                </button>
+                {/* รูปหมวดหมู่ */}
                 <div>
-                  <p className="text-sm font-medium text-dark dark:text-white">ต้องเลือกเฉดสีก่อน</p>
-                  <p className="text-xs text-dark-5">เปิดเมื่อเป็นหมวดหมู่สีผม ลูกค้าต้องเลือกเฉดก่อนดูสินค้า</p>
+                  <label className="mb-2 block text-sm font-medium text-dark dark:text-white">รูปหมวดหมู่</label>
+                  <div className="flex items-center gap-4">
+                    {imagePreview ? (
+                      <div className="relative">
+                        <img alt="preview" className="h-20 w-20 rounded-xl border border-[#d8e6dd] object-cover" src={imagePreview} />
+                        <button
+                          className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#c84b44] text-xs text-white hover:bg-[#ad3d37]"
+                          onClick={() => { setImagePreview(null); setForm((c) => ({ ...c, tempImageFile: undefined, imageUrl: undefined })); }}
+                          type="button"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : null}
+                    <label className={`cursor-pointer rounded-xl border-2 border-dashed border-[#c8ddd1] px-4 py-3 text-sm text-[#45745a] transition-colors hover:border-[#5f8f74] hover:bg-[#f4fbf6] ${isUploadingImage ? "opacity-60" : ""}`}>
+                      {isUploadingImage ? "กำลังอัปโหลด..." : imagePreview ? "เปลี่ยนรูป" : "เลือกรูป"}
+                      <input
+                        accept="image/jpeg,image/png,image/webp"
+                        className="sr-only"
+                        disabled={isUploadingImage}
+                        onChange={(e) => { const f = e.target.files?.[0]; if (f) void handleImageUpload(f); e.target.value = ""; }}
+                        type="file"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* ต้องเลือกเฉดสี */}
+                <div className="flex items-center gap-3 rounded-xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3">
+                  <button
+                    className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${form.requiresShadeSelection ? "bg-[#58cf94]" : "bg-[#d7e2db]"}`}
+                    onClick={() => setForm((c) => ({ ...c, requiresShadeSelection: !c.requiresShadeSelection }))}
+                    type="button"
+                  >
+                    <span className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${form.requiresShadeSelection ? "translate-x-6" : "translate-x-1"}`} />
+                  </button>
+                  <div>
+                    <p className="text-sm font-medium text-dark dark:text-white">ต้องเลือกเฉดสีก่อน</p>
+                    <p className="text-xs text-dark-5">เปิดเมื่อเป็นหมวดหมู่สีผม ลูกค้าต้องเลือกเฉดก่อนดูสินค้า</p>
+                  </div>
+                </div>
+
+                {/* สถานะ */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-dark dark:text-white">สถานะ</label>
+                  <select
+                    className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
+                    onChange={(e) => setForm((c) => ({ ...c, isActive: e.target.value === "active" }))}
+                    value={form.isActive ? "active" : "inactive"}
+                  >
+                    <option value="active">เปิดใช้งาน</option>
+                    <option value="inactive">ปิดใช้งาน</option>
+                  </select>
                 </div>
               </div>
 
-              {/* สถานะ */}
-              <div>
-                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">สถานะ</label>
-                <select
-                  className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
-                  onChange={(e) => setForm((c) => ({ ...c, isActive: e.target.value === "active" }))}
-                  value={form.isActive ? "active" : "inactive"}
-                >
-                  <option value="active">เปิดใช้งาน</option>
-                  <option value="inactive">ปิดใช้งาน</option>
-                </select>
-              </div>
-
-              <div className="flex flex-wrap gap-3 pt-1">
+              {/* Footer */}
+              <div className="flex justify-end gap-3 border-t border-stroke px-6 py-4 dark:border-dark-3">
                 <button
-                  className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:cursor-not-allowed disabled:opacity-70"
-                  disabled={isSubmitting || isUploadingImage}
-                  type="submit"
-                >
-                  {isSubmitting ? (editingId ? "กำลังบันทึก..." : "กำลังสร้าง...") : editingId ? "บันทึกการเปลี่ยนแปลง" : "สร้างหมวดหมู่"}
-                </button>
-                <button
-                  className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+                  className="rounded-full border border-[#d7e7dc] px-5 py-2.5 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6]"
                   onClick={closeModal}
                   type="button"
                 >
                   ยกเลิก
+                </button>
+                <button
+                  className="rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#355846] disabled:cursor-not-allowed disabled:opacity-70"
+                  disabled={isSubmitting || isUploadingImage}
+                  type="submit"
+                >
+                  {isSubmitting ? (editingId ? "กำลังบันทึก..." : "กำลังสร้าง...") : editingId ? "บันทึก" : "สร้างหมวดหมู่"}
                 </button>
               </div>
             </form>

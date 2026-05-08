@@ -155,7 +155,7 @@ export function StatusPill({
   tone = "default",
 }: {
   label: string;
-  tone?: "default" | "success" | "warning";
+  tone?: "default" | "success" | "warning" | "danger";
 }) {
   return (
     <span
@@ -163,6 +163,7 @@ export function StatusPill({
         "inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide",
         tone === "success" && "bg-[#ecf9f0] text-[#2f7a4f]",
         tone === "warning" && "bg-[#fff4df] text-[#9a6a12]",
+        tone === "danger" && "bg-[#fef2f1] text-[#b42318]",
         tone === "default" && "bg-[#f1f5f3] text-[#456955]",
       )}
     >
