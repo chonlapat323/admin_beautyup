@@ -985,67 +985,88 @@ export function CategoryManagerTable({
   return (
     <>
       <ContentCard
-        title="จัดการหมวดหมู่"
-        description="ค้นหา กรองข้อมูล และแบ่งหน้าได้จากหน้าจัดการเดียว"
-        aside={
-          <button
-            className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
-            onClick={openCreateModal}
-            type="button"
-          >
-            + เพิ่มหมวดหมู่
-          </button>
-        }
+        title="หมวดหมู่สินค้า"
+        description="จัดการหมวดหมู่ทั้งหมด — ค้นหา กรอง และเรียงลำดับการแสดงผลได้จากหน้านี้"
       >
-        <div className="mb-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_160px_110px]">
-          <input
-            className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-            onChange={(event) => {
-              setPage(1);
-              setSearchTerm(event.target.value);
-            }}
-            placeholder="ค้นหาชื่อหมวดหมู่หรือ slug"
-            value={searchTerm}
-          />
-
-          <SelectField
-            options={STATUS_OPTIONS}
-            onChange={(value) => {
-              setPage(1);
-              setStatusFilter(value);
-            }}
-            value={statusFilter}
-          />
-
-          <SelectField
-            options={PAGE_SIZE_OPTIONS}
-            onChange={(value) => {
-              setPage(1);
-              setPageSize(value);
-            }}
-            value={pageSize}
-          />
+        {/* Filter bar */}
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {/* Left: search + status pills */}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-60">
+              <svg
+                className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-5"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.75}
+                viewBox="0 0 24 24"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] py-2.5 pl-9 pr-4 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                onChange={(event) => {
+                  setPage(1);
+                  setSearchTerm(event.target.value);
+                }}
+                placeholder="ค้นหาหมวดหมู่..."
+                value={searchTerm}
+              />
+            </div>
+            <div className="flex gap-1.5">
+              {STATUS_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  className={`rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${
+                    statusFilter === opt.value
+                      ? "bg-[#45745a] text-white"
+                      : "border border-[#d7e7dc] text-[#355846] hover:bg-[#f4fbf6]"
+                  }`}
+                  onClick={() => { setPage(1); setStatusFilter(opt.value); }}
+                  type="button"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Right: page size + add button */}
+          <div className="flex shrink-0 items-center gap-2">
+            <SelectField
+              options={PAGE_SIZE_OPTIONS}
+              onChange={(value) => { setPage(1); setPageSize(value); }}
+              value={pageSize}
+            />
+            <button
+              className="shrink-0 rounded-full bg-[#45745a] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
+              onClick={openCreateModal}
+              type="button"
+            >
+              + เพิ่มหมวดหมู่
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
-          <table className="w-full min-w-[820px] text-left">
-            <thead className="bg-[#f8fbf9] text-sm text-dark-5 dark:bg-dark-2 dark:text-dark-6">
+          <table className="w-full min-w-[640px] text-left">
+            <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
-                <th className="w-8 px-3 py-4" />
-                <th className="px-3 py-4 font-medium">รูป</th>
-                <th className="px-5 py-4 font-medium">ชื่อหมวดหมู่</th>
-                <th className="hidden px-5 py-4 font-medium md:table-cell">Slug</th>
-                <th className="px-5 py-4 font-medium">สถานะ</th>
-                <th className="hidden px-5 py-4 font-medium lg:table-cell">จัดการโดยล่าสุด</th>
-                <th className="px-5 py-4 font-medium">จัดการ</th>
+                <th className="w-8 px-3 py-3" />
+                <th className="px-3 py-3 font-medium">รูป</th>
+                <th className="px-4 py-3 font-medium">หมวดหมู่</th>
+                <th className="px-4 py-3 font-medium">สถานะ</th>
+                <th className="hidden px-4 py-3 font-medium lg:table-cell">แก้ไขล่าสุดโดย</th>
+                <th className="px-4 py-3 font-medium">จัดการ</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-t border-stroke dark:border-dark-3">
-                    {Array.from({ length: 7 }).map((__, j) => (
-                      <td key={j} className="px-4 py-4">
+                    {Array.from({ length: 6 }).map((__, j) => (
+                      <td key={j} className="px-4 py-3">
                         <div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
                       </td>
                     ))}
@@ -1053,63 +1074,83 @@ export function CategoryManagerTable({
                 ))
               ) : tableRows.length === 0 ? (
                 <tr>
-                  <td className="px-5 py-8 text-center text-sm text-dark-5" colSpan={7}>
-                    ไม่พบข้อมูลหมวดหมู่
+                  <td colSpan={6} className="py-16 text-center">
+                    <div className="flex flex-col items-center">
+                      <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f6f2]">
+                        <svg className="h-7 w-7 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+                        </svg>
+                      </div>
+                      <p className="font-semibold text-dark dark:text-white">
+                        {searchTerm || statusFilter !== "all" ? "ไม่พบหมวดหมู่" : "ยังไม่มีหมวดหมู่"}
+                      </p>
+                      <p className="mt-1 text-sm text-dark-5">
+                        {searchTerm || statusFilter !== "all"
+                          ? "ลองเปลี่ยนคำค้นหาหรือตัวกรอง"
+                          : "เพิ่มหมวดหมู่แรกเพื่อเริ่มจัดการสินค้า"}
+                      </p>
+                      {!searchTerm && statusFilter === "all" ? (
+                        <button
+                          className="mt-4 rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#355846]"
+                          onClick={openCreateModal}
+                          type="button"
+                        >
+                          + เพิ่มหมวดหมู่แรก
+                        </button>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ) : (
                 tableRows.map((category, idx) => (
                   <tr
                     key={category.id}
-                    className={`border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6 transition-colors ${draggingIdx === idx ? "opacity-40" : ""} ${dragOverIdx === idx && draggingIdx !== idx ? "bg-[#eef8f1]" : ""}`}
+                    className={`group border-t border-stroke text-sm transition-colors hover:bg-[#fafcfb] dark:border-dark-3 dark:hover:bg-dark-2/50 ${draggingIdx === idx ? "opacity-40" : ""} ${dragOverIdx === idx && draggingIdx !== idx ? "bg-[#eef8f1]" : ""}`}
                     draggable
                     onDragEnd={() => { setDraggingIdx(null); setDragOverIdx(null); }}
                     onDragOver={(e) => { e.preventDefault(); setDragOverIdx(idx); }}
                     onDragStart={() => setDraggingIdx(idx)}
                     onDrop={() => void handleCategoryDrop(idx)}
                   >
-                    <td className="px-3 py-4 text-center text-dark-5 cursor-grab select-none">⠿</td>
-                    <td className="px-3 py-4">
+                    <td className="px-3 py-3 text-center cursor-grab select-none text-dark-5 opacity-30 transition-opacity group-hover:opacity-70">⠿</td>
+                    <td className="px-3 py-3">
                       {category.imageUrl ? (
-                        <img alt={category.name} className="h-10 w-10 rounded-lg object-cover border border-stroke" src={category.imageUrl} />
+                        <img
+                          alt={category.name}
+                          className="h-9 w-9 rounded-lg border border-stroke object-cover"
+                          src={category.imageUrl}
+                        />
                       ) : (
-                        <div className="h-10 w-10 rounded-lg bg-[#f0f4f2] border border-stroke" />
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-stroke bg-[#f0f4f2]">
+                          <svg className="h-4 w-4 text-[#a0b8ad]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                          </svg>
+                        </div>
                       )}
                     </td>
-                    <td className="px-5 py-4 font-semibold text-dark dark:text-white">
-                      {category.name}
+                    <td className="px-4 py-3">
+                      <p className="font-semibold text-dark dark:text-white">{category.name}</p>
+                      <p className="mt-0.5 font-mono text-xs text-dark-5">{category.slug}</p>
                     </td>
-                    <td className="hidden px-5 py-4 md:table-cell">{category.slug}</td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <button
-                          aria-label={category.isActive ? "ปิดใช้งาน" : "เปิดใช้งาน"}
-                          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-                            category.isActive ? "bg-[#58cf94]" : "bg-[#d7e2db]"
-                          }`}
-                          onClick={() => handleToggleStatus(category)}
-                          type="button"
-                        >
-                          <span
-                            className={`inline-block h-5 w-5 rounded-full bg-white transition-transform ${
-                              category.isActive ? "translate-x-6" : "translate-x-1"
-                            }`}
-                          />
-                        </button>
+                    <td className="px-4 py-3">
+                      <button
+                        aria-label={category.isActive ? "คลิกเพื่อปิดใช้งาน" : "คลิกเพื่อเปิดใช้งาน"}
+                        className="transition-opacity hover:opacity-75"
+                        onClick={() => handleToggleStatus(category)}
+                        type="button"
+                      >
                         <StatusPill
                           label={category.isActive ? "เปิดใช้งาน" : "ปิดใช้งาน"}
                           tone={category.isActive ? "success" : "danger"}
                         />
-                      </div>
+                      </button>
                     </td>
-                    <td className="hidden px-5 py-4 lg:table-cell">
-                      <div className="font-medium text-dark dark:text-white">
-                        {category.processedBy}
-                      </div>
-                      <div className="mt-1 text-xs text-dark-5">{category.processedAt}</div>
+                    <td className="hidden px-4 py-3 lg:table-cell">
+                      <p className="text-sm text-dark dark:text-white">{category.processedBy}</p>
+                      <p className="mt-0.5 text-xs text-dark-5">{category.processedAt}</p>
                     </td>
-                    <td className="px-5 py-4">
-                      <div className="flex flex-wrap gap-2">
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1.5">
                         {category.requiresShadeSelection ? (
                           <button
                             className="rounded-full border border-[#c8ddd1] px-3 py-1 text-xs font-semibold text-[#45745a] transition-colors hover:bg-[#eef8f1]"
@@ -1142,32 +1183,37 @@ export function CategoryManagerTable({
           </table>
         </div>
 
-        <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-dark-5">
-            {isLoading
-              ? "กำลังโหลดข้อมูล..."
-              : `แสดง ${tableRows.length} จากทั้งหมด ${meta.totalItems} รายการ`}
+            {isLoading ? (
+              <span className="inline-flex items-center gap-1.5">
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-[#d8e6dd] border-t-[#45745a]" />
+                กำลังโหลด...
+              </span>
+            ) : (
+              <>
+                <span className="font-semibold text-dark dark:text-white">{meta.totalItems}</span>
+                {" รายการ"}
+                {meta.totalPages > 1 ? ` · หน้า ${meta.page}/${meta.totalPages}` : ""}
+              </>
+            )}
           </p>
-
           <div className="flex items-center gap-2">
             <button
-              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-40"
               disabled={!meta.hasPreviousPage || isLoading}
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               type="button"
             >
-              ก่อนหน้า
+              ← ก่อนหน้า
             </button>
-            <span className="text-sm font-medium text-dark dark:text-white">
-              หน้า {meta.page} / {meta.totalPages}
-            </span>
             <button
-              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-40"
               disabled={!meta.hasNextPage || isLoading}
               onClick={() => setPage((current) => current + 1)}
               type="button"
             >
-              ถัดไป
+              ถัดไป →
             </button>
           </div>
         </div>
