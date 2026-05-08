@@ -984,10 +984,7 @@ export function CategoryManagerTable({
 
   return (
     <>
-      <ContentCard
-        title="หมวดหมู่สินค้า"
-        description="จัดการหมวดหมู่ทั้งหมด — ค้นหา กรอง และเรียงลำดับการแสดงผลได้จากหน้านี้"
-      >
+      <ContentCard title="หมวดหมู่สินค้า">
         {/* Filter bar */}
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           {/* Left: search + status pills */}
