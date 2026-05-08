@@ -1168,11 +1168,9 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
             >
               ← ก่อนหน้า
             </button>
-            {meta.totalPages > 1 && (
-              <span className="min-w-[3rem] text-center text-sm font-medium text-dark dark:text-white">
-                {meta.page} / {meta.totalPages}
-              </span>
-            )}
+            <span className="min-w-[3rem] text-center text-sm font-medium text-dark dark:text-white">
+              {meta.page} / {meta.totalPages}
+            </span>
             <button
               className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6] disabled:cursor-not-allowed disabled:opacity-40"
               disabled={!meta.hasNextPage || isLoading}
