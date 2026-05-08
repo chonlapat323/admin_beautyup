@@ -109,13 +109,15 @@ export function StatCard({
   icon?: React.ReactNode;
 }) {
   return (
-    <article className="rounded-[20px] border border-stroke bg-white p-5 shadow-1 dark:border-dark-3 dark:bg-gray-dark">
-      {icon ? <div className="mb-3">{icon}</div> : null}
-      <p className="text-sm font-medium text-dark-5 dark:text-dark-6">{label}</p>
-      <strong className="mt-3 block text-2xl font-bold text-dark dark:text-white">
+    <article className="rounded-[22px] border border-stroke bg-white p-4 shadow-1 dark:border-dark-3 dark:bg-gray-dark sm:p-5">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-xs font-medium leading-snug text-dark-5 dark:text-dark-6">{label}</p>
+        {icon ? <div className="shrink-0">{icon}</div> : null}
+      </div>
+      <strong className="mt-3 block text-[22px] font-bold leading-none tracking-tight text-dark tabular-nums dark:text-white sm:text-[26px]">
         {value}
       </strong>
-      <p className="mt-2 text-sm text-[#5f8f74]">{hint}</p>
+      <p className="mt-1.5 text-xs leading-snug text-dark-5 dark:text-dark-6">{hint}</p>
     </article>
   );
 }
@@ -131,10 +133,10 @@ export function ContentCard({
   aside?: React.ReactNode;
 }>) {
   return (
-    <section className="rounded-[22px] border border-stroke bg-white p-6 shadow-1 dark:border-dark-3 dark:bg-gray-dark xl:p-7.5">
-      <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+    <section className="rounded-[22px] border border-stroke bg-white p-5 shadow-1 dark:border-dark-3 dark:bg-gray-dark sm:p-6 xl:p-7.5">
+      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h3 className="text-xl font-bold text-dark dark:text-white">{title}</h3>
+          <h3 className="text-lg font-bold text-dark dark:text-white sm:text-xl">{title}</h3>
           {description ? (
             <p className="mt-2 max-w-3xl text-sm leading-6 text-dark-5 dark:text-dark-6">
               {description}
