@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
-
-function getBackendApiBaseUrl() {
-  return process.env.ADMIN_API_URL || process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000/api";
-}
+import { backendFetch, requireSession } from "@/lib/backend-fetch";
 
 type RouteContext = { params: Promise<{ id: string; imageId: string }> };
 
 export async function DELETE(_: Request, context: RouteContext) {
   const { id, imageId } = await context.params;
+  const { session, unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
   try {
-    const response = await fetch(`${getBackendApiBaseUrl()}/products/${id}/images/${imageId}`, {
+    const response = await backendFetch(`/products/${id}/images/${imageId}`, {
       method: "DELETE",
-      cache: "no-store",
-    });
+    }, session.admin.email);
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {

@@ -1,21 +1,19 @@
 import { NextResponse } from "next/server";
-
-function getBackend() {
-  return process.env.ADMIN_API_URL || process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000/api";
-}
+import { backendFetch, requireSession } from "@/lib/backend-fetch";
 
 type RouteContext = { params: Promise<{ id: string; groupId: string; shadeId: string }> };
 
 export async function PATCH(request: Request, context: RouteContext) {
   const { id, groupId, shadeId } = await context.params;
+  const { session, unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
   try {
     const body = await request.json();
-    const res = await fetch(`${getBackend()}/categories/${id}/shade-groups/${groupId}/shades/${shadeId}`, {
+    const response = await backendFetch(`/categories/${id}/shade-groups/${groupId}/shades/${shadeId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    });
-    return NextResponse.json(await res.json(), { status: res.status });
+    }, session.admin.email);
+    return NextResponse.json(await response.json(), { status: response.status });
   } catch {
     return NextResponse.json({ message: "ไม่สามารถแก้ไขเฉดสีได้" }, { status: 503 });
   }
@@ -23,9 +21,13 @@ export async function PATCH(request: Request, context: RouteContext) {
 
 export async function DELETE(_: Request, context: RouteContext) {
   const { id, groupId, shadeId } = await context.params;
+  const { session, unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
   try {
-    const res = await fetch(`${getBackend()}/categories/${id}/shade-groups/${groupId}/shades/${shadeId}`, { method: "DELETE" });
-    return NextResponse.json(await res.json(), { status: res.status });
+    const response = await backendFetch(`/categories/${id}/shade-groups/${groupId}/shades/${shadeId}`, {
+      method: "DELETE",
+    }, session.admin.email);
+    return NextResponse.json(await response.json(), { status: response.status });
   } catch {
     return NextResponse.json({ message: "ไม่สามารถลบเฉดสีได้" }, { status: 503 });
   }

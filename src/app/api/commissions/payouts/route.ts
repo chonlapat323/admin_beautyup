@@ -4,13 +4,15 @@ import { backendFetch, requireSession } from "@/lib/backend-fetch";
 export async function GET(request: Request) {
   const { unauthorized } = await requireSession();
   if (unauthorized) return unauthorized;
+
   try {
     const url = new URL(request.url);
-    const period = url.searchParams.get("period") ?? "day";
-    const response = await backendFetch(`/commissions/report?period=${period}`);
+    const query = url.searchParams.toString();
+    const path = query ? `/commissions/payouts?${query}` : "/commissions/payouts";
+    const response = await backendFetch(path);
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {
-    return NextResponse.json({ message: "ไม่สามารถโหลดรายงานได้" }, { status: 503 });
+    return NextResponse.json({ message: "ไม่สามารถดึงประวัติ Payout ได้" }, { status: 503 });
   }
 }

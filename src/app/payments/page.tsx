@@ -64,28 +64,28 @@ export default async function PaymentsPage() {
             <table className="w-full text-left">
               <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
                 <tr>
-                  <th className="px-5 py-4 font-medium">ช่องทาง</th>
-                  <th className="px-5 py-4 font-medium">จำนวนรายการ</th>
-                  <th className="px-5 py-4 font-medium">สำเร็จ</th>
-                  <th className="px-5 py-4 font-medium">อัตราสำเร็จ</th>
-                  <th className="px-5 py-4 font-medium">ยอดรวม</th>
+                  <th className="px-4 py-3 text-left font-semibold">ช่องทาง</th>
+                  <th className="px-4 py-3 text-left font-semibold">จำนวนรายการ</th>
+                  <th className="px-4 py-3 text-left font-semibold">สำเร็จ</th>
+                  <th className="px-4 py-3 text-left font-semibold">อัตราสำเร็จ</th>
+                  <th className="px-4 py-3 text-left font-semibold">ยอดรวม</th>
                 </tr>
               </thead>
               <tbody>
                 {payments.map((p) => (
                   <tr key={p.method} className="border-t border-stroke text-sm dark:border-dark-3">
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-3">
                       <span className="font-semibold text-dark dark:text-white">{methodLabel(p.method)}</span>
                       <span className="ml-2 rounded-full bg-[#f0f4f2] px-2 py-0.5 text-xs text-dark-5">{p.method}</span>
                     </td>
-                    <td className="px-5 py-4 text-dark-5 dark:text-dark-6">{thb(p.orders)}</td>
-                    <td className="px-5 py-4 text-dark-5 dark:text-dark-6">{thb(p.successCount)}</td>
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-3 text-dark-5 dark:text-dark-6">{thb(p.orders)}</td>
+                    <td className="px-4 py-3 text-dark-5 dark:text-dark-6">{thb(p.successCount)}</td>
+                    <td className="px-4 py-3">
                       <span className={`font-semibold ${p.successCount === p.orders ? "text-[#2d6a4f]" : "text-dark dark:text-white"}`}>
                         {successRateText(p.successCount, p.orders)}
                       </span>
                     </td>
-                    <td className="px-5 py-4 font-medium text-dark dark:text-white">
+                    <td className="px-4 py-3 font-medium text-dark dark:text-white">
                       {p.totalAmount > 0 ? `฿${thb(p.totalAmount)}` : "-"}
                     </td>
                   </tr>

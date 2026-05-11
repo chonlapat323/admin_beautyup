@@ -1,21 +1,19 @@
 import { NextResponse } from "next/server";
-
-function getBackend() {
-  return process.env.ADMIN_API_URL || process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000/api";
-}
+import { backendFetch, requireSession } from "@/lib/backend-fetch";
 
 type RouteContext = { params: Promise<{ id: string; groupId: string }> };
 
 export async function POST(request: Request, context: RouteContext) {
   const { id, groupId } = await context.params;
+  const { session, unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
   try {
     const body = await request.json();
-    const res = await fetch(`${getBackend()}/categories/${id}/shade-groups/${groupId}/shades`, {
+    const response = await backendFetch(`/categories/${id}/shade-groups/${groupId}/shades`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    });
-    return NextResponse.json(await res.json(), { status: res.status });
+    }, session.admin.email);
+    return NextResponse.json(await response.json(), { status: response.status });
   } catch {
     return NextResponse.json({ message: "ไม่สามารถสร้างเฉดสีได้" }, { status: 503 });
   }

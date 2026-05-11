@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
-
-function getBackend() {
-  return process.env.ADMIN_API_URL || process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000/api";
-}
+import { backendFetch, requireSession } from "@/lib/backend-fetch";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_: Request, context: RouteContext) {
   const { id } = await context.params;
+  const { unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
   try {
-    const response = await fetch(`${getBackend()}/categories/${id}/shades`, { cache: "no-store" });
+    const response = await backendFetch(`/categories/${id}/shades`);
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {
@@ -19,14 +18,14 @@ export async function GET(_: Request, context: RouteContext) {
 
 export async function POST(request: Request, context: RouteContext) {
   const { id } = await context.params;
+  const { session, unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
   try {
     const body = await request.json();
-    const response = await fetch(`${getBackend()}/categories/${id}/shades`, {
+    const response = await backendFetch(`/categories/${id}/shades`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      cache: "no-store",
-    });
+    }, session.admin.email);
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {

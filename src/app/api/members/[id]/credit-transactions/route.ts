@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-
-function getBackendApiBaseUrl() {
-  return process.env.ADMIN_API_URL || process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000/api";
-}
+import { backendFetch, requireSession } from "@/lib/backend-fetch";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -10,8 +7,10 @@ type RouteContext = {
 
 export async function GET(_: Request, context: RouteContext) {
   const { id } = await context.params;
+  const { unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
   try {
-    const response = await fetch(`${getBackendApiBaseUrl()}/members/${id}/credit-transactions`, { cache: "no-store" });
+    const response = await backendFetch(`/members/${id}/credit-transactions`);
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {

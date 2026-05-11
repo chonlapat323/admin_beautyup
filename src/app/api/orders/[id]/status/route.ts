@@ -1,10 +1,5 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { ADMIN_SESSION_COOKIE, decodeAdminSession } from "@/lib/auth-session";
-
-function getBackendApiBaseUrl() {
-  return process.env.ADMIN_API_URL || process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000/api";
-}
+import { backendFetch, requireSession } from "@/lib/backend-fetch";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -12,18 +7,14 @@ type RouteContext = {
 
 export async function PATCH(request: Request, context: RouteContext) {
   const { id } = await context.params;
+  const { session, unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
   try {
-    const cookieStore = await cookies();
-    const session = decodeAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
-    const changedByName = session?.admin?.email ?? "Admin";
-
     const body = await request.json() as Record<string, unknown>;
-    const response = await fetch(`${getBackendApiBaseUrl()}/orders/${id}/status`, {
+    const response = await backendFetch(`/orders/${id}/status`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...body, changedByName }),
-      cache: "no-store",
-    });
+      body: JSON.stringify({ ...body, changedByName: session.admin.email }),
+    }, session.admin.email);
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {

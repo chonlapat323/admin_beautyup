@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
-
-function getBackendApiBaseUrl() {
-  return process.env.ADMIN_API_URL || process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000/api";
-}
+import { backendFetch, requireSession } from "@/lib/backend-fetch";
 
 export async function GET(request: Request) {
+  const { unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
   try {
     const url = new URL(request.url);
     const query = url.searchParams.toString();
-    const targetUrl = query
-      ? `${getBackendApiBaseUrl()}/banners?${query}`
-      : `${getBackendApiBaseUrl()}/banners`;
-    const response = await fetch(targetUrl, { cache: "no-store" });
+    const path = query ? `/banners?${query}` : "/banners";
+    const response = await backendFetch(path);
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {
@@ -20,14 +17,14 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const { session, unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
   try {
     const body = await request.json();
-    const response = await fetch(`${getBackendApiBaseUrl()}/banners`, {
+    const response = await backendFetch("/banners", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      cache: "no-store",
-    });
+    }, session.admin.email);
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {

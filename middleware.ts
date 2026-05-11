@@ -32,7 +32,23 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+
+  // Sliding window: reset session expiry on every authenticated request
+  if (session) {
+    const cookieVal = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+    if (cookieVal) {
+      response.cookies.set(ADMIN_SESSION_COOKIE, cookieVal, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production" && process.env.SECURE_COOKIE !== "false",
+        path: "/",
+        maxAge: 60 * 60 * 8,
+      });
+    }
+  }
+
+  return response;
 }
 
 export const config = {

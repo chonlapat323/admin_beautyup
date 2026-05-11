@@ -1,17 +1,16 @@
 import { NextResponse } from "next/server";
-
-function getBackendApiBaseUrl() {
-  return process.env.ADMIN_API_URL || process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000/api";
-}
+import { requireSession, getBackendUrl } from "@/lib/backend-fetch";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { session, unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
   try {
     const { id } = await params;
     const formData = await request.formData();
-    const response = await fetch(`${getBackendApiBaseUrl()}/banners/${id}/image`, {
+    const response = await fetch(`${getBackendUrl()}/banners/${id}/image`, {
       method: "POST",
+      headers: { Authorization: `Bearer ${session.accessToken}` },
       body: formData,
-      cache: "no-store",
     });
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
