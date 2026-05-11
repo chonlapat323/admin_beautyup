@@ -19,14 +19,17 @@ export function middleware(request: NextRequest) {
 
   const session = decodeAdminSession(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
 
-  if (!session && !isPublicPath) {
-    const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
+  if (!session) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+    if (!isPublicPath) {
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
   }
 
   if (session && pathname === "/login") {
-    const dashboardUrl = new URL("/", request.url);
-    return NextResponse.redirect(dashboardUrl);
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();

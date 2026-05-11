@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
+import { backendFetch, requireSession } from "@/lib/backend-fetch";
 
-function getBackendApiBaseUrl() {
-  return process.env.ADMIN_API_URL || process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000/api";
-}
+export async function GET(request: Request) {
+  const { unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
 
-export async function GET() {
   try {
-    const response = await fetch(`${getBackendApiBaseUrl()}/orders`, { cache: "no-store" });
+    const url = new URL(request.url);
+    const query = url.searchParams.toString();
+    const path = query ? `/orders?${query}` : "/orders";
+    const response = await backendFetch(path);
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {

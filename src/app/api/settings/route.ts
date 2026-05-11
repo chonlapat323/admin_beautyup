@@ -1,29 +1,31 @@
 import { NextResponse } from "next/server";
-
-function getBackendApiBaseUrl() {
-  return process.env.ADMIN_API_URL || process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000/api";
-}
+import { backendFetch, requireSession } from "@/lib/backend-fetch";
 
 export async function GET() {
+  const { unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
-    const res = await fetch(`${getBackendApiBaseUrl()}/settings`, { cache: "no-store" });
-    const data = await res.json();
-    return NextResponse.json(data, { status: res.status });
+    const response = await backendFetch("/settings");
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
   } catch {
     return NextResponse.json({ message: "ไม่สามารถดึงการตั้งค่าได้" }, { status: 503 });
   }
 }
 
 export async function PUT(request: Request) {
+  const { session, unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json() as unknown;
-    const res = await fetch(`${getBackendApiBaseUrl()}/settings`, {
+    const response = await backendFetch("/settings", {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    return NextResponse.json(data, { status: res.status });
+    }, session.admin.email);
+    const data = await response.json();
+    return NextResponse.json(data, { status: response.status });
   } catch {
     return NextResponse.json({ message: "ไม่สามารถบันทึกการตั้งค่าได้" }, { status: 503 });
   }

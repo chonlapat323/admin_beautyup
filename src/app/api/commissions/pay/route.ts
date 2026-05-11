@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
-
-function backend() {
-  return process.env.ADMIN_API_URL || process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000/api";
-}
+import { backendFetch, requireSession } from "@/lib/backend-fetch";
 
 export async function POST(request: Request) {
+  const { session, unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const body = await request.json();
-    const response = await fetch(`${backend()}/commissions/pay`, {
+    const response = await backendFetch("/commissions/pay", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      cache: "no-store",
-    });
+    }, session.admin.email);
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {

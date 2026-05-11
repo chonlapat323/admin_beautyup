@@ -1,17 +1,15 @@
 import { NextResponse } from "next/server";
-
-function backend() {
-  return process.env.ADMIN_API_URL || process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:3000/api";
-}
+import { backendFetch, requireSession } from "@/lib/backend-fetch";
 
 export async function GET(request: Request) {
+  const { unauthorized } = await requireSession();
+  if (unauthorized) return unauthorized;
+
   try {
     const url = new URL(request.url);
     const query = url.searchParams.toString();
-    const targetUrl = query
-      ? `${backend()}/commissions?${query}`
-      : `${backend()}/commissions`;
-    const response = await fetch(targetUrl, { cache: "no-store" });
+    const path = query ? `/commissions?${query}` : "/commissions";
+    const response = await backendFetch(path);
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {

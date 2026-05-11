@@ -234,6 +234,13 @@ async function fetchFromApi<T>(path: string, init?: RequestInit): Promise<T> {
     cache: "no-store",
   });
 
+  if (response.status === 401) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+    throw new Error("Unauthorized");
+  }
+
   if (!response.ok) {
     throw new Error(`API request failed: ${response.status}`);
   }
