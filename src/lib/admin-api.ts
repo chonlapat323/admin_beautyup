@@ -6,6 +6,22 @@ import {
   products as fallbackProducts,
   settingsSections as fallbackSettingsSections,
 } from "@/lib/admin-data";
+import { ADMIN_SESSION_COOKIE, decodeAdminSession } from "@/lib/auth-session";
+
+async function getServerAuthHeader(): Promise<Record<string, string>> {
+  try {
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const val = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
+    const session = decodeAdminSession(val);
+    if (session?.accessToken) {
+      return { Authorization: `Bearer ${session.accessToken}` };
+    }
+  } catch {
+    // Running client-side — cookies() not available
+  }
+  return {};
+}
 
 export type ApiCategory = {
   id: string;
@@ -225,10 +241,12 @@ function getApiBaseUrl() {
 }
 
 async function fetchFromApi<T>(path: string, init?: RequestInit): Promise<T> {
+  const authHeader = await getServerAuthHeader();
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      ...authHeader,
       ...(init?.headers || {}),
     },
     cache: "no-store",
