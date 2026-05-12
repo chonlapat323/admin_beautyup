@@ -33,8 +33,9 @@ export function LoginFormClient() {
       showToast("เข้าสู่ระบบสำเร็จ", "success");
       router.push("/");
       router.refresh();
-    } catch {
-      showToast("ไม่สามารถเข้าสู่ระบบได้ กรุณาตรวจสอบระบบหลังบ้านแล้วลองอีกครั้ง", "error");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "เข้าสู่ระบบไม่สำเร็จ";
+      showToast(message, "error");
     } finally {
       setIsSubmitting(false);
     }

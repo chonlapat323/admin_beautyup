@@ -1,6 +1,7 @@
 "use client";
 
 import { SearchIcon } from "@/assets/icons";
+import { Logo } from "@/components/logo";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSidebarContext } from "../sidebar/sidebar-context";
@@ -20,7 +21,7 @@ const PAGE_COPY: Record<string, { title: string; description: string }> = {
   },
   "/products": {
     title: "จัดการสินค้า",
-    description: "ดูแล SKU สต็อก ราคา สื่อ และสถานะการแสดงผลได้จากที่เดียว",
+    description: "ดูแลรหัสสินค้า สต็อก ราคา สื่อ และสถานะการแสดงผลได้จากที่เดียว",
   },
   "/members": {
     title: "จัดการสมาชิก",
@@ -40,7 +41,7 @@ const PAGE_COPY: Record<string, { title: string; description: string }> = {
   },
   "/payments": {
     title: "ตรวจสอบการชำระเงิน",
-    description: "ตรวจสอบประสิทธิภาพการชำระผ่าน PromptPay บัตร และวอลเล็ท",
+    description: "ตรวจสอบประสิทธิภาพการชำระผ่านพร้อมเพย์ บัตร และวอลเล็ท",
   },
   "/reports": {
     title: "รายงานธุรกิจ",
@@ -67,12 +68,16 @@ export function Header() {
         <span className="sr-only">เปิดหรือปิดเมนูด้านข้าง</span>
       </button>
 
-      {isMobile && (
+      {isMobile ? (
         <Link
           href={"/"}
           className="ml-2 flex size-10 items-center justify-center rounded-2xl bg-[#e8f5ec] text-base font-bold text-[#3d6d55] max-[430px]:hidden min-[375px]:ml-4"
         >
           B
+        </Link>
+      ) : (
+        <Link href="/" className="hidden lg:flex">
+          <Logo />
         </Link>
       )}
 
@@ -87,7 +92,7 @@ export function Header() {
         {/* <div className="relative w-full max-w-[300px]">
           <input
             type="search"
-            placeholder="Search catalog, orders, members"
+            placeholder="ค้นหาสินค้า คำสั่งซื้อ หรือสมาชิก"
             className="flex w-full items-center gap-3.5 rounded-full border bg-gray-2 py-3 pl-[53px] pr-5 outline-none transition-colors focus-visible:border-primary dark:border-dark-3 dark:bg-dark-2 dark:hover:border-dark-4 dark:hover:bg-dark-3 dark:hover:text-dark-6 dark:focus-visible:border-primary"
           />
 
