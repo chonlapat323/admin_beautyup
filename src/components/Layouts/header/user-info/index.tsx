@@ -33,7 +33,7 @@ export function UserInfo() {
       .catch(() => undefined);
   }, []);
 
-  const displayName = admin?.email.split("@")[0] ?? "Admin";
+  const displayName = admin?.email.split("@")[0] ?? "ผู้ดูแลระบบ";
   const displayEmail = admin?.email ?? "";
   const displayRole = admin?.role ?? "";
 
@@ -53,7 +53,7 @@ export function UserInfo() {
           <Image
             src="/images/user/user-03.png"
             className="size-12"
-            alt={`Avatar of ${displayName}`}
+            alt={`รูปโปรไฟล์ของ ${displayName}`}
             role="presentation"
             width={200}
             height={200}
@@ -83,7 +83,7 @@ export function UserInfo() {
           <Image
             src="/images/user/user-03.png"
             className="size-12"
-            alt={`Avatar for ${displayName}`}
+            alt={`รูปโปรไฟล์ของ ${displayName}`}
             role="presentation"
             width={200}
             height={200}

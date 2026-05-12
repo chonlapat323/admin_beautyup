@@ -16,7 +16,7 @@ export function Logo() {
           Beauty Up
         </div>
         <div className="mt-1 text-xs font-medium uppercase tracking-[0.28em] text-[#6f8e7d]">
-          Enterprise Admin
+          ระบบหลังบ้าน
         </div>
       </div>
     </div>

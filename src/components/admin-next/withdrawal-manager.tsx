@@ -47,8 +47,8 @@ function statusLabel(s: string) {
 }
 
 function memberTypeLabel(t: string | null) {
-  if (t === "SALON") return "Salon";
-  return "Regular";
+  if (t === "SALON") return "ซาลอน";
+  return "ทั่วไป";
 }
 
 function formatAmount(v: string) {
@@ -285,7 +285,7 @@ export function WithdrawalManager() {
 
   return (
     <>
-      <ContentCard title="จัดการการถอน Credit" description="รายการขอถอน credit จากสมาชิก">
+      <ContentCard title="จัดการการถอนเครดิต" description="รายการขอถอนเครดิตจากสมาชิก">
         {/* Summary */}
         <div className="mb-5 flex flex-wrap gap-3">
           <div className="flex-1 min-w-[140px] rounded-2xl border border-stroke bg-[#f8fbf9] px-5 py-4 dark:border-dark-3 dark:bg-dark-2">

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ADMIN_SESSION_COOKIE } from "@/lib/auth-session";
 
 export async function POST() {
-  const response = NextResponse.json({ message: "Signed out successfully." });
+  const response = NextResponse.json({ message: "ออกจากระบบสำเร็จ" });
 
   response.cookies.set(ADMIN_SESSION_COOKIE, "", {
     httpOnly: true,

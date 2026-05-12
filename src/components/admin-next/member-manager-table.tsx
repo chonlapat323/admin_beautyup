@@ -331,7 +331,7 @@ function MemberFormModal({
                       : "border-[#d8e6dd] bg-[#f8fbf9] text-dark-5 hover:border-[#bfd6c7]"
                   }`}
                 >
-                  {type === "SALON" ? "Salon Member" : "Regular Member"}
+                  {type === "SALON" ? "สมาชิกซาลอน" : "สมาชิกทั่วไป"}
                 </button>
               ))}
             </div>
@@ -590,7 +590,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
                 <th className="hidden px-5 py-4 font-medium xl:table-cell">ออเดอร์</th>
                 <th className="hidden px-5 py-4 font-medium xl:table-cell">แนะนำ</th>
                 <th className="hidden px-5 py-4 font-medium xl:table-cell">แต้ม</th>
-                <th className="hidden px-5 py-4 font-medium xl:table-cell">Credit</th>
+                <th className="hidden px-5 py-4 font-medium xl:table-cell">เครดิต</th>
                 <th className="px-5 py-4 font-medium">สถานะ</th>
                 <th className="px-5 py-4 font-medium">จัดการ</th>
               </tr>
@@ -653,7 +653,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
                   </td>
                   <td className="hidden px-5 py-4 lg:table-cell">
                     <StatusPill
-                      label={member.memberType === "SALON" ? "Salon" : "Regular"}
+                      label={member.memberType === "SALON" ? "ซาลอน" : "ทั่วไป"}
                       tone={member.memberType === "SALON" ? "success" : "default"}
                     />
                   </td>
@@ -698,7 +698,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
                         onClick={() => setCreditMember({ id: member.id, name: member.fullName, balance: member.creditBalance })}
                         type="button"
                       >
-                        Credit
+                        เครดิต
                       </button>
                       <button
                         className="rounded-full border border-[#f1d0cf] px-3 py-1 text-xs font-semibold text-[#b42318] transition-colors hover:bg-[#fff5f4]"

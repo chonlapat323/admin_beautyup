@@ -16,6 +16,6 @@ export async function PATCH(
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {
-    return NextResponse.json({ message: "ไม่สามารถยกเลิก commission ได้" }, { status: 503 });
+    return NextResponse.json({ message: "ไม่สามารถยกเลิกคอมมิชชันได้" }, { status: 503 });
   }
 }

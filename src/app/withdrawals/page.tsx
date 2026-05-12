@@ -1,6 +1,6 @@
 import { WithdrawalManager } from "@/components/admin-next/withdrawal-manager";
 
-export const metadata = { title: "ถอน Credit" };
+export const metadata = { title: "ถอนเครดิต" };
 
 export default function WithdrawalsPage() {
   return (

@@ -83,25 +83,25 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
-        title: "Salon Code",
+        title: "โค้ดซาลอน",
         url: "/salon-codes",
         icon: Icons.User,
         items: [],
       },
       {
-        title: "Commission",
+        title: "คอมมิชชัน",
         url: "/commissions",
         icon: Icons.PieChart,
         items: [],
       },
       {
-        title: "ประวัติ Payout",
+        title: "ประวัติการจ่ายคอมมิชชัน",
         url: "/commissions/payouts",
         icon: Icons.PieChart,
         items: [],
       },
       {
-        title: "ถอน Credit",
+        title: "ถอนเครดิต",
         url: "/withdrawals",
         icon: Icons.PieChart,
         items: [],
@@ -110,7 +110,7 @@ export const NAV_DATA: NavSection[] = [
         title: "รายงาน",
         icon: Icons.PieChart,
         items: [
-          { title: "รายงาน Commission", url: "/commissions/report" },
+          { title: "รายงานคอมมิชชัน", url: "/commissions/report" },
           { title: "รายงานการแลกแต้ม", url: "/reward-logs" },
         ],
       },

@@ -17,10 +17,10 @@ export const navigationItems: NavItem[] = [
 ];
 
 export const summaryMetrics = [
-  { label: "ยอดขายรวม", value: "THB 128,400", hint: "+12.4% ในเดือนนี้" },
+  { label: "ยอดขายรวม", value: "฿128,400", hint: "+12.4% ในเดือนนี้" },
   { label: "คำสั่งซื้อ", value: "324", hint: "18 รายการรอตรวจสอบ" },
   { label: "สมาชิก", value: "1,286", hint: "สมาชิกใหม่ 42 คนในสัปดาห์นี้" },
-  { label: "สต็อกต่ำ", value: "7 SKU", hint: "ควรวางแผนเติมสินค้า" },
+  { label: "สต็อกต่ำ", value: "7 รหัสสินค้า", hint: "ควรวางแผนเติมสินค้า" },
 ];
 
 export const launchModules = [
@@ -37,7 +37,7 @@ export const launchModules = [
   {
     title: "ตรวจสอบคำสั่งซื้อและการชำระเงิน",
     description:
-      "ติดตามสถานะเช็กเอาต์ การยืนยัน PromptPay สถานะบัตร และการชำระผ่านวอลเล็ทได้โดยไม่ต้องออกจากแดชบอร์ด",
+      "ติดตามสถานะเช็กเอาต์ การยืนยันพร้อมเพย์ สถานะบัตร และการชำระผ่านวอลเล็ทได้โดยไม่ต้องออกจากแดชบอร์ด",
   },
   {
     title: "กติกาและการตั้งค่า",
@@ -47,43 +47,43 @@ export const launchModules = [
 ];
 
 export const categories = [
-  { name: "สีผมและฟอกสี", status: "Active", products: 18, updatedAt: "16 เม.ย. 2026" },
-  { name: "แชมพูและมาสก์", status: "Active", products: 21, updatedAt: "15 เม.ย. 2026" },
-  { name: "ลีฟอิน", status: "Active", products: 14, updatedAt: "14 เม.ย. 2026" },
-  { name: "ของรางวัลแต้มสะสม", status: "Draft", products: 9, updatedAt: "12 เม.ย. 2026" },
+  { name: "สีผมและฟอกสี", status: "ใช้งาน", products: 18, updatedAt: "16 เม.ย. 2026" },
+  { name: "แชมพูและมาสก์", status: "ใช้งาน", products: 21, updatedAt: "15 เม.ย. 2026" },
+  { name: "ลีฟอิน", status: "ใช้งาน", products: 14, updatedAt: "14 เม.ย. 2026" },
+  { name: "ของรางวัลแต้มสะสม", status: "ฉบับร่าง", products: 9, updatedAt: "12 เม.ย. 2026" },
 ];
 
 export const products = [
-  { sku: "BU-CLR-013NB", name: "ครีมสีผม 13-NB", category: "สีผมและฟอกสี", price: "THB 49", stock: 180, status: "Active" },
-  { sku: "BU-CLR-AD13", name: "สีผม Addicthy 13-NB", category: "สีผมและฟอกสี", price: "THB 54", stock: 72, status: "Active" },
-  { sku: "BU-SHM-001", name: "แชมพู Smooth Smoothing", category: "แชมพูและมาสก์", price: "THB 58", stock: 94, status: "Active" },
-  { sku: "BU-LIV-001", name: "ออยล์บำรุงผม Elujuda", category: "ลีฟอิน", price: "THB 42", stock: 38, status: "Low stock" },
+  { sku: "BU-CLR-013NB", name: "ครีมสีผม 13-NB", category: "สีผมและฟอกสี", price: "฿49", stock: 180, status: "ใช้งาน" },
+  { sku: "BU-CLR-AD13", name: "สีผม Addicthy 13-NB", category: "สีผมและฟอกสี", price: "฿54", stock: 72, status: "ใช้งาน" },
+  { sku: "BU-SHM-001", name: "แชมพู Smooth Smoothing", category: "แชมพูและมาสก์", price: "฿58", stock: 94, status: "ใช้งาน" },
+  { sku: "BU-LIV-001", name: "ออยล์บำรุงผม Elujuda", category: "ลีฟอิน", price: "฿42", stock: 38, status: "สต็อกต่ำ" },
 ];
 
 export const members = [
-  { name: "Nisa P.", tier: "Silver", points: 600, referrals: 2, spend: "THB 6,420" },
-  { name: "Pimlada K.", tier: "Gold", points: 900, referrals: 5, spend: "THB 12,840" },
-  { name: "Thanaporn S.", tier: "Silver", points: 300, referrals: 1, spend: "THB 3,280" },
-  { name: "Kanya R.", tier: "Basic", points: 0, referrals: 0, spend: "THB 980" },
+  { name: "Nisa P.", tier: "เงิน", points: 600, referrals: 2, spend: "฿6,420" },
+  { name: "Pimlada K.", tier: "ทอง", points: 900, referrals: 5, spend: "฿12,840" },
+  { name: "Thanaporn S.", tier: "เงิน", points: 300, referrals: 1, spend: "฿3,280" },
+  { name: "Kanya R.", tier: "พื้นฐาน", points: 0, referrals: 0, spend: "฿980" },
 ];
 
 export const adminUsers = [
-  { name: "Pao Chonlapat", role: "Super Admin", status: "Active", access: "ทุกสาขา" },
-  { name: "Store Admin A", role: "Admin", status: "Active", access: "สาขากรุงเทพฯ" },
-  { name: "Store Admin B", role: "Admin", status: "Pending", access: "สาขาเชียงใหม่" },
+  { name: "Pao Chonlapat", role: "ผู้ดูแลสูงสุด", status: "ใช้งาน", access: "ทุกสาขา" },
+  { name: "Store Admin A", role: "ผู้ดูแลระบบ", status: "ใช้งาน", access: "สาขากรุงเทพฯ" },
+  { name: "Store Admin B", role: "ผู้ดูแลระบบ", status: "รออนุมัติ", access: "สาขาเชียงใหม่" },
 ];
 
 export const rolePermissions = [
-  { permission: "จัดการสินค้า", superAdmin: "Full access", admin: "สร้าง / แก้ไข / เผยแพร่" },
-  { permission: "จัดการสมาชิก", superAdmin: "Full access", admin: "ดูข้อมูล / อัปเดตหมายเหตุช่วยเหลือ" },
-  { permission: "จัดการผู้ดูแลระบบ", superAdmin: "Full access", admin: "No access" },
-  { permission: "ตั้งค่าระบบ", superAdmin: "Full access", admin: "Store-level only" },
+  { permission: "จัดการสินค้า", superAdmin: "เข้าถึงทั้งหมด", admin: "สร้าง / แก้ไข / เผยแพร่" },
+  { permission: "จัดการสมาชิก", superAdmin: "เข้าถึงทั้งหมด", admin: "ดูข้อมูล / อัปเดตหมายเหตุช่วยเหลือ" },
+  { permission: "จัดการผู้ดูแลระบบ", superAdmin: "เข้าถึงทั้งหมด", admin: "ไม่มีสิทธิ์" },
+  { permission: "ตั้งค่าระบบ", superAdmin: "เข้าถึงทั้งหมด", admin: "เฉพาะระดับสาขา" },
 ];
 
 export const orders = [
-  { code: "BU-24003", member: "Nisa P.", store: "กรุงเทพฯ", total: "THB 62", status: "Preparing" },
-  { code: "BU-24018", member: "Pimlada K.", store: "กรุงเทพฯ", total: "THB 118", status: "Paid" },
-  { code: "BU-24031", member: "Thanaporn S.", store: "เชียงใหม่", total: "THB 84", status: "Delivered" },
+  { code: "BU-24003", member: "Nisa P.", store: "กรุงเทพฯ", total: "฿62", status: "กำลังเตรียม" },
+  { code: "BU-24018", member: "Pimlada K.", store: "กรุงเทพฯ", total: "฿118", status: "ชำระแล้ว" },
+  { code: "BU-24031", member: "Thanaporn S.", store: "เชียงใหม่", total: "฿84", status: "ส่งสำเร็จ" },
 ];
 
 export const payments = [
@@ -99,8 +99,8 @@ export const reportCards = [
 ];
 
 export const settingsSections = [
-  { title: "กติกาการจัดส่ง", description: "ฟรีค่าจัดส่งเมื่อมียอดตั้งแต่ THB 1,000 ขึ้นไป และคิดค่าจัดส่งเมื่อยอดต่ำกว่าเงื่อนไข" },
-  { title: "กติกาแต้มสะสม", description: "มอบ 300 แต้มทุกการใช้จ่ายสำเร็จครบ THB 3,000" },
+  { title: "กติกาการจัดส่ง", description: "ฟรีค่าจัดส่งเมื่อมียอดตั้งแต่ ฿1,000 ขึ้นไป และคิดค่าจัดส่งเมื่อยอดต่ำกว่าเงื่อนไข" },
+  { title: "กติกาแต้มสะสม", description: "มอบ 300 แต้มทุกการใช้จ่ายสำเร็จครบ ฿3,000" },
   { title: "กติกาผู้แนะนำ", description: "กำหนดค่าคอมมิชชัน 3% สำหรับคำสั่งซื้อที่มาจากการแนะนำสำเร็จ" },
-  { title: "ลิงก์สื่อ", description: "ตั้งค่าทางลัดไปยัง YouTube, TikTok และช่องทางของแบรนด์" },
+  { title: "ลิงก์สื่อ", description: "ตั้งค่าทางลัดไปยังยูทูบ ติ๊กต็อก และช่องทางของแบรนด์" },
 ];

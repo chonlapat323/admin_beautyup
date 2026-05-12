@@ -14,7 +14,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {
-    return NextResponse.json({ message: "ไม่สามารถแก้ไข Salon Code ได้" }, { status: 503 });
+    return NextResponse.json({ message: "ไม่สามารถแก้ไขโค้ดซาลอนได้" }, { status: 503 });
   }
 }
 
@@ -29,6 +29,6 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {
-    return NextResponse.json({ message: "ไม่สามารถลบ Salon Code ได้" }, { status: 503 });
+    return NextResponse.json({ message: "ไม่สามารถลบโค้ดซาลอนได้" }, { status: 503 });
   }
 }

@@ -12,11 +12,11 @@ import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Beauty Up Enterprise Admin",
-    default: "Beauty Up Enterprise Admin",
+    template: "%s | ระบบหลังบ้าน Beauty Up Enterprise",
+    default: "ระบบหลังบ้าน Beauty Up Enterprise",
   },
   description:
-    "Beauty Up Enterprise backoffice for managing catalog, members, orders, payments, reports, and operational settings.",
+    "ระบบหลังบ้าน Beauty Up Enterprise สำหรับจัดการสินค้า สมาชิก คำสั่งซื้อ การชำระเงิน รายงาน และการตั้งค่าการทำงาน",
 };
 
 export default function RootLayout({ children }: PropsWithChildren) {

@@ -21,7 +21,7 @@ export default function LoginPage() {
           <div className="mt-10 space-y-4">
             {[
               "จัดการหมวดหมู่ สินค้า ราคา และสถานะสต็อกได้ในหน้าจอเดียว",
-              "ติดตามการชำระเงินผ่าน PromptPay บัตร และ TrueMoney ก่อนส่งมอบสินค้า",
+              "ติดตามการชำระเงินผ่านพร้อมเพย์ บัตร และทรูมันนี่ก่อนส่งมอบสินค้า",
               "ตรวจสอบแต้มสะสม การแนะนำสมาชิก และรายงานของแต่ละสาขาได้จากบัญชีเดียว",
             ].map((item) => (
               <div key={item} className="rounded-2xl border border-white/10 bg-white/8 p-4 text-sm leading-6 text-[#edf7f0]">

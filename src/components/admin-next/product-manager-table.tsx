@@ -388,7 +388,7 @@ function ProductFormModal({
             </div>
             <div>
               <label className={LABEL_CLS}>
-                SKU <span className="text-red-500">*</span>
+                รหัสสินค้า <span className="text-red-500">*</span>
               </label>
               <input
                 className={INPUT_CLS}
@@ -794,7 +794,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
       const specialPrice = form.specialPrice.trim() ? parseFloat(form.specialPrice) : undefined;
 
       if (!form.name.trim() || !form.sku.trim() || !form.slug.trim() || !form.categoryId) {
-        throw new Error("กรุณากรอกชื่อสินค้า SKU Slug และหมวดหมู่");
+        throw new Error("กรุณากรอกชื่อสินค้า รหัสสินค้า Slug และหมวดหมู่");
       }
 
       if (isNaN(price) || price < 0) {
@@ -912,7 +912,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
             <input
               className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] py-2.5 pl-9 pr-4 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
               onChange={(e) => { setPage(1); setSearchTerm(e.target.value); }}
-              placeholder="ค้นหาชื่อสินค้าหรือ SKU"
+              placeholder="ค้นหาชื่อสินค้าหรือรหัสสินค้า"
               value={searchTerm}
             />
           </div>
@@ -939,7 +939,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
             <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
                 <th className="px-4 py-3 font-semibold">รูป</th>
-                <th className="px-4 py-3 font-semibold">สินค้า / SKU</th>
+                <th className="px-4 py-3 font-semibold">สินค้า / รหัสสินค้า</th>
                 <th className="whitespace-nowrap px-4 py-3 font-semibold">ราคา</th>
                 <th className="hidden px-4 py-3 font-semibold md:table-cell">สต็อก</th>
                 <th className="hidden px-4 py-3 font-semibold lg:table-cell">หมวดหมู่</th>

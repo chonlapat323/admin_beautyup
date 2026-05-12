@@ -25,6 +25,6 @@ export async function POST(request: Request) {
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {
-    return NextResponse.json({ message: "ไม่สามารถสร้าง Salon Code ได้" }, { status: 503 });
+    return NextResponse.json({ message: "ไม่สามารถสร้างโค้ดซาลอนได้" }, { status: 503 });
   }
 }

@@ -125,7 +125,7 @@ export function CommissionReport() {
   const btnActive = "bg-[#45745a] text-white border-[#45745a] hover:bg-[#355846]";
 
   return (
-    <ContentCard title="รายงาน Commission" description="ยอด commission แยกตามช่วงเวลาและผู้รับ">
+    <ContentCard title="รายงานคอมมิชชัน" description="ยอดคอมมิชชันแยกตามช่วงเวลาและผู้รับ">
 
       {/* Date filter */}
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -231,7 +231,7 @@ export function CommissionReport() {
                     <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
                       row.memberType === "SALON" ? "bg-[#fef3c7] text-[#92400e]" : "bg-[#e0f2fe] text-[#0369a1]"
                     }`}>
-                      {row.memberType === "SALON" ? "Salon" : "Regular"}
+                      {row.memberType === "SALON" ? "ซาลอน" : "ทั่วไป"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right text-dark-5">{row.count}</td>

@@ -13,6 +13,6 @@ export async function GET(request: Request) {
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {
-    return NextResponse.json({ message: "ไม่สามารถเชื่อมต่อ API commission ได้" }, { status: 503 });
+    return NextResponse.json({ message: "ไม่สามารถเชื่อมต่อ API คอมมิชชันได้" }, { status: 503 });
   }
 }

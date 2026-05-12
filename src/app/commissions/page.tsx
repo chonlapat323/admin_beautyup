@@ -1,6 +1,6 @@
 import { CommissionManager } from "@/components/admin-next/commission-manager";
 
-export const metadata = { title: "Commission" };
+export const metadata = { title: "คอมมิชชัน" };
 
 export default function CommissionsPage() {
   return (

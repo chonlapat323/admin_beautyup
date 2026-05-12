@@ -13,8 +13,8 @@ type CreditTransaction = {
 };
 
 const TYPE_LABEL: Record<CreditTransaction["type"], string> = {
-  EARN: "รับ Credit",
-  USE: "ใช้ Credit",
+  EARN: "รับเครดิต",
+  USE: "ใช้เครดิต",
   WITHDRAW: "ถอน",
 };
 
@@ -75,7 +75,7 @@ export function MemberCreditModal({
       >
         <div className="flex items-start justify-between gap-4 border-b border-[#edf4ef] px-7 py-6 dark:border-dark-3">
           <div>
-            <h3 className="text-2xl font-bold text-dark dark:text-white">Credit — {memberName}</h3>
+            <h3 className="text-2xl font-bold text-dark dark:text-white">เครดิต — {memberName}</h3>
             <p className="mt-1 text-sm text-dark-5 dark:text-dark-6">
               ยอดคงเหลือ:{" "}
               <span className="font-semibold text-[#2a7a4b]">
@@ -96,9 +96,9 @@ export function MemberCreditModal({
           {isLoading ? (
             <p className="text-center text-sm text-dark-5">กำลังโหลดข้อมูล...</p>
           ) : error ? (
-            <p className="text-center text-sm text-[#b42318]">ไม่สามารถโหลดประวัติ Credit ได้</p>
+            <p className="text-center text-sm text-[#b42318]">ไม่สามารถโหลดประวัติเครดิตได้</p>
           ) : transactions.length === 0 ? (
-            <p className="text-center text-sm text-dark-5">ยังไม่มีประวัติ Credit</p>
+            <p className="text-center text-sm text-dark-5">ยังไม่มีประวัติเครดิต</p>
           ) : (
             <div className="space-y-3">
               {transactions.map((tx) => (

@@ -153,7 +153,7 @@ function ConfirmCancelModal({
         </div>
         <div className="px-6 py-5">
           <p className="text-sm leading-6 text-dark-5 dark:text-dark-6">
-            ต้องการยกเลิก commission รายการนี้ใช่หรือไม่?
+            ต้องการยกเลิกคอมมิชชันรายการนี้ใช่หรือไม่?
           </p>
         </div>
         <div className="flex flex-wrap justify-end gap-3 border-t border-stroke px-6 py-4 dark:border-dark-3">
@@ -216,7 +216,7 @@ export function CommissionManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ salon: salonRate, regular: regularRate }),
       });
-      showToast("บันทึกอัตรา commission แล้ว", "success");
+      showToast("บันทึกอัตราคอมมิชชันแล้ว", "success");
       setShowSettings(false);
     } finally {
       setIsSavingRates(false);
@@ -264,9 +264,9 @@ export function CommissionManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: [...selected] }),
       });
-      if (!res.ok) throw new Error("ไม่สามารถจ่าย commission ได้");
+      if (!res.ok) throw new Error("ไม่สามารถจ่ายคอมมิชชันได้");
       setSelected(new Set());
-      showToast(`จ่าย commission ${selected.size} รายการสำเร็จ`, "success");
+      showToast(`จ่ายคอมมิชชัน ${selected.size} รายการสำเร็จ`, "success");
       void load();
     } catch (err) {
       showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error");
@@ -278,8 +278,8 @@ export function CommissionManager() {
     setIsCancelling(true);
     try {
       const res = await fetch(`/api/commissions/${cancelTargetId}/cancel`, { method: "PATCH" });
-      if (!res.ok) throw new Error("ไม่สามารถยกเลิก commission ได้");
-      showToast("ยกเลิก commission แล้ว", "warning");
+      if (!res.ok) throw new Error("ไม่สามารถยกเลิกคอมมิชชันได้");
+      showToast("ยกเลิกคอมมิชชันแล้ว", "warning");
       setCancelTargetId(null);
       void load();
     } catch (err) {
@@ -310,8 +310,8 @@ export function CommissionManager() {
   return (
     <>
       <ContentCard
-        title="จัดการ Commission"
-        description={`ค่าแนะนำจากการสั่งซื้อ — SALON ${salonRate}%, REGULAR ${regularRate}% (1 ระดับ)`}
+        title="จัดการคอมมิชชัน"
+        description={`ค่าแนะนำจากการสั่งซื้อ — ซาลอน ${salonRate}%, ทั่วไป ${regularRate}% (1 ระดับ)`}
       >
         {/* Rate settings */}
         <div className="mb-5">
@@ -320,7 +320,7 @@ export function CommissionManager() {
             className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#45745a] hover:underline"
             type="button"
           >
-            ⚙ ตั้งค่าอัตรา commission {showSettings ? "▲" : "▼"}
+            ⚙ ตั้งค่าอัตราคอมมิชชัน {showSettings ? "▲" : "▼"}
           </button>
           {showSettings && (
             <div className="flex flex-wrap items-end gap-4 rounded-2xl border border-stroke bg-[#f8fbf9] px-5 py-4 dark:border-dark-3 dark:bg-dark-2">
@@ -420,7 +420,7 @@ export function CommissionManager() {
                 <th className="hidden px-4 py-3 font-medium sm:table-cell">ประเภท</th>
                 <th className="px-4 py-3 font-medium">ออเดอร์</th>
                 <th className="hidden px-4 py-3 font-medium md:table-cell">อัตรา</th>
-                <th className="px-4 py-3 font-medium">commission</th>
+                <th className="px-4 py-3 font-medium">คอมมิชชัน</th>
                 <th className="px-4 py-3 font-medium">สถานะ</th>
                 <th className="px-4 py-3 font-medium">จัดการ</th>
               </tr>
@@ -448,7 +448,7 @@ export function CommissionManager() {
                       </svg>
                     </div>
                     <p className="mt-4 text-sm font-medium text-dark dark:text-white">
-                      {statusFilter !== "all" ? "ไม่พบ commission ที่ตรงกับเงื่อนไข" : "ยังไม่มีข้อมูล commission"}
+                      {statusFilter !== "all" ? "ไม่พบคอมมิชชันที่ตรงกับเงื่อนไข" : "ยังไม่มีข้อมูลคอมมิชชัน"}
                     </p>
                   </td>
                 </tr>
@@ -477,7 +477,7 @@ export function CommissionManager() {
                           ? "bg-[#fef3c7] text-[#92400e]"
                           : "bg-[#e0f2fe] text-[#0369a1]"
                       }`}>
-                        {item.earner.memberType === "SALON" ? "Salon" : "Regular"}
+                        {item.earner.memberType === "SALON" ? "ซาลอน" : "ทั่วไป"}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -603,7 +603,7 @@ function OrderDetailModal({
           <div>
             <p className="text-[11px] font-bold uppercase tracking-widest text-[#5f8f74]">รายละเอียดออเดอร์</p>
             <h3 className="mt-1 font-mono text-xl font-bold text-dark dark:text-white">{order.orderNumber}</h3>
-            <p className="mt-0.5 text-sm text-dark-5">Commission ของ {commission.earner.fullName}</p>
+            <p className="mt-0.5 text-sm text-dark-5">คอมมิชชันของ {commission.earner.fullName}</p>
           </div>
           <button
             className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
@@ -691,7 +691,7 @@ function OrderDetailModal({
 
           {/* Commission calculation */}
           <div className="rounded-2xl border border-[#b7ddc7] bg-[#f0faf4] px-5 py-4">
-            <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-[#5f8f74]">การคำนวณ Commission</p>
+            <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-[#5f8f74]">การคำนวณคอมมิชชัน</p>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-dark-5">ยอดออเดอร์ที่ใช้คำนวณ</span>
@@ -699,7 +699,7 @@ function OrderDetailModal({
               </div>
               <div className="flex justify-between">
                 <span className="text-dark-5">
-                  อัตรา ({commission.earner.memberType === "SALON" ? "Salon" : "Regular"})
+                  อัตรา ({commission.earner.memberType === "SALON" ? "ซาลอน" : "ทั่วไป"})
                 </span>
                 <span className="font-medium text-dark">{rate}%</span>
               </div>

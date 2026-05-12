@@ -13,6 +13,6 @@ export async function GET(request: Request) {
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {
-    return NextResponse.json({ message: "ไม่สามารถดึงประวัติ Payout ได้" }, { status: 503 });
+    return NextResponse.json({ message: "ไม่สามารถดึงประวัติการจ่ายคอมมิชชันได้" }, { status: 503 });
   }
 }

@@ -3,8 +3,8 @@ import { getPayments } from "@/lib/admin-api";
 
 const METHOD_LABELS: Record<string, string> = {
   CARD: "บัตรเครดิต / เดบิต",
-  PROMPTPAY: "PromptPay QR",
-  CREDIT: "Credit Wallet",
+  PROMPTPAY: "พร้อมเพย์ QR",
+  CREDIT: "กระเป๋าเครดิต",
 };
 
 function thb(n: number) {
@@ -76,7 +76,7 @@ export default async function PaymentsPage() {
                   <tr key={p.method} className="border-t border-stroke text-sm dark:border-dark-3">
                     <td className="px-4 py-3">
                       <span className="font-semibold text-dark dark:text-white">{methodLabel(p.method)}</span>
-                      <span className="ml-2 rounded-full bg-[#f0f4f2] px-2 py-0.5 text-xs text-dark-5">{p.method}</span>
+                      <span className="ml-2 rounded-full bg-[#f0f4f2] px-2 py-0.5 text-xs text-dark-5">{methodLabel(p.method)}</span>
                     </td>
                     <td className="px-4 py-3 text-dark-5 dark:text-dark-6">{thb(p.orders)}</td>
                     <td className="px-4 py-3 text-dark-5 dark:text-dark-6">{thb(p.successCount)}</td>

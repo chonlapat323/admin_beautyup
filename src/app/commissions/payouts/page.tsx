@@ -24,7 +24,7 @@ type Meta = {
 const METHOD_LABELS: Record<string, string> = {
   BANK_TRANSFER: "โอนธนาคาร",
   CASH: "เงินสด",
-  PROMPTPAY: "PromptPay",
+  PROMPTPAY: "พร้อมเพย์",
 };
 
 function thb(n: number) {
@@ -61,13 +61,13 @@ export default function PayoutsPage() {
 
   return (
     <div className="space-y-6">
-      <ContentCard title="ประวัติ Payout" description="รายการจ่าย commission ที่ผ่านมาทั้งหมด">
+      <ContentCard title="ประวัติการจ่ายคอมมิชชัน" description="รายการจ่ายคอมมิชชันที่ผ่านมาทั้งหมด">
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
           <table className="w-full min-w-[640px] text-left">
             <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
                 <th className="px-4 py-3 font-semibold">ผู้รับ</th>
-                <th className="px-4 py-3 font-semibold">commission</th>
+                <th className="px-4 py-3 font-semibold">คอมมิชชัน</th>
                 <th className="px-4 py-3 font-semibold">ยอดรวม</th>
                 <th className="px-4 py-3 font-semibold">วิธีโอน</th>
                 <th className="hidden px-4 py-3 font-semibold md:table-cell">อ้างอิง</th>
@@ -91,7 +91,7 @@ export default function PayoutsPage() {
               ) : items.length === 0 ? (
                 <tr>
                   <td className="px-4 py-16 text-center text-sm text-dark-5" colSpan={7}>
-                    ยังไม่มีประวัติการจ่าย Payout
+                    ยังไม่มีประวัติการจ่ายคอมมิชชัน
                   </td>
                 </tr>
               ) : (

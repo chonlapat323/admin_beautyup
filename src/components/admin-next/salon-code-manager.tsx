@@ -58,7 +58,7 @@ function CreateModal({
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/55 px-4 py-8">
       <div className="flex w-full max-w-md flex-col rounded-[24px] border border-[#dce9e1] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark" style={{ maxHeight: "90vh" }}>
         <div className="shrink-0 flex items-center justify-between border-b border-[#edf4ef] px-6 py-5 dark:border-dark-3">
-          <h3 className="text-lg font-semibold text-dark dark:text-white">สร้าง Salon Code</h3>
+          <h3 className="text-lg font-semibold text-dark dark:text-white">สร้างโค้ดซาลอน</h3>
           <button
             onClick={onClose}
             type="button"
@@ -72,7 +72,7 @@ function CreateModal({
           <form id="salon-code-form" onSubmit={onSubmit} className="space-y-4 p-6">
             <div>
               <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">
-                Code <span className="text-red-500">*</span>
+                โค้ด <span className="text-red-500">*</span>
               </label>
               <input
                 className={`${inputCls} uppercase`}
@@ -148,7 +148,7 @@ function CreateModal({
             disabled={isSubmitting}
             className="rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:opacity-70"
           >
-            {isSubmitting ? "กำลังสร้าง..." : "สร้าง Code"}
+            {isSubmitting ? "กำลังสร้าง..." : "สร้างโค้ด"}
           </button>
         </div>
       </div>
@@ -194,7 +194,7 @@ export function SalonCodeManager({ initialItems }: { initialItems: SalonCode[] }
       setItems((prev) => [data, ...prev]);
       setShowCreate(false);
       setForm(INITIAL_FORM);
-      showToast("สร้าง Salon Code สำเร็จ", "success");
+      showToast("สร้างโค้ดซาลอนสำเร็จ", "success");
     } catch (err) {
       showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error");
     } finally {
@@ -212,7 +212,7 @@ export function SalonCodeManager({ initialItems }: { initialItems: SalonCode[] }
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "เกิดข้อผิดพลาด");
       setItems((prev) => prev.map((c) => (c.id === item.id ? data : c)));
-      showToast(`${data.isActive ? "เปิด" : "ปิด"}ใช้งาน Code สำเร็จ`, "success");
+      showToast(`${data.isActive ? "เปิด" : "ปิด"}ใช้งานโค้ดสำเร็จ`, "success");
     } catch (err) {
       showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error");
     }
@@ -227,7 +227,7 @@ export function SalonCodeManager({ initialItems }: { initialItems: SalonCode[] }
       if (!res.ok) throw new Error(data.message || "เกิดข้อผิดพลาด");
       setItems((prev) => prev.filter((c) => c.id !== deleteTarget.id));
       setDeleteTarget(null);
-      showToast("ลบ Code สำเร็จ", "success");
+      showToast("ลบโค้ดสำเร็จ", "success");
     } catch (err) {
       showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error");
     } finally {
@@ -238,14 +238,14 @@ export function SalonCodeManager({ initialItems }: { initialItems: SalonCode[] }
   return (
     <>
       <ContentCard
-        title="Salon Code"
-        description="โค้ดสำหรับลงทะเบียนเป็นสมาชิกประเภท Salon"
+        title="โค้ดซาลอน"
+        description="โค้ดสำหรับลงทะเบียนเป็นสมาชิกประเภทซาลอน"
         aside={
           <button
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-2 rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
           >
-            + สร้าง Code
+            + สร้างโค้ด
           </button>
         }
       >
@@ -254,7 +254,7 @@ export function SalonCodeManager({ initialItems }: { initialItems: SalonCode[] }
           <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold">Code</th>
+                <th className="px-4 py-3 text-left font-semibold">โค้ด</th>
                 <th className="px-4 py-3 text-left font-semibold">คำอธิบาย</th>
                 <th className="px-4 py-3 text-center font-semibold">ใช้แล้ว / จำกัด</th>
                 <th className="px-4 py-3 text-left font-semibold">วันหมดอายุ</th>
@@ -269,8 +269,8 @@ export function SalonCodeManager({ initialItems }: { initialItems: SalonCode[] }
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f4fbf6] dark:bg-dark-2">
                       <svg fill="none" height="28" stroke="#45745a" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24" width="28"><path d="M20 12V22H4V12" /><path d="M22 7H2v5h20V7z" /><path d="M12 22V7" /><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" /><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" /></svg>
                     </div>
-                    <p className="mt-3 text-sm font-medium text-dark dark:text-white">ยังไม่มี Salon Code</p>
-                    <p className="mt-1 text-xs text-dark-5">สร้างโค้ดแรกเพื่อให้ Salon ลงทะเบียน</p>
+                    <p className="mt-3 text-sm font-medium text-dark dark:text-white">ยังไม่มีโค้ดซาลอน</p>
+                    <p className="mt-1 text-xs text-dark-5">สร้างโค้ดแรกเพื่อให้สมาชิกซาลอนลงทะเบียน</p>
                   </td>
                 </tr>
               ) : (
@@ -325,13 +325,13 @@ export function SalonCodeManager({ initialItems }: { initialItems: SalonCode[] }
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fef2f1]">
                   <svg fill="none" height="18" stroke="#c84b44" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="18"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" x2="12" y1="9" y2="13" /><line x1="12" x2="12.01" y1="17" y2="17" /></svg>
                 </div>
-                <h3 className="text-lg font-bold text-dark dark:text-white">ยืนยันการลบ Code</h3>
+                <h3 className="text-lg font-bold text-dark dark:text-white">ยืนยันการลบโค้ด</h3>
               </div>
               <button className="flex h-8 w-8 items-center justify-center rounded-full text-dark-4 hover:bg-[#f0f7f2] dark:text-dark-6 dark:hover:bg-dark-3" onClick={() => setDeleteTarget(null)} type="button">✕</button>
             </div>
             <div className="px-6 py-5">
               <p className="text-sm leading-6 text-dark-5 dark:text-dark-6">
-                ต้องการลบ Code <strong className="font-mono text-dark dark:text-white">{deleteTarget.code}</strong> ใช่หรือไม่? การลบไม่สามารถย้อนกลับได้
+                ต้องการลบโค้ด <strong className="font-mono text-dark dark:text-white">{deleteTarget.code}</strong> ใช่หรือไม่? การลบไม่สามารถย้อนกลับได้
               </p>
             </div>
             <div className="flex flex-wrap justify-end gap-3 border-t border-[#f3e8e7] px-6 py-4 dark:border-dark-3">

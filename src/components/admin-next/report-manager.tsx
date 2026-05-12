@@ -237,9 +237,9 @@ export function ReportManager() {
                     <td className="px-4 py-3 font-semibold text-dark dark:text-white">{e.name}</td>
                     <td className="hidden px-4 py-3 md:table-cell">
                       {commissions.find((r) => r.earnerName === e.name)?.memberType === "SALON" ? (
-                        <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-700">Salon</span>
+                        <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-700">ซาลอน</span>
                       ) : (
-                        <span className="rounded-full bg-[#f0f4f2] px-2 py-0.5 text-xs font-semibold text-dark-5">Regular</span>
+                        <span className="rounded-full bg-[#f0f4f2] px-2 py-0.5 text-xs font-semibold text-dark-5">ทั่วไป</span>
                       )}
                     </td>
                     <td className="px-4 py-3 tabular-nums text-right text-dark-5">{e.count}</td>

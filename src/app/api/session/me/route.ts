@@ -7,7 +7,7 @@ export async function GET() {
   const session = decodeAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
 
   if (!session) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ message: "ไม่ได้รับอนุญาต" }, { status: 401 });
   }
 
   return NextResponse.json({

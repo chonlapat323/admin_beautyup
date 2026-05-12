@@ -14,7 +14,7 @@ export async function requireSession(): Promise<SessionResult> {
   if (!session) {
     return {
       session: null,
-      unauthorized: NextResponse.json({ message: "Unauthorized" }, { status: 401 }),
+      unauthorized: NextResponse.json({ message: "ไม่ได้รับอนุญาต" }, { status: 401 }),
     };
   }
   return { session, unauthorized: null };
@@ -37,7 +37,7 @@ export async function backendFetch(
   processedBy?: string,
 ): Promise<Response> {
   const { session, unauthorized } = await requireSession();
-  if (unauthorized) throw new Error("Unauthorized");
+  if (unauthorized) throw new Error("ไม่ได้รับอนุญาต");
 
   const headers: Record<string, string> = authHeaders(session.accessToken, {
     ...(processedBy ? { "x-processed-by": processedBy } : {}),

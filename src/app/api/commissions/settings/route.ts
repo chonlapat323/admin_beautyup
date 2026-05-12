@@ -10,7 +10,7 @@ export async function GET() {
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {
-    return NextResponse.json({ message: "ไม่สามารถโหลดการตั้งค่า commission ได้" }, { status: 503 });
+    return NextResponse.json({ message: "ไม่สามารถโหลดการตั้งค่าคอมมิชชันได้" }, { status: 503 });
   }
 }
 

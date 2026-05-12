@@ -76,8 +76,8 @@ function fmtDate(s: string) {
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   CARD: "บัตรเครดิต",
-  PROMPTPAY: "PromptPay",
-  CREDIT: "Credit",
+  PROMPTPAY: "พร้อมเพย์",
+  CREDIT: "เครดิต",
 };
 
 const PAYMENT_METHOD_CLASS: Record<string, string> = {
@@ -149,7 +149,7 @@ function ItemRow({ item }: { item: OrderDetail["items"][number] }) {
             )}
             <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-2 text-xs">
               <div>
-                <span className="text-dark-5">SKU</span>
+                <span className="text-dark-5">รหัสสินค้า</span>
                 <p className="mt-0.5 font-mono font-semibold text-dark dark:text-white">{item.sku}</p>
               </div>
               <div>
@@ -174,6 +174,36 @@ function ItemRow({ item }: { item: OrderDetail["items"][number] }) {
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
+function isOrderListItem(value: unknown): value is OrderListItem {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Partial<OrderListItem>;
+  return (
+    typeof item.id === "string" &&
+    typeof item.orderNumber === "string" &&
+    typeof item.status === "string" &&
+    "totalAmount" in item &&
+    typeof item.createdAt === "string"
+  );
+}
+
+function isOrderList(value: unknown): value is OrderListItem[] {
+  return Array.isArray(value) && value.every(isOrderListItem);
+}
+
+function isOrderDetail(value: unknown): value is OrderDetail {
+  if (!value || typeof value !== "object") return false;
+  const detail = value as Partial<OrderDetail>;
+  return (
+    typeof detail.id === "string" &&
+    typeof detail.orderNumber === "string" &&
+    typeof detail.status === "string" &&
+    "totalAmount" in detail &&
+    typeof detail.createdAt === "string" &&
+    Array.isArray(detail.items) &&
+    Array.isArray(detail.statusLogs)
+  );
+}
+
 export function OrderManager() {
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -189,9 +219,17 @@ export function OrderManager() {
 
   useEffect(() => {
     fetch("/api/orders")
-      .then((r) => r.json())
-      .then((data: OrderListItem[]) => setOrders(data))
-      .catch(() => {})
+      .then(async (r) => {
+        const data = (await r.json().catch(() => null)) as unknown;
+        if (!r.ok || !isOrderList(data)) {
+          setOrders([]);
+          return;
+        }
+        setOrders(data);
+      })
+      .catch(() => {
+        setOrders([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -200,11 +238,17 @@ export function OrderManager() {
     setSaveError("");
     try {
       const r = await fetch(`/api/orders/${id}`);
-      const d = (await r.json()) as OrderDetail;
+      const d = (await r.json().catch(() => null)) as unknown;
+      if (!r.ok || !isOrderDetail(d)) {
+        setDetail(null);
+        setSaveError("ไม่สามารถโหลดรายละเอียดคำสั่งซื้อได้");
+        return;
+      }
       setDetail(d);
       setSelectedStatus((d.status as OrderStatus) ?? "PAID");
     } catch {
-      // ignore
+      setDetail(null);
+      setSaveError("ไม่สามารถโหลดรายละเอียดคำสั่งซื้อได้");
     } finally {
       setDetailLoading(false);
     }
@@ -231,7 +275,12 @@ export function OrderManager() {
         setSaveError(e?.message ?? "ไม่สามารถบันทึกได้");
         return;
       }
-      const fresh = (await fetch(`/api/orders/${detail.id}`).then((r) => r.json())) as OrderDetail;
+      const freshResponse = await fetch(`/api/orders/${detail.id}`);
+      const fresh = (await freshResponse.json().catch(() => null)) as unknown;
+      if (!freshResponse.ok || !isOrderDetail(fresh)) {
+        setSaveError("บันทึกสำเร็จ แต่ไม่สามารถโหลดข้อมูลล่าสุดได้");
+        return;
+      }
       setDetail(fresh);
       setOrders((prev) => prev.map((o) => (o.id === detail.id ? { ...o, status: selectedStatus } : o)));
     } finally {
@@ -239,7 +288,7 @@ export function OrderManager() {
     }
   }
 
-  const filteredOrders = orders.filter((o) => {
+  const filteredOrders = (Array.isArray(orders) ? orders : []).filter((o) => {
     const q = search.trim().toLowerCase();
     const matchSearch = !q ||
       o.orderNumber.toLowerCase().includes(q) ||

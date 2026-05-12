@@ -238,11 +238,11 @@ async function fetchFromApi<T>(path: string, init?: RequestInit): Promise<T> {
     if (typeof window !== "undefined") {
       window.location.href = "/login";
     }
-    throw new Error("Unauthorized");
+    throw new Error("ไม่ได้รับอนุญาต");
   }
 
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
+    throw new Error(`คำขอ API ล้มเหลว: ${response.status}`);
   }
 
   return response.json() as Promise<T>;

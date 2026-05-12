@@ -1,6 +1,6 @@
 import { CommissionReport } from "@/components/admin-next/commission-report";
 
-export const metadata = { title: "รายงาน Commission" };
+export const metadata = { title: "รายงานคอมมิชชัน" };
 
 export default function CommissionReportPage() {
   return (
