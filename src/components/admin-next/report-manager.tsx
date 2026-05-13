@@ -40,6 +40,16 @@ function getPeriod(from: string, to: string): "day" | "week" | "month" {
   return "month";
 }
 
+function formatBucket(bucket: string): string {
+  // bucket is "YYYY-MM-DD" or "YYYY-MM"
+  const parts = bucket.split("-");
+  if (parts.length === 2) {
+    // month bucket
+    return new Date(`${bucket}-01`).toLocaleDateString("th-TH", { month: "long", year: "numeric" });
+  }
+  return new Date(bucket).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" });
+}
+
 function StatBox({ label, value, sub, loading }: { label: string; value: string; sub: string; loading: boolean }) {
   return (
     <div className="rounded-[22px] border border-stroke bg-white p-5 shadow-1 dark:border-dark-3 dark:bg-gray-dark">
@@ -100,15 +110,9 @@ export function ReportManager() {
   const orderRevenue = orders.reduce((s, o) => s + Number(o.totalAmount), 0);
   const orderPending = orders.filter((o) => o.status === "PENDING" || o.status === "PAID").length;
 
-  const earnerMap = new Map<string, { name: string; total: number; count: number }>();
-  for (const row of commissions) {
-    const cur = earnerMap.get(row.earnerId) ?? { name: row.earnerName, total: 0, count: 0 };
-    earnerMap.set(row.earnerId, { ...cur, total: cur.total + Number(row.totalAmount), count: cur.count + row.count });
-  }
-  const topEarners = [...earnerMap.values()]
-    .sort((a, b) => b.total - a.total)
-    .filter((e) => !search.trim() || e.name.toLowerCase().includes(search.trim().toLowerCase()))
-    .slice(0, 10);
+  const filtered = commissions.filter(
+    (r) => !search.trim() || r.earnerName.toLowerCase().includes(search.trim().toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -172,7 +176,7 @@ export function ReportManager() {
         />
       </div>
 
-      {/* Top earners */}
+      {/* Commission table */}
       <ContentCard
         title="ผู้รับค่าคอมมิชชันสูงสุด"
         description={`ช่วง ${from} ถึง ${to}`}
@@ -191,10 +195,10 @@ export function ReportManager() {
           </div>
         </div>
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
-          <table className="w-full min-w-[480px] text-left">
+          <table className="w-full min-w-[600px] text-left">
             <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
-                <th className="px-4 py-3 font-semibold">#</th>
+                <th className="px-4 py-3 font-semibold">วันที่</th>
                 <th className="px-4 py-3 font-semibold">ชื่อ</th>
                 <th className="hidden px-4 py-3 font-semibold md:table-cell">ประเภท</th>
                 <th className="px-4 py-3 font-semibold text-right">รายการ</th>
@@ -205,14 +209,14 @@ export function ReportManager() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-t border-stroke dark:border-dark-3">
-                    <td className="px-4 py-3"><div className="h-4 w-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
+                    <td className="px-4 py-3"><div className="h-4 w-24 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
                     <td className="px-4 py-3"><div className="h-4 w-32 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
                     <td className="hidden px-4 py-3 md:table-cell"><div className="h-5 w-16 animate-pulse rounded-full bg-neutral-100 dark:bg-dark-2" /></td>
                     <td className="px-4 py-3"><div className="h-4 w-8 animate-pulse rounded bg-neutral-100 dark:bg-dark-2 ml-auto" /></td>
                     <td className="px-4 py-3"><div className="h-4 w-20 animate-pulse rounded bg-neutral-100 dark:bg-dark-2 ml-auto" /></td>
                   </tr>
                 ))
-              ) : topEarners.length === 0 ? (
+              ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-16 text-center">
                     <div className="flex flex-col items-center">
@@ -227,23 +231,26 @@ export function ReportManager() {
                   </td>
                 </tr>
               ) : (
-                topEarners.map((e, i) => (
-                  <tr key={e.name} className="border-t border-stroke text-sm dark:border-dark-3">
+                filtered.map((r, i) => (
+                  <tr key={`${r.bucket}-${r.earnerId}`} className="border-t border-stroke text-sm dark:border-dark-3">
+                    <td className="px-4 py-3 text-dark-5 dark:text-dark-6">{formatBucket(r.bucket)}</td>
                     <td className="px-4 py-3">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#eef8f1] text-xs font-bold text-[#45745a]">
-                        {i + 1}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[#eef8f1] text-xs font-bold text-[#45745a]">
+                          {i + 1}
+                        </span>
+                        <span className="font-semibold text-dark dark:text-white">{r.earnerName}</span>
+                      </div>
                     </td>
-                    <td className="px-4 py-3 font-semibold text-dark dark:text-white">{e.name}</td>
                     <td className="hidden px-4 py-3 md:table-cell">
-                      {commissions.find((r) => r.earnerName === e.name)?.memberType === "SALON" ? (
+                      {r.memberType === "SALON" ? (
                         <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-700">ซาลอน</span>
                       ) : (
                         <span className="rounded-full bg-[#f0f4f2] px-2 py-0.5 text-xs font-semibold text-dark-5">ทั่วไป</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 tabular-nums text-right text-dark-5">{e.count}</td>
-                    <td className="px-4 py-3 text-right font-semibold tabular-nums text-[#2f7a4f]">{thb(e.total)}</td>
+                    <td className="px-4 py-3 tabular-nums text-right text-dark-5">{r.count}</td>
+                    <td className="px-4 py-3 text-right font-semibold tabular-nums text-[#2f7a4f]">{thb(Number(r.totalAmount))}</td>
                   </tr>
                 ))
               )}
