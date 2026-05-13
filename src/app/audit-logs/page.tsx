@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ContentCard } from "@/components/admin-next/page-elements";
 
 type AuditLogEntry = {
@@ -22,6 +22,13 @@ const ACTION_LABELS: Record<string, string> = {
   "order.status_change": "เปลี่ยนสถานะออเดอร์",
   "stock.adjust": "ปรับ stock",
 };
+
+const ENTITY_TYPES = [
+  { label: "ทั้งหมด", value: "" },
+  { label: "สมาชิก", value: "member" },
+  { label: "ออเดอร์", value: "order" },
+  { label: "Stock", value: "stock" },
+];
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString("th-TH", {
@@ -50,9 +57,22 @@ export default function AuditLogsPage() {
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
-  const load = useCallback((p: number) => {
+  const [search, setSearch] = useState("");
+  const [entityType, setEntityType] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const load = useCallback((p: number, params: { search: string; entityType: string; dateFrom: string; dateTo: string }) => {
     setIsLoading(true);
-    fetch(`/api/audit-logs?page=${p}&limit=50`)
+    const qs = new URLSearchParams({ page: String(p), limit: "50" });
+    if (params.search) qs.set("search", params.search);
+    if (params.entityType) qs.set("entityType", params.entityType);
+    if (params.dateFrom) qs.set("dateFrom", params.dateFrom);
+    if (params.dateTo) qs.set("dateTo", params.dateTo);
+
+    fetch(`/api/audit-logs?${qs.toString()}`)
       .then((r) => r.json())
       .then((data: { items: AuditLogEntry[]; meta: Meta }) => {
         setItems(data.items ?? []);
@@ -62,11 +82,100 @@ export default function AuditLogsPage() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  useEffect(() => { load(page); }, [page, load]);
+  useEffect(() => {
+    load(page, { search, entityType, dateFrom, dateTo });
+  }, [page, entityType, dateFrom, dateTo, load]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setPage(1);
+      load(1, { search: value, entityType, dateFrom, dateTo });
+    }, 400);
+  };
+
+  const handleEntityType = (value: string) => {
+    setEntityType(value);
+    setPage(1);
+  };
+
+  const handleDateFrom = (value: string) => {
+    setDateFrom(value);
+    setPage(1);
+  };
+
+  const handleDateTo = (value: string) => {
+    setDateTo(value);
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setSearch("");
+    setEntityType("");
+    setDateFrom("");
+    setDateTo("");
+    setPage(1);
+    load(1, { search: "", entityType: "", dateFrom: "", dateTo: "" });
+  };
+
+  const hasFilter = search || entityType || dateFrom || dateTo;
 
   return (
     <div className="space-y-6">
       <ContentCard title="Audit Log" description="ประวัติการกระทำของผู้ดูแลระบบ">
+        {/* Filter bar */}
+        <div className="mb-4 flex flex-wrap items-end gap-3">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="ค้นหา email หรือ ID..."
+            className="h-10 w-56 rounded-xl border border-stroke bg-white px-4 text-sm text-dark placeholder:text-dark-5 focus:border-[#4caf82] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+          />
+
+          <div className="flex items-center gap-2">
+            {ENTITY_TYPES.map((t) => (
+              <button
+                key={t.value}
+                onClick={() => handleEntityType(t.value)}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                  entityType === t.value
+                    ? "border-[#4caf82] bg-[#4caf82] text-white"
+                    : "border-[#d7e7dc] text-[#355846] hover:bg-[#f4fbf6]"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => handleDateFrom(e.target.value)}
+              className="h-10 rounded-xl border border-stroke bg-white px-3 text-sm text-dark focus:border-[#4caf82] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+            />
+            <span className="text-sm text-dark-5">ถึง</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => handleDateTo(e.target.value)}
+              className="h-10 rounded-xl border border-stroke bg-white px-3 text-sm text-dark focus:border-[#4caf82] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+            />
+          </div>
+
+          {hasFilter && (
+            <button
+              onClick={handleReset}
+              className="h-10 rounded-xl border border-red-200 px-4 text-sm font-semibold text-red-500 hover:bg-red-50"
+            >
+              ล้าง filter
+            </button>
+          )}
+        </div>
+
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
           <table className="w-full min-w-[700px] text-left">
             <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
@@ -92,7 +201,7 @@ export default function AuditLogsPage() {
               ) : items.length === 0 ? (
                 <tr>
                   <td className="px-4 py-16 text-center text-sm text-dark-5" colSpan={5}>
-                    ยังไม่มี audit log
+                    ไม่พบรายการ
                   </td>
                 </tr>
               ) : (
@@ -116,24 +225,38 @@ export default function AuditLogsPage() {
           </table>
         </div>
 
-        {meta.totalPages > 1 && (
-          <div className="mt-5 flex items-center justify-between">
-            <p className="text-sm text-dark-5">
-              ทั้งหมด <span className="font-bold text-dark dark:text-white">{meta.total}</span> รายการ
-            </p>
+        <div className="mt-5 flex items-center justify-between">
+          <p className="text-sm text-dark-5">
+            แสดง{" "}
+            <span className="font-bold text-dark dark:text-white">
+              {Math.min((page - 1) * 50 + items.length, meta.total)}
+            </span>{" "}
+            จาก{" "}
+            <span className="font-bold text-dark dark:text-white">{meta.total}</span>{" "}
+            รายการ
+          </p>
+          {meta.totalPages > 1 && (
             <div className="flex items-center gap-2">
-              <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)}
-                className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6] disabled:opacity-40">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+                className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6] disabled:opacity-40"
+              >
                 ← ก่อนหน้า
               </button>
-              <span className="text-sm font-medium text-dark dark:text-white">{page} / {meta.totalPages}</span>
-              <button disabled={page >= meta.totalPages} onClick={() => setPage((p) => p + 1)}
-                className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6] disabled:opacity-40">
+              <span className="text-sm font-medium text-dark dark:text-white">
+                {page} / {meta.totalPages}
+              </span>
+              <button
+                disabled={page >= meta.totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6] disabled:opacity-40"
+              >
                 ถัดไป →
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </ContentCard>
     </div>
   );
