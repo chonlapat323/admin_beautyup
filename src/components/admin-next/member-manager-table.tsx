@@ -82,6 +82,7 @@ function mapMemberRecord(member: ApiMember): MemberRecord {
     creditBalance: Number(member.creditBalance ?? 0),
     orders: member._count?.orders ?? 0,
     referrals: member._count?.referrals ?? 0,
+    referredByName: member.referredBy?.fullName,
     createdAt: fmt(member.createdAt),
     updatedAt: formatMemberDate(member.updatedAt),
     source: "api",
@@ -215,6 +216,7 @@ function ConfirmDeleteModal({
 
 function MemberFormModal({
   editingId,
+  referredByName,
   form,
   isSubmitting,
   onChange,
@@ -222,6 +224,7 @@ function MemberFormModal({
   onSubmit,
 }: {
   editingId: string | null;
+  referredByName?: string;
   form: MemberFormState;
   isSubmitting: boolean;
   onChange: (next: Partial<MemberFormState>) => void;
@@ -303,6 +306,13 @@ function MemberFormModal({
             </div>
           )}
 
+          {editingId && referredByName && (
+            <div className="rounded-xl border border-[#d8e6dd] bg-[#f4fbf6] px-4 py-3">
+              <p className="text-xs font-semibold text-dark-5 dark:text-dark-6">ผู้แนะนำ</p>
+              <p className="mt-1 text-sm font-semibold text-[#2d6a4f]">{referredByName}</p>
+            </div>
+          )}
+
           {!editingId && (
             <div>
               <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
@@ -377,6 +387,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingReferredByName, setEditingReferredByName] = useState<string | undefined>();
   const [form, setForm] = useState<MemberFormState>(INITIAL_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -453,6 +464,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
 
   function startEdit(member: MemberRecord) {
     setEditingId(member.id);
+    setEditingReferredByName(member.referredByName);
     setForm({
       fullName: member.fullName,
       phone: member.phone,
@@ -763,6 +775,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
         ? createPortal(
             <MemberFormModal
               editingId={editingId}
+              referredByName={editingReferredByName}
               form={form}
               isSubmitting={isSubmitting}
               onChange={(next) => setForm((c) => ({ ...c, ...next }))}

@@ -121,6 +121,12 @@ export const NAV_DATA: NavSection[] = [
         ],
       },
       {
+        title: "Audit Log",
+        url: "/audit-logs",
+        icon: Icons.Table,
+        items: [],
+      },
+      {
         title: "ตั้งค่า",
         url: "/settings",
         icon: Icons.Alphabet,

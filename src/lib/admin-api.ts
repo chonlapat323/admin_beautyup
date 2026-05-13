@@ -187,6 +187,7 @@ export type ApiMember = {
   pointBalance: number;
   creditBalance?: number | null;
   referredById?: string | null;
+  referredBy?: { id: string; fullName: string } | null;
   createdAt?: string;
   updatedAt?: string;
   _count?: {
@@ -801,6 +802,7 @@ export type MemberRecord = {
   creditBalance: number;
   orders: number;
   referrals: number;
+  referredByName?: string;
   createdAt: string;
   updatedAt: string;
   source: "api" | "mock";
@@ -834,6 +836,7 @@ function mapMemberRecord(member: ApiMember): MemberRecord {
     creditBalance: Number(member.creditBalance ?? 0),
     orders: member._count?.orders ?? 0,
     referrals: member._count?.referrals ?? 0,
+    referredByName: member.referredBy?.fullName,
     createdAt: fmt(member.createdAt),
     updatedAt: fmt(member.updatedAt),
     source: "api",
