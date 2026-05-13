@@ -116,6 +116,7 @@ export const NAV_DATA: NavSection[] = [
         title: "รายงาน",
         icon: Icons.PieChart,
         items: [
+          { title: "ภาพรวมรายงาน", url: "/reports" },
           { title: "รายงานคอมมิชชัน", url: "/commissions/report" },
           { title: "รายงานการแลกแต้ม", url: "/reward-logs" },
         ],
