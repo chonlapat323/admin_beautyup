@@ -71,6 +71,12 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
+        title: "สต็อกสินค้า",
+        url: "/stock",
+        icon: Icons.Table,
+        items: [],
+      },
+      {
         title: "คำสั่งซื้อ",
         url: "/orders",
         icon: Icons.Calendar,
