@@ -73,6 +73,7 @@ export function ReportManager() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
 
   function applyPreset(idx: number) {
     const t = new Date();
@@ -110,9 +111,11 @@ export function ReportManager() {
   const orderRevenue = orders.reduce((s, o) => s + Number(o.totalAmount), 0);
   const orderPending = orders.filter((o) => o.status === "PENDING" || o.status === "PAID").length;
 
-  const filtered = commissions.filter(
-    (r) => !search.trim() || r.earnerName.toLowerCase().includes(search.trim().toLowerCase())
-  );
+  const filtered = commissions.filter((r) => {
+    if (search.trim() && !r.earnerName.toLowerCase().includes(search.trim().toLowerCase())) return false;
+    if (typeFilter && r.memberType !== typeFilter) return false;
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -181,8 +184,8 @@ export function ReportManager() {
         title="ผู้รับค่าคอมมิชชันสูงสุด"
         description={`ช่วง ${from} ถึง ${to}`}
       >
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative w-full sm:w-60">
+        <div className="mb-5 flex flex-wrap items-center gap-3">
+          <div className="relative w-56">
             <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} viewBox="0 0 24 24">
               <circle cx="11" cy="11" r="7" /><path d="m21 21-4.35-4.35" />
             </svg>
@@ -193,6 +196,19 @@ export function ReportManager() {
               value={search}
             />
           </div>
+          {[{ label: "ทั้งหมด", value: "" }, { label: "ซาลอน", value: "SALON" }, { label: "ทั่วไป", value: "REGULAR" }].map((t) => (
+            <button
+              key={t.value}
+              onClick={() => setTypeFilter(t.value)}
+              className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                typeFilter === t.value
+                  ? "border-[#4caf82] bg-[#4caf82] text-white"
+                  : "border-[#d7e7dc] text-[#355846] hover:bg-[#f4fbf6]"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
           <table className="w-full min-w-[600px] text-left">
