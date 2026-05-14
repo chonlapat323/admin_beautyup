@@ -9,6 +9,7 @@ type Settings = {
   shipping: { freeShippingThreshold: number; defaultShippingFee: number };
   points: { tiers: PointTier[] };
   payment: { gatewayFee: number };
+  social?: { youtubeUrl?: string; tiktokUrl?: string };
 };
 
 type FormState = {
@@ -16,6 +17,8 @@ type FormState = {
   defaultShippingFee: string;
   gatewayFee: string;
   pointTiers: PointTier[];
+  youtubeUrl: string;
+  tiktokUrl: string;
 };
 
 function toForm(s: Settings): FormState {
@@ -24,6 +27,8 @@ function toForm(s: Settings): FormState {
     defaultShippingFee: String(s.shipping.defaultShippingFee),
     gatewayFee: String(s.payment.gatewayFee),
     pointTiers: [...s.points.tiers].sort((a, b) => a.minSpend - b.minSpend),
+    youtubeUrl: s.social?.youtubeUrl ?? "",
+    tiktokUrl: s.social?.tiktokUrl ?? "",
   };
 }
 
@@ -60,6 +65,21 @@ function Field({
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+function UrlField({ label, value, placeholder, onChange }: { label: string; value: string; placeholder?: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <label className={labelCls}>{label}</label>
+      <input
+        type="url"
+        className={inputCls}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+      />
     </div>
   );
 }
@@ -147,6 +167,7 @@ export function SettingsForm({ initial }: { initial: Settings }) {
     return (v: string) => setForm((prev) => ({ ...prev, [key]: v }));
   }
 
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setIsSaving(true);
@@ -159,6 +180,8 @@ export function SettingsForm({ initial }: { initial: Settings }) {
           defaultShippingFee: Number(form.defaultShippingFee),
           gatewayFee: Number(form.gatewayFee),
           pointTiers: form.pointTiers,
+          youtubeUrl: form.youtubeUrl,
+          tiktokUrl: form.tiktokUrl,
         }),
       });
       if (!res.ok) throw new Error("บันทึกไม่สำเร็จ");
@@ -183,6 +206,23 @@ export function SettingsForm({ initial }: { initial: Settings }) {
           <div className="grid gap-4 sm:grid-cols-2 max-w-lg">
             <Field label="ฟรีค่าจัดส่งเมื่อยอดถึง" value={form.freeShippingThreshold} unit="บาท" onChange={set("freeShippingThreshold")} />
             <Field label="ค่าจัดส่งปกติ" value={form.defaultShippingFee} unit="บาท" onChange={set("defaultShippingFee")} />
+          </div>
+        </ContentCard>
+
+        <ContentCard title="Social Media" description="ลิงก์ YouTube และ TikTok จะแสดงในแอปลูกค้า — เว้นว่างหากยังไม่ต้องการแสดง">
+          <div className="grid gap-4 sm:grid-cols-2 max-w-2xl">
+            <UrlField
+              label="YouTube URL"
+              value={form.youtubeUrl}
+              placeholder="https://youtube.com/@beautyup"
+              onChange={set("youtubeUrl")}
+            />
+            <UrlField
+              label="TikTok URL"
+              value={form.tiktokUrl}
+              placeholder="https://tiktok.com/@beautyup"
+              onChange={set("tiktokUrl")}
+            />
           </div>
         </ContentCard>
 
