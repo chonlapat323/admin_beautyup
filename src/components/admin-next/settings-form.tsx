@@ -9,7 +9,6 @@ type Settings = {
   shipping: { freeShippingThreshold: number; defaultShippingFee: number };
   points: { tiers: PointTier[] };
   payment: { gatewayFee: number };
-  referral?: { commissionRate: number };
   social?: { youtubeUrl?: string; tiktokUrl?: string };
 };
 
@@ -17,7 +16,6 @@ type FormState = {
   freeShippingThreshold: string;
   defaultShippingFee: string;
   gatewayFee: string;
-  referralCommissionRate: string;
   pointTiers: PointTier[];
   youtubeUrl: string;
   tiktokUrl: string;
@@ -28,7 +26,6 @@ function toForm(s: Settings): FormState {
     freeShippingThreshold: String(s.shipping.freeShippingThreshold),
     defaultShippingFee: String(s.shipping.defaultShippingFee),
     gatewayFee: String(s.payment.gatewayFee),
-    referralCommissionRate: String((s.referral?.commissionRate ?? 0.03) * 100),
     pointTiers: [...s.points.tiers].sort((a, b) => a.minSpend - b.minSpend),
     youtubeUrl: s.social?.youtubeUrl ?? "",
     tiktokUrl: s.social?.tiktokUrl ?? "",
@@ -182,7 +179,6 @@ export function SettingsForm({ initial }: { initial: Settings }) {
           freeShippingThreshold: Number(form.freeShippingThreshold),
           defaultShippingFee: Number(form.defaultShippingFee),
           gatewayFee: Number(form.gatewayFee),
-          referralCommissionRate: Number(form.referralCommissionRate) / 100,
           pointTiers: form.pointTiers,
           youtubeUrl: form.youtubeUrl,
           tiktokUrl: form.tiktokUrl,
@@ -210,12 +206,6 @@ export function SettingsForm({ initial }: { initial: Settings }) {
           <div className="grid gap-4 sm:grid-cols-2 max-w-lg">
             <Field label="ฟรีค่าจัดส่งเมื่อยอดถึง" value={form.freeShippingThreshold} unit="บาท" onChange={set("freeShippingThreshold")} />
             <Field label="ค่าจัดส่งปกติ" value={form.defaultShippingFee} unit="บาท" onChange={set("defaultShippingFee")} />
-          </div>
-        </ContentCard>
-
-        <ContentCard title="คอมมิชชัน" description="อัตราค่าแนะนำที่จ่ายให้สมาชิกเมื่อคนที่ตนแนะนำสั่งซื้อ">
-          <div className="max-w-xs">
-            <Field label="อัตราคอมมิชชัน" value={form.referralCommissionRate} unit="%" onChange={set("referralCommissionRate")} />
           </div>
         </ContentCard>
 
