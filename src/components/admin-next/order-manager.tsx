@@ -30,6 +30,7 @@ type OrderDetail = OrderListItem & {
   shippingName: string;
   shippingPhone: string;
   shippingAddr: string;
+  trackingNumber?: string | null;
   items: {
     id: string;
     productId: string;
@@ -212,6 +213,8 @@ export function OrderManager() {
   const [selectedStatus, setSelectedStatus] = useState<OrderStatus>("PAID");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [trackingInput, setTrackingInput] = useState("");
+  const [savingTracking, setSavingTracking] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
@@ -246,6 +249,7 @@ export function OrderManager() {
       }
       setDetail(d);
       setSelectedStatus((d.status as OrderStatus) ?? "PAID");
+      setTrackingInput(d.trackingNumber ?? "");
     } catch {
       setDetail(null);
       setSaveError("ไม่สามารถโหลดรายละเอียดคำสั่งซื้อได้");
@@ -285,6 +289,21 @@ export function OrderManager() {
       setOrders((prev) => prev.map((o) => (o.id === detail.id ? { ...o, status: selectedStatus } : o)));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function saveTracking() {
+    if (!detail) return;
+    setSavingTracking(true);
+    try {
+      await fetch(`/api/orders/${detail.id}/tracking`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trackingNumber: trackingInput }),
+      });
+      setDetail((prev) => prev ? { ...prev, trackingNumber: trackingInput } : prev);
+    } finally {
+      setSavingTracking(false);
     }
   }
 
@@ -527,6 +546,27 @@ export function OrderManager() {
                             <PaymentBadge method={detail.paymentMethod} />
                           </div>
                         )}
+                      </div>
+                    </div>
+
+                    {/* Tracking number */}
+                    <div className="rounded-xl border border-stroke bg-[#f8fbf9] px-5 py-4 dark:border-dark-3 dark:bg-dark-2">
+                      <SectionLabel>เลขพัสดุ / Tracking</SectionLabel>
+                      <div className="flex gap-3">
+                        <input
+                          type="text"
+                          value={trackingInput}
+                          onChange={(e) => setTrackingInput(e.target.value)}
+                          placeholder="เช่น TH123456789"
+                          className="flex-1 rounded-xl border border-stroke bg-white px-4 py-2.5 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-gray-dark dark:text-white"
+                        />
+                        <button
+                          disabled={savingTracking || trackingInput === (detail.trackingNumber ?? "")}
+                          onClick={() => void saveTracking()}
+                          className="flex-shrink-0 rounded-xl bg-[#45745a] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#355846] disabled:opacity-70"
+                        >
+                          {savingTracking ? "กำลังบันทึก..." : "บันทึก"}
+                        </button>
                       </div>
                     </div>
 
