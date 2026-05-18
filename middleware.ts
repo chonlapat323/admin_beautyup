@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ADMIN_SESSION_COOKIE, decodeAdminSession } from "@/lib/auth-session";
 
-const PUBLIC_PATHS = ["/login", "/auth/sign-in", "/privacy"];
+const PUBLIC_PATHS = ["/login", "/auth/sign-in", "/privacy", "/privacy.html"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
