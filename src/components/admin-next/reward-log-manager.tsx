@@ -2,13 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { ContentCard } from "./page-elements";
+import { RedemptionDetailModal } from "./RedemptionDetailModal";
+
+type RedemptionStatus = "PENDING" | "PREPARING" | "SHIPPED" | "DELIVERED";
 
 type Redemption = {
   id: string;
   pointsSpent: number;
+  status: RedemptionStatus;
+  trackingNumber: string | null;
   createdAt: string;
   member: { id: string; fullName: string; email: string | null; phone: string | null };
   rewardProduct: { id: string; name: string };
+};
+
+const STATUS_LABELS: Record<RedemptionStatus, { label: string; className: string }> = {
+  PENDING:   { label: "รอดำเนินการ",    className: "bg-gray-100 text-gray-600" },
+  PREPARING: { label: "กำลังเตรียม",    className: "bg-amber-100 text-amber-700" },
+  SHIPPED:   { label: "จัดส่งแล้ว",     className: "bg-blue-100 text-blue-700" },
+  DELIVERED: { label: "ส่งถึงแล้ว",     className: "bg-green-100 text-green-700" },
 };
 
 type Preset = "today" | "week" | "month" | "custom";
@@ -42,8 +54,10 @@ export function RewardLogManager() {
   const [rows, setRows] = useState<Redemption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<RedemptionStatus | "ALL">("ALL");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [selectedRedemptionId, setSelectedRedemptionId] = useState<string | null>(null);
 
   async function load(f: string, t: string) {
     setIsLoading(true);
@@ -84,10 +98,12 @@ export function RewardLogManager() {
 
   const filteredRows = rows.filter((r) => {
     const q = search.trim().toLowerCase();
-    return !q ||
+    const matchSearch = !q ||
       r.member.fullName.toLowerCase().includes(q) ||
       (r.member.email ?? "").toLowerCase().includes(q) ||
       r.rewardProduct.name.toLowerCase().includes(q);
+    const matchStatus = statusFilter === "ALL" || r.status === statusFilter;
+    return matchSearch && matchStatus;
   });
   const totalItems = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
@@ -101,6 +117,12 @@ export function RewardLogManager() {
   ];
 
   return (
+    <>
+    <RedemptionDetailModal
+      redemptionId={selectedRedemptionId}
+      onClose={() => setSelectedRedemptionId(null)}
+      onUpdated={() => { setSelectedRedemptionId(null); load(from, to); }}
+    />
     <ContentCard
       title="Log การแลกแต้ม"
       description="บันทึกการแลกสินค้าด้วยแต้มสะสมของสมาชิก"
@@ -139,6 +161,29 @@ export function RewardLogManager() {
             ค้นหา
           </button>
         </div>
+      </div>
+
+      {/* Status filter */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        {([
+          { value: "ALL",       label: "ทั้งหมด" },
+          { value: "PENDING",   label: "รอดำเนินการ" },
+          { value: "PREPARING", label: "กำลังเตรียม" },
+          { value: "SHIPPED",   label: "จัดส่งแล้ว" },
+          { value: "DELIVERED", label: "ส่งถึงแล้ว" },
+        ] as { value: RedemptionStatus | "ALL"; label: string }[]).map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => { setStatusFilter(opt.value); setPage(1); }}
+            className={`rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${
+              statusFilter === opt.value
+                ? "bg-[#45745a] text-white"
+                : "border border-[#d7e7dc] text-[#355846] hover:bg-[#f4fbf6]"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       {/* Search + page size */}
@@ -184,6 +229,9 @@ export function RewardLogManager() {
               <th className="px-4 py-3 text-left font-semibold">สมาชิก</th>
               <th className="px-4 py-3 text-left font-semibold">สินค้าที่แลก</th>
               <th className="px-4 py-3 text-center font-semibold">แต้มที่ใช้</th>
+              <th className="px-4 py-3 text-center font-semibold">สถานะ</th>
+              <th className="px-4 py-3 text-left font-semibold">Tracking</th>
+              <th className="px-4 py-3 text-center font-semibold">จัดการ</th>
             </tr>
           </thead>
           <tbody>
@@ -198,7 +246,7 @@ export function RewardLogManager() {
               ))
             ) : pagedRows.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-16 text-center">
+                <td colSpan={7} className="px-4 py-16 text-center">
                   <div className="flex flex-col items-center">
                     <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f6f2] dark:bg-dark-2">
                       <svg className="h-7 w-7 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /></svg>
@@ -223,6 +271,22 @@ export function RewardLogManager() {
                   </td>
                   <td className="px-4 py-3 text-dark dark:text-white">{row.rewardProduct.name}</td>
                   <td className="px-4 py-3 text-center font-semibold text-[#45745a]">{row.pointsSpent.toLocaleString()} pts</td>
+                  <td className="px-4 py-3 text-center">
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_LABELS[row.status].className}`}>
+                      {STATUS_LABELS[row.status].label}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm text-dark-5 dark:text-dark-6">
+                    {row.trackingNumber ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      onClick={() => setSelectedRedemptionId(row.id)}
+                      className="rounded-full border border-[#d7e7dc] px-3 py-1.5 text-xs font-semibold text-[#355846] hover:bg-[#f4fbf6]"
+                    >
+                      จัดการ
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
@@ -261,5 +325,6 @@ export function RewardLogManager() {
         </div>
       </div>
     </ContentCard>
+    </>
   );
 }
