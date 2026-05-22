@@ -52,6 +52,7 @@ export default function PayoutsPage() {
   const [search, setSearch] = useState("");
   const [appliedFrom, setAppliedFrom] = useState("");
   const [appliedTo, setAppliedTo] = useState("");
+  const [preset, setPreset] = useState<"today" | "week" | "month" | "custom" | "">("");
 
   useEffect(() => {
     setIsLoading(true);
@@ -81,8 +82,30 @@ export default function PayoutsPage() {
     setSearch("");
     setAppliedFrom("");
     setAppliedTo("");
+    setPreset("");
     setPage(1);
   }
+
+  function handlePreset(p: "today" | "week" | "month") {
+    const now = new Date();
+    const toStr = now.toISOString().slice(0, 10);
+    let fromStr = toStr;
+    if (p === "week") {
+      const d = new Date(now); d.setDate(d.getDate() - 6);
+      fromStr = d.toISOString().slice(0, 10);
+    } else if (p === "month") {
+      fromStr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+    }
+    setFrom(fromStr);
+    setTo(toStr);
+    setAppliedFrom(fromStr);
+    setAppliedTo(toStr);
+    setPreset(p);
+    setPage(1);
+  }
+
+  const btnBase = "rounded-full px-3.5 py-2 text-xs font-semibold transition-colors border border-[#d7e7dc] text-[#355846] hover:bg-[#f4fbf6]";
+  const btnActive = "bg-[#45745a] text-white border-[#45745a] hover:bg-[#355846]";
 
   const filtered = items.filter(
     (p) => !search || p.member.fullName.toLowerCase().includes(search.toLowerCase())
@@ -103,18 +126,21 @@ export default function PayoutsPage() {
       <ContentCard title="ประวัติการจ่าย" description="รายการชุดการจ่ายคอมมิชชันทั้งหมดที่ Admin อนุมัติแล้ว">
         {/* Filter bar */}
         <div className="mb-5 flex flex-wrap items-end gap-3">
+          <button type="button" onClick={() => handlePreset("today")} className={`${btnBase} ${preset === "today" ? btnActive : ""}`}>วันนี้</button>
+          <button type="button" onClick={() => handlePreset("week")} className={`${btnBase} ${preset === "week" ? btnActive : ""}`}>7 วันล่าสุด</button>
+          <button type="button" onClick={() => handlePreset("month")} className={`${btnBase} ${preset === "month" ? btnActive : ""}`}>เดือนนี้</button>
           <div className="flex items-center gap-2">
             <input
               type="date"
               value={from}
-              onChange={(e) => setFrom(e.target.value)}
+              onChange={(e) => { setFrom(e.target.value); setPreset("custom"); }}
               className="rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
             />
             <span className="text-sm text-dark-5">—</span>
             <input
               type="date"
               value={to}
-              onChange={(e) => setTo(e.target.value)}
+              onChange={(e) => { setTo(e.target.value); setPreset("custom"); }}
               className="rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
             />
           </div>
