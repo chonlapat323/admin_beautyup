@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { ContentCard } from "./page-elements";
 
 type ReportRow = {
@@ -11,6 +12,16 @@ type ReportRow = {
   referralCode: string | null;
   count: number;
   totalAmount: number;
+};
+
+type CommissionDetail = {
+  id: string;
+  amount: number;
+  rate: number;
+  status: "PENDING" | "PAID" | "CANCELLED";
+  note: string | null;
+  createdAt: string;
+  order: { orderNumber: string; totalAmount: number };
 };
 
 type Period = "day" | "week" | "month";
@@ -72,6 +83,9 @@ export function CommissionReport() {
   const [to, setTo] = useState(() => getPresetRange("month").to);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [selectedRow, setSelectedRow] = useState<ReportRow | null>(null);
+  const [details, setDetails] = useState<CommissionDetail[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
@@ -120,6 +134,19 @@ export function CommissionReport() {
   const totalItems = filteredRows.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const pagedRows = filteredRows.slice((page - 1) * pageSize, page * pageSize);
+
+  async function openDetail(row: ReportRow) {
+    setSelectedRow(row);
+    setDetailLoading(true);
+    setDetails([]);
+    const qs = new URLSearchParams({ earnerId: row.earnerId, pageSize: "100" });
+    if (from) qs.set("from", from);
+    if (to) qs.set("to", to);
+    const res = await fetch(`/api/commissions?${qs}`);
+    const data = await res.json();
+    setDetails(data.items ?? []);
+    setDetailLoading(false);
+  }
 
   const btnBase = "rounded-full px-3.5 py-2 text-xs font-semibold transition-colors border border-[#d7e7dc] text-[#355846] hover:bg-[#f4fbf6]";
   const btnActive = "bg-[#45745a] text-white border-[#45745a] hover:bg-[#355846]";
@@ -221,7 +248,7 @@ export function CommissionReport() {
               </tr>
             ) : (
               pagedRows.map((row, i) => (
-                <tr key={i} className="border-t border-stroke text-sm dark:border-dark-3">
+                <tr key={i} onClick={() => openDetail(row)} className="border-t border-stroke text-sm dark:border-dark-3 cursor-pointer hover:bg-[#f8fbf9] dark:hover:bg-dark-2">
                   <td className="px-4 py-3 font-medium text-dark dark:text-white">{formatBucket(row.bucket, period)}</td>
                   <td className="px-4 py-3 font-semibold text-dark dark:text-white">{row.earnerName}</td>
                   <td className="hidden px-4 py-3 sm:table-cell">
@@ -273,6 +300,71 @@ export function CommissionReport() {
           >ถัดไป →</button>
         </div>
       </div>
+      {selectedRow && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setSelectedRow(null)} />
+          <div className="relative w-full max-w-2xl rounded-2xl bg-white shadow-xl dark:bg-dark-2 max-h-[80vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-stroke px-6 py-4 dark:border-dark-3">
+              <div>
+                <h3 className="font-semibold text-dark dark:text-white">{selectedRow.earnerName}</h3>
+                <p className="text-sm text-dark-5">{formatBucket(selectedRow.bucket, period)} · {selectedRow.count} รายการ · {formatAmount(selectedRow.totalAmount)}</p>
+              </div>
+              <button onClick={() => setSelectedRow(null)} className="rounded-lg p-1 text-dark-5 hover:bg-dark-5/10">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {/* Body */}
+            <div className="overflow-y-auto flex-1">
+              {detailLoading ? (
+                <div className="flex justify-center py-10">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#d8e6dd] border-t-[#45745a]" />
+                </div>
+              ) : (
+                <table className="w-full text-sm text-left">
+                  <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">เลขออเดอร์</th>
+                      <th className="px-4 py-3 font-semibold text-right">ยอด Order</th>
+                      <th className="px-4 py-3 font-semibold text-right">อัตรา</th>
+                      <th className="px-4 py-3 font-semibold text-right">คอมมิชชัน</th>
+                      <th className="px-4 py-3 font-semibold">สถานะ</th>
+                      <th className="px-4 py-3 font-semibold">วันที่</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {details.length === 0 ? (
+                      <tr><td colSpan={6} className="px-4 py-10 text-center text-dark-5">ไม่พบข้อมูล</td></tr>
+                    ) : details.map((d) => (
+                      <tr key={d.id} className="border-t border-stroke dark:border-dark-3">
+                        <td className="px-4 py-3 font-mono text-xs text-dark dark:text-white">{d.order.orderNumber}</td>
+                        <td className="px-4 py-3 text-right text-dark-5">{formatAmount(d.order.totalAmount)}</td>
+                        <td className="px-4 py-3 text-right text-dark-5">{d.rate}%</td>
+                        <td className="px-4 py-3 text-right font-semibold text-[#5f8f74]">{formatAmount(d.amount)}</td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            d.status === "PAID" ? "bg-green-100 text-green-700" :
+                            d.status === "CANCELLED" ? "bg-red-100 text-red-600" :
+                            "bg-yellow-100 text-yellow-700"
+                          }`}>
+                            {d.status === "PAID" ? "จ่ายแล้ว" : d.status === "CANCELLED" ? "ยกเลิก" : "รอจ่าย"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-dark-5 text-xs">
+                          {new Date(d.createdAt).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </ContentCard>
   );
 }
