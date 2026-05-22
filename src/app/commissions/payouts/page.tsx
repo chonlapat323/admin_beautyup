@@ -47,9 +47,19 @@ export default function PayoutsPage() {
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [search, setSearch] = useState("");
+  const [appliedFrom, setAppliedFrom] = useState("");
+  const [appliedTo, setAppliedTo] = useState("");
+
   useEffect(() => {
     setIsLoading(true);
-    fetch(`/api/commissions/payouts?page=${page}&pageSize=20`)
+    const url =
+      `/api/commissions/payouts?page=${page}&pageSize=20` +
+      (appliedFrom ? `&from=${appliedFrom}` : "") +
+      (appliedTo ? `&to=${appliedTo}` : "");
+    fetch(url)
       .then((r) => r.json())
       .then((data: { items: PayoutLog[]; meta: Meta }) => {
         setItems(data.items ?? []);
@@ -57,11 +67,93 @@ export default function PayoutsPage() {
       })
       .catch(() => setItems([]))
       .finally(() => setIsLoading(false));
-  }, [page]);
+  }, [page, appliedFrom, appliedTo]);
+
+  function handleSearch() {
+    setAppliedFrom(from);
+    setAppliedTo(to);
+    setPage(1);
+  }
+
+  function handleClear() {
+    setFrom("");
+    setTo("");
+    setSearch("");
+    setAppliedFrom("");
+    setAppliedTo("");
+    setPage(1);
+  }
+
+  const filtered = items.filter(
+    (p) => !search || p.member.fullName.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
-      <ContentCard title="ประวัติการจ่ายคอมมิชชัน" description="รายการจ่ายคอมมิชชันที่ผ่านมาทั้งหมด">
+      {/* Info banner */}
+      <div className="rounded-2xl border border-[#b7ddc7] bg-[#f0faf4] px-5 py-4 text-sm text-[#2d6a4f]">
+        <p className="mb-2 font-semibold">หน้านี้แสดงอะไร?</p>
+        <ul className="space-y-1 list-disc list-inside">
+          <li>แสดงรายการ "ชุดการจ่าย" commission ที่ Admin อนุมัติและโอนเงินไปแล้ว</li>
+          <li>1 รายการ = 1 ครั้งที่ Admin กดจ่าย (อาจรวมหลาย commission หลาย order)</li>
+          <li>แตกต่างจาก "รายงานคอมมิชชัน" ที่แสดงรายละเอียดแต่ละ order</li>
+        </ul>
+      </div>
+
+      <ContentCard title="ประวัติการจ่าย" description="รายการชุดการจ่ายคอมมิชชันทั้งหมดที่ Admin อนุมัติแล้ว">
+        {/* Filter bar */}
+        <div className="mb-5 flex flex-wrap items-end gap-3">
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              className="rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+            />
+            <span className="text-sm text-dark-5">—</span>
+            <input
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              className="rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+            />
+          </div>
+          <div className="relative w-full sm:w-56">
+            <svg
+              className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-5"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.75}
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] py-2.5 pl-9 pr-4 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="ค้นหาชื่อสมาชิก..."
+              value={search}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleSearch}
+            className="rounded-full bg-[#45745a] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
+          >
+            ค้นหา
+          </button>
+          <button
+            type="button"
+            onClick={handleClear}
+            className="rounded-full border border-[#d7e7dc] px-4 py-2 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+          >
+            ล้าง
+          </button>
+        </div>
+
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
           <table className="w-full min-w-[640px] text-left">
             <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
@@ -88,14 +180,14 @@ export default function PayoutsPage() {
                     <td className="px-4 py-3"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
                   </tr>
                 ))
-              ) : items.length === 0 ? (
+              ) : filtered.length === 0 ? (
                 <tr>
                   <td className="px-4 py-16 text-center text-sm text-dark-5" colSpan={7}>
                     ยังไม่มีประวัติการจ่ายคอมมิชชัน
                   </td>
                 </tr>
               ) : (
-                items.map((p) => (
+                filtered.map((p) => (
                   <tr key={p.id} className="border-t border-stroke text-sm dark:border-dark-3">
                     <td className="px-4 py-3 font-semibold text-dark dark:text-white">
                       {p.member.fullName}
@@ -128,7 +220,7 @@ export default function PayoutsPage() {
         {meta.totalPages > 1 && (
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-dark-5">
-              แสดง {items.length} จากทั้งหมด{" "}
+              แสดง {filtered.length} จากทั้งหมด{" "}
               <span className="font-bold text-dark dark:text-white">{meta.totalItems}</span> รายการ
             </p>
             <div className="flex items-center gap-2">
