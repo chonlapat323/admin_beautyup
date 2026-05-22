@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 type RedemptionStatus = "PENDING" | "PREPARING" | "SHIPPED" | "DELIVERED";
 
@@ -79,7 +80,7 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
 
   if (!redemptionId) return null;
 
-  return (
+  const modal = (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-xl dark:bg-dark-2">
@@ -186,4 +187,6 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
