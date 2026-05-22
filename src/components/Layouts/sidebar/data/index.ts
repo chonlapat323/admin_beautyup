@@ -95,19 +95,19 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
-        title: "คอมมิชชัน",
+        title: "จ่ายคอมมิชชัน",
         url: "/commissions",
         icon: Icons.PieChart,
         items: [],
       },
       {
-        title: "ประวัติการจ่ายคอมมิชชัน",
+        title: "ประวัติการจ่าย",
         url: "/commissions/payouts",
         icon: Icons.PieChart,
         items: [],
       },
       {
-        title: "ถอนเครดิต",
+        title: "คำขอถอนเครดิต",
         url: "/withdrawals",
         icon: Icons.PieChart,
         items: [],
@@ -116,9 +116,9 @@ export const NAV_DATA: NavSection[] = [
         title: "รายงาน",
         icon: Icons.PieChart,
         items: [
-          { title: "ภาพรวมรายงาน", url: "/reports" },
-          { title: "รายงานคอมมิชชัน", url: "/commissions/report" },
-          { title: "รายงานการแลกแต้ม", url: "/reward-logs" },
+          { title: "ภาพรวม", url: "/reports" },
+          { title: "คอมมิชชัน", url: "/commissions/report" },
+          { title: "แลกของรางวัล", url: "/reward-logs" },
         ],
       },
       {
