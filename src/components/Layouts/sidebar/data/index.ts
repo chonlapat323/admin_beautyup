@@ -101,12 +101,6 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
-        title: "ประวัติการจ่าย",
-        url: "/commissions/payouts",
-        icon: Icons.PieChart,
-        items: [],
-      },
-      {
         title: "คำขอถอนเครดิต",
         url: "/withdrawals",
         icon: Icons.PieChart,
