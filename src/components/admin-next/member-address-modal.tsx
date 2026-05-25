@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "@/components/shared/toast-provider";
 import type { ProvinceEntry } from "@/data/thailand-address";
@@ -61,6 +61,83 @@ function formFromAddress(addr: MemberAddress): AddressFormState {
 const inputCls =
   "w-full rounded-[14px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark focus:border-[#5f8f74] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white";
 
+function AddressCombobox({
+  label,
+  value,
+  options,
+  placeholder,
+  disabled,
+  onSelect,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  placeholder: string;
+  disabled?: boolean;
+  onSelect: (v: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // sync input text with selected value
+  useEffect(() => { setQuery(value); }, [value]);
+
+  // close on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        setQuery(value); // reset if no new selection
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [value]);
+
+  const filtered = query
+    ? options.filter((o) => o.includes(query))
+    : options;
+
+  function handleSelect(v: string) {
+    onSelect(v);
+    setQuery(v);
+    setOpen(false);
+  }
+
+  return (
+    <div>
+      <label className="mb-1.5 block text-xs font-medium text-dark-5">{label}</label>
+      <div ref={ref} className="relative">
+        <input
+          className={inputCls + (disabled ? " opacity-40 cursor-not-allowed" : "")}
+          value={query}
+          placeholder={disabled ? "—" : placeholder}
+          disabled={disabled}
+          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => { if (!disabled) setOpen(true); }}
+          autoComplete="off"
+        />
+        {open && filtered.length > 0 && (
+          <ul className="absolute z-50 mt-1 max-h-52 w-full overflow-y-auto rounded-2xl border border-[#d8e6dd] bg-white shadow-md dark:border-dark-3 dark:bg-dark-2">
+            {filtered.map((o) => (
+              <li key={o}>
+                <button
+                  type="button"
+                  className="w-full px-4 py-2.5 text-left text-sm text-dark hover:bg-[#f0faf4] dark:text-white dark:hover:bg-dark-3"
+                  onMouseDown={(e) => { e.preventDefault(); handleSelect(o); }}
+                >
+                  {o}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AddressForm({
   form,
   isSubmitting,
@@ -111,60 +188,37 @@ function AddressForm({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {/* จังหวัด */}
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-dark-5">จังหวัด</label>
-          <select
-            className={inputCls}
-            value={form.province}
-            onChange={(e) => onChange({ province: e.target.value, district: "", subdistrict: "", postalCode: "" })}
-          >
-            <option value="">-- เลือกจังหวัด --</option>
-            {thaiAddress.map((p) => (
-              <option key={p.name} value={p.name}>{p.name}</option>
-            ))}
-          </select>
-        </div>
+        <AddressCombobox
+          label="จังหวัด"
+          value={form.province}
+          options={thaiAddress.map((p) => p.name)}
+          placeholder="พิมพ์ชื่อจังหวัด..."
+          onSelect={(v) => onChange({ province: v, district: "", subdistrict: "", postalCode: "" })}
+        />
 
-        {/* เขต/อำเภอ */}
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-dark-5">เขต/อำเภอ</label>
-          <select
-            className={inputCls}
-            value={form.district}
-            disabled={!form.province}
-            onChange={(e) => onChange({ district: e.target.value, subdistrict: "", postalCode: "" })}
-          >
-            <option value="">-- เลือกเขต/อำเภอ --</option>
-            {(thaiAddress.find((p) => p.name === form.province)?.districts ?? []).map((d) => (
-              <option key={d.name} value={d.name}>{d.name}</option>
-            ))}
-          </select>
-        </div>
+        <AddressCombobox
+          label="เขต/อำเภอ"
+          value={form.district}
+          options={(thaiAddress.find((p) => p.name === form.province)?.districts ?? []).map((d) => d.name)}
+          placeholder="พิมพ์ชื่อเขต/อำเภอ..."
+          disabled={!form.province}
+          onSelect={(v) => onChange({ district: v, subdistrict: "", postalCode: "" })}
+        />
 
-        {/* ตำบล/แขวง */}
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-dark-5">ตำบล/แขวง</label>
-          <select
-            className={inputCls}
-            value={form.subdistrict}
-            disabled={!form.district}
-            onChange={(e) => {
-              const selected = thaiAddress
-                .find((p) => p.name === form.province)?.districts
-                .find((d) => d.name === form.district)?.subdistricts
-                .find((s) => s.name === e.target.value);
-              onChange({ subdistrict: e.target.value, postalCode: selected?.zipcode ?? "" });
-            }}
-          >
-            <option value="">-- เลือกตำบล/แขวง --</option>
-            {(thaiAddress
+        <AddressCombobox
+          label="ตำบล/แขวง"
+          value={form.subdistrict}
+          options={(thaiAddress.find((p) => p.name === form.province)?.districts.find((d) => d.name === form.district)?.subdistricts ?? []).map((s) => s.name)}
+          placeholder="พิมพ์ชื่อตำบล/แขวง..."
+          disabled={!form.district}
+          onSelect={(v) => {
+            const zipcode = thaiAddress
               .find((p) => p.name === form.province)?.districts
-              .find((d) => d.name === form.district)?.subdistricts ?? []).map((s) => (
-              <option key={s.name} value={s.name}>{s.name}</option>
-            ))}
-          </select>
-        </div>
+              .find((d) => d.name === form.district)?.subdistricts
+              .find((s) => s.name === v)?.zipcode ?? "";
+            onChange({ subdistrict: v, postalCode: zipcode });
+          }}
+        />
 
         {/* รหัสไปรษณีย์ */}
         <div>
