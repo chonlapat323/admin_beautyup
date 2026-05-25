@@ -24,6 +24,7 @@ import {
   uploadShadeItemImage,
 } from "@/lib/admin-api";
 import { ContentCard, StatusPill } from "./page-elements";
+import { toProxiedImageUrl } from "@/lib/utils";
 
 type CategoryManagerTableProps = {
   initialItems: CategoryRecord[];
@@ -592,7 +593,7 @@ function ShadeManagerModal({ category, onClose }: { category: CategoryRecord; on
                   <label className="cursor-pointer">
                     <div className="mb-1 text-xs font-medium text-dark-5">รูป</div>
                     {shadeForm.imagePreview ? (
-                      <img alt="preview" className="h-14 w-14 rounded-xl border border-stroke object-cover hover:opacity-80" src={shadeForm.imagePreview} title="คลิกเพื่อเปลี่ยนรูป" />
+                      <img alt="preview" className="h-14 w-14 rounded-xl border border-stroke object-cover hover:opacity-80" src={toProxiedImageUrl(shadeForm.imagePreview)} title="คลิกเพื่อเปลี่ยนรูป" />
                     ) : (
                       <div className="flex h-14 w-14 items-center justify-center rounded-xl border-2 border-dashed border-[#c8ddd1] text-xs text-[#45745a] hover:border-[#5f8f74]">
                         + รูป
@@ -704,7 +705,7 @@ function ShadeManagerModal({ category, onClose }: { category: CategoryRecord; on
                       <td className="px-6 py-3">
                         <label className="cursor-pointer">
                           {shade.imageUrl ? (
-                            <img alt={shade.name} className="h-12 w-12 rounded-xl border border-stroke object-cover hover:opacity-80" src={shade.imageUrl} title="คลิกเพื่อเปลี่ยนรูป" />
+                            <img alt={shade.name} className="h-12 w-12 rounded-xl border border-stroke object-cover hover:opacity-80" src={toProxiedImageUrl(shade.imageUrl)} title="คลิกเพื่อเปลี่ยนรูป" />
                           ) : (
                             <div className={`flex h-12 w-12 items-center justify-center rounded-xl border-2 border-dashed border-[#c8ddd1] text-xs text-[#45745a] hover:border-[#5f8f74] ${uploadingShadeId === shade.id ? "opacity-60" : ""}`}>
                               {uploadingShadeId === shade.id ? "..." : "+ รูป"}
@@ -1154,7 +1155,7 @@ export function CategoryManagerTable({
                         <img
                           alt={category.name}
                           className="h-9 w-9 rounded-lg border border-stroke object-cover"
-                          src={category.imageUrl}
+                          src={toProxiedImageUrl(category.imageUrl)}
                         />
                       ) : (
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-stroke bg-[#f0f4f2]">
@@ -1356,7 +1357,7 @@ export function CategoryManagerTable({
                   <div className="flex items-center gap-4">
                     {imagePreview ? (
                       <div className="relative">
-                        <img alt="preview" className="h-20 w-20 rounded-xl border border-[#d8e6dd] object-cover" src={imagePreview} />
+                        <img alt="preview" className="h-20 w-20 rounded-xl border border-[#d8e6dd] object-cover" src={toProxiedImageUrl(imagePreview)} />
                         <button
                           className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#c84b44] text-xs text-white hover:bg-[#ad3d37]"
                           onClick={() => { setImagePreview(null); setForm((c) => ({ ...c, tempImageFile: undefined, imageUrl: undefined })); }}

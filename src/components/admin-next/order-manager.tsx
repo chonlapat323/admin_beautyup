@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ContentCard, StatusPill } from "@/components/admin-next/page-elements";
 
-type OrderStatus = "PENDING" | "PAID" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+type OrderStatus = "PENDING" | "PAID" | "PROCESSING" | "SHIPPED" | "CANCELLED";
 
 type OrderListItem = {
   id: string;
@@ -47,16 +47,15 @@ type OrderDetail = OrderListItem & {
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "รอดำเนินการ",
   PAID: "ชำระแล้ว",
-  PROCESSING: "กำลังเตรียม",
+  PROCESSING: "รอจัดส่ง",
   SHIPPED: "จัดส่งแล้ว",
-  DELIVERED: "ส่งสำเร็จ",
   CANCELLED: "ยกเลิก",
 };
 
-const ALL_STATUSES: OrderStatus[] = ["PENDING", "PAID", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
+const ALL_STATUSES: OrderStatus[] = ["PENDING", "PAID", "PROCESSING", "SHIPPED", "CANCELLED"];
 
 function statusTone(s: string): "success" | "warning" | "default" {
-  if (s === "PAID" || s === "DELIVERED") return "success";
+  if (s === "PAID") return "success";
   if (s === "PROCESSING" || s === "SHIPPED") return "warning";
   return "default";
 }
@@ -217,6 +216,9 @@ export function OrderManager() {
   const [savingTracking, setSavingTracking] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [datePreset, setDatePreset] = useState<"today" | "week" | "month" | "custom" | "">("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
@@ -307,6 +309,29 @@ export function OrderManager() {
     }
   }
 
+  function handleDatePreset(p: "today" | "week" | "month") {
+    const now = new Date();
+    const toStr = now.toISOString().slice(0, 10);
+    let fromStr = toStr;
+    if (p === "week") {
+      const d = new Date(now); d.setDate(d.getDate() - 6);
+      fromStr = d.toISOString().slice(0, 10);
+    } else if (p === "month") {
+      fromStr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+    }
+    setDateFrom(fromStr);
+    setDateTo(toStr);
+    setDatePreset(p);
+    setPage(1);
+  }
+
+  function clearDateFilter() {
+    setDateFrom("");
+    setDateTo("");
+    setDatePreset("");
+    setPage(1);
+  }
+
   const filteredOrders = (Array.isArray(orders) ? orders : []).filter((o) => {
     const q = search.trim().toLowerCase();
     const matchSearch = !q ||
@@ -315,55 +340,90 @@ export function OrderManager() {
       (o.member?.email ?? "").toLowerCase().includes(q) ||
       (o.member?.phone ?? "").toLowerCase().includes(q);
     const matchStatus = !statusFilter || o.status === statusFilter;
-    return matchSearch && matchStatus;
+    let matchDate = true;
+    if (dateFrom || dateTo) {
+      const d = o.createdAt ? o.createdAt.slice(0, 10) : "";
+      if (dateFrom && d < dateFrom) matchDate = false;
+      if (dateTo && d > dateTo) matchDate = false;
+    }
+    return matchSearch && matchStatus && matchDate;
   });
   const totalItems = filteredOrders.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const pagedOrders = filteredOrders.slice((page - 1) * pageSize, page * pageSize);
-  const hasFilter = search.trim() !== "" || statusFilter !== "";
+  const hasFilter = search.trim() !== "" || statusFilter !== "" || dateFrom !== "" || dateTo !== "";
+  const btnBase = "rounded-full px-3.5 py-2 text-xs font-semibold transition-colors border border-[#d7e7dc] text-[#355846] hover:bg-[#f4fbf6]";
+  const btnActive = "!bg-[#45745a] !text-white !border-[#45745a] hover:!bg-[#355846]";
 
   return (
     <>
       <ContentCard title="คำสั่งซื้อทั้งหมด" description="คลิกที่แถวเพื่อดูรายละเอียดและเปลี่ยนสถานะ">
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="relative w-full sm:w-60">
-              <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="7" /><path d="m21 21-4.35-4.35" />
-              </svg>
+        <div className="mb-5 flex flex-col gap-3">
+          {/* Date filter row */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" onClick={() => handleDatePreset("today")} className={`${btnBase} ${datePreset === "today" ? btnActive : ""}`}>วันนี้</button>
+            <button type="button" onClick={() => handleDatePreset("week")} className={`${btnBase} ${datePreset === "week" ? btnActive : ""}`}>7 วันล่าสุด</button>
+            <button type="button" onClick={() => handleDatePreset("month")} className={`${btnBase} ${datePreset === "month" ? btnActive : ""}`}>เดือนนี้</button>
+            <div className="flex items-center gap-2">
               <input
-                className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] py-2.5 pl-9 pr-4 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                placeholder="ค้นหาเลขออเดอร์ / สมาชิก..."
-                value={search}
+                type="date"
+                value={dateFrom}
+                onChange={(e) => { setDateFrom(e.target.value); setDatePreset("custom"); setPage(1); }}
+                className="rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+              />
+              <span className="text-sm text-dark-5">—</span>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => { setDateTo(e.target.value); setDatePreset("custom"); setPage(1); }}
+                className="rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
               />
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                className={`rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${statusFilter === "" ? "bg-[#45745a] text-white" : "border border-[#d7e7dc] text-[#355846] hover:bg-[#f4fbf6]"}`}
-                onClick={() => { setStatusFilter(""); setPage(1); }}
-                type="button"
-              >ทั้งหมด</button>
-              {ALL_STATUSES.map((s) => (
-                <button
-                  key={s}
-                  className={`rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${statusFilter === s ? "bg-[#45745a] text-white" : "border border-[#d7e7dc] text-[#355846] hover:bg-[#f4fbf6]"}`}
-                  onClick={() => { setStatusFilter(s); setPage(1); }}
-                  type="button"
-                >{STATUS_LABELS[s]}</button>
-              ))}
-            </div>
+            {(dateFrom || dateTo) && (
+              <button type="button" onClick={clearDateFilter} className={btnBase}>✕ ล้างวันที่</button>
+            )}
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <select
-              className="rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-              onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
-              value={pageSize}
-            >
-              {PAGE_SIZE_OPTIONS.map((n) => (
-                <option key={n} value={n}>{n} รายการ</option>
-              ))}
-            </select>
+          {/* Search + status + page size row */}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="relative w-full sm:w-60">
+                <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="7" /><path d="m21 21-4.35-4.35" />
+                </svg>
+                <input
+                  className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] py-2.5 pl-9 pr-4 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                  onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  placeholder="ค้นหาเลขออเดอร์ / สมาชิก..."
+                  value={search}
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className={`${btnBase} ${statusFilter === "" ? btnActive : ""}`}
+                  onClick={() => { setStatusFilter(""); setPage(1); }}
+                  type="button"
+                >ทั้งหมด</button>
+                {ALL_STATUSES.map((s) => (
+                  <button
+                    key={s}
+                    className={`${btnBase} ${statusFilter === s ? btnActive : ""}`}
+                    onClick={() => { setStatusFilter(s); setPage(1); }}
+                    type="button"
+                  >{STATUS_LABELS[s]}</button>
+                ))}
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <select
+                className="rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+                value={pageSize}
+              >
+                {PAGE_SIZE_OPTIONS.map((n) => (
+                  <option key={n} value={n}>{n} รายการ</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">

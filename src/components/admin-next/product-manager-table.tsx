@@ -15,6 +15,7 @@ import {
 } from "@/lib/admin-api";
 import { ContentCard, StatusPill } from "./page-elements";
 import { PreviewImage, ProductImageManager } from "./product-image-manager";
+import { toProxiedImageUrl } from "@/lib/utils";
 
 type ProductManagerTableProps = {
   initialItems: ProductRecord[];
@@ -999,7 +1000,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                         <img
                           alt={product.name}
                           className="h-10 w-10 cursor-zoom-in rounded-lg border border-[#d8e6dd] object-cover"
-                          src={product.thumbnail}
+                          src={toProxiedImageUrl(product.thumbnail)}
                         />
                       </button>
                     ) : (
@@ -1229,7 +1230,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
             alt="Product image"
             className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
             onClick={(e) => e.stopPropagation()}
-            src={lightboxUrl}
+            src={toProxiedImageUrl(lightboxUrl)}
           />
         </div>,
         document.body,

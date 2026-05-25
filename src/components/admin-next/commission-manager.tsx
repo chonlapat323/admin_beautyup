@@ -477,7 +477,7 @@ export function CommissionManager() {
                           ? "bg-[#fef3c7] text-[#92400e]"
                           : "bg-[#e0f2fe] text-[#0369a1]"
                       }`}>
-                        {item.earner.memberType === "SALON" ? "ซาลอน" : "ทั่วไป"}
+                        {item.earner.memberType === "SALON" ? "ร้านซาลอน" : "ลูกค้าทั่วไป"}
                       </span>
                     </td>
                     <td className="px-4 py-3">

@@ -258,7 +258,7 @@ export function CommissionReport() {
                     <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
                       row.memberType === "SALON" ? "bg-[#fef3c7] text-[#92400e]" : "bg-[#e0f2fe] text-[#0369a1]"
                     }`}>
-                      {row.memberType === "SALON" ? "ซาลอน" : "ทั่วไป"}
+                      {row.memberType === "SALON" ? "ร้านซาลอน" : "ลูกค้าทั่วไป"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right text-dark-5">{row.count}</td>
