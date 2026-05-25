@@ -71,7 +71,7 @@ function SelectField<T extends string | number>({
 type CommissionItem = {
   id: string;
   orderId: string;
-  earner: { id: string; fullName: string; memberType: "REGULAR" | "SALON" };
+  earner: { id: string; fullName: string; memberType: "REGULAR" | "SALON" | "SALES" };
   order: { orderNumber: string; totalAmount: string };
   orderAmount: string;
   rate: string;
@@ -195,15 +195,17 @@ export function CommissionManager() {
   // settings
   const [salonRate, setSalonRate] = useState<number>(10);
   const [regularRate, setRegularRate] = useState<number>(5);
+  const [salesRate, setSalesRate] = useState<number>(3);
   const [showSettings, setShowSettings] = useState(false);
   const [isSavingRates, setIsSavingRates] = useState(false);
 
   useEffect(() => {
     void fetch("/api/commissions/settings")
       .then((r) => r.json())
-      .then((d: { salon?: number; regular?: number }) => {
+      .then((d: { salon?: number; regular?: number; sales?: number }) => {
         if (d.salon != null) setSalonRate(d.salon);
         if (d.regular != null) setRegularRate(d.regular);
+        if (d.sales != null) setSalesRate(d.sales);
       })
       .catch(() => null);
   }, []);
@@ -214,7 +216,7 @@ export function CommissionManager() {
       await fetch("/api/commissions/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ salon: salonRate, regular: regularRate }),
+        body: JSON.stringify({ salon: salonRate, regular: regularRate, sales: salesRate }),
       });
       showToast("บันทึกอัตราคอมมิชชันแล้ว", "success");
       setShowSettings(false);
@@ -311,7 +313,7 @@ export function CommissionManager() {
     <>
       <ContentCard
         title="จัดการคอมมิชชัน"
-        description={`ค่าแนะนำจากการสั่งซื้อ — ซาลอน ${salonRate}%, ทั่วไป ${regularRate}% (1 ระดับ)`}
+        description={`ค่าแนะนำจากการสั่งซื้อ — ซาลอน ${salonRate}%, ทั่วไป ${regularRate}%, เซล ${salesRate}% (1 ระดับ)`}
       >
         {/* Rate settings */}
         <div className="mb-5">
@@ -343,6 +345,17 @@ export function CommissionManager() {
                   max={100}
                   value={regularRate}
                   onChange={(e) => setRegularRate(Number(e.target.value))}
+                  className="w-24 rounded-xl border border-stroke bg-white px-3 py-2 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-dark-5">SALES (%)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={salesRate}
+                  onChange={(e) => setSalesRate(Number(e.target.value))}
                   className="w-24 rounded-xl border border-stroke bg-white px-3 py-2 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
                 />
               </div>
@@ -475,9 +488,15 @@ export function CommissionManager() {
                       <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
                         item.earner.memberType === "SALON"
                           ? "bg-[#fef3c7] text-[#92400e]"
-                          : "bg-[#e0f2fe] text-[#0369a1]"
+                          : item.earner.memberType === "SALES"
+                            ? "bg-[#f3e8ff] text-[#6b21a8]"
+                            : "bg-[#e0f2fe] text-[#0369a1]"
                       }`}>
-                        {item.earner.memberType === "SALON" ? "ร้านซาลอน" : "ลูกค้าทั่วไป"}
+                        {item.earner.memberType === "SALON"
+                          ? "ร้านซาลอน"
+                          : item.earner.memberType === "SALES"
+                            ? "พนักงานเซล"
+                            : "ลูกค้าทั่วไป"}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -699,7 +718,7 @@ function OrderDetailModal({
               </div>
               <div className="flex justify-between">
                 <span className="text-dark-5">
-                  อัตรา ({commission.earner.memberType === "SALON" ? "ซาลอน" : "ทั่วไป"})
+                  อัตรา ({commission.earner.memberType === "SALON" ? "ซาลอน" : commission.earner.memberType === "SALES" ? "เซล" : "ทั่วไป"})
                 </span>
                 <span className="font-medium text-dark">{rate}%</span>
               </div>

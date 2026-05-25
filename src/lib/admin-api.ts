@@ -181,7 +181,7 @@ export type ApiMember = {
   fullName: string;
   phone?: string | null;
   email?: string | null;
-  memberType: "REGULAR" | "SALON";
+  memberType: "REGULAR" | "SALON" | "SALES";
   referralCode?: string | null;
   isActive: boolean;
   pointBalance: number;
@@ -795,7 +795,7 @@ export type MemberRecord = {
   fullName: string;
   phone: string;
   email: string;
-  memberType: "REGULAR" | "SALON";
+  memberType: "REGULAR" | "SALON" | "SALES";
   referralCode: string;
   isActive: boolean;
   pointBalance: number;
@@ -813,7 +813,7 @@ export type MemberFormPayload = {
   phone?: string;
   email?: string;
   referredById?: string;
-  memberType?: "REGULAR" | "SALON";
+  memberType?: "REGULAR" | "SALON" | "SALES";
 };
 
 type MemberApiResponse = {

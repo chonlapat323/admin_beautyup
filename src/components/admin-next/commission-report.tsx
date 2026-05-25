@@ -256,9 +256,17 @@ export function CommissionReport() {
                   </td>
                   <td className="hidden px-4 py-3 sm:table-cell">
                     <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-                      row.memberType === "SALON" ? "bg-[#fef3c7] text-[#92400e]" : "bg-[#e0f2fe] text-[#0369a1]"
+                      row.memberType === "SALON"
+                        ? "bg-[#fef3c7] text-[#92400e]"
+                        : row.memberType === "SALES"
+                          ? "bg-[#f3e8ff] text-[#6b21a8]"
+                          : "bg-[#e0f2fe] text-[#0369a1]"
                     }`}>
-                      {row.memberType === "SALON" ? "ร้านซาลอน" : "ลูกค้าทั่วไป"}
+                      {row.memberType === "SALON"
+                        ? "ร้านซาลอน"
+                        : row.memberType === "SALES"
+                          ? "พนักงานเซล"
+                          : "ลูกค้าทั่วไป"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right text-dark-5">{row.count}</td>

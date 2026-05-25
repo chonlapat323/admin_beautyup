@@ -35,7 +35,7 @@ type MemberFormState = {
   phone: string;
   email: string;
   referredById: string;
-  memberType: "REGULAR" | "SALON";
+  memberType: "REGULAR" | "SALON" | "SALES";
 };
 
 const INITIAL_FORM: MemberFormState = {
@@ -330,7 +330,7 @@ function MemberFormModal({
           <div>
             <label className="mb-2 block text-sm font-medium text-dark dark:text-white">ประเภทสมาชิก</label>
             <div className="flex gap-3">
-              {(["REGULAR", "SALON"] as const).map((type) => (
+              {(["REGULAR", "SALON", "SALES"] as const).map((type) => (
                 <button
                   key={type}
                   type="button"
@@ -341,7 +341,7 @@ function MemberFormModal({
                       : "border-[#d8e6dd] bg-[#f8fbf9] text-dark-5 hover:border-[#bfd6c7]"
                   }`}
                 >
-                  {type === "SALON" ? "สมาชิกซาลอน" : "สมาชิกทั่วไป"}
+                  {type === "SALON" ? "สมาชิกซาลอน" : type === "SALES" ? "พนักงานเซล" : "สมาชิกทั่วไป"}
                 </button>
               ))}
             </div>
@@ -665,8 +665,8 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
                   </td>
                   <td className="hidden px-5 py-4 lg:table-cell">
                     <StatusPill
-                      label={member.memberType === "SALON" ? "ซาลอน" : "ทั่วไป"}
-                      tone={member.memberType === "SALON" ? "success" : "default"}
+                      label={member.memberType === "SALON" ? "ซาลอน" : member.memberType === "SALES" ? "พนักงานเซล" : "ทั่วไป"}
+                      tone={member.memberType === "SALON" ? "success" : member.memberType === "SALES" ? "warning" : "default"}
                     />
                   </td>
                   <td className="hidden px-5 py-4 text-center xl:table-cell">{member.orders}</td>
