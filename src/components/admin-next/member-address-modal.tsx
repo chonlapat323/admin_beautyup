@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "@/components/shared/toast-provider";
+import type { ProvinceEntry } from "@/data/thailand-address";
+import { thaiAddress as _thaiAddressDb } from "@/data/thailand-address";
 
 export type MemberAddress = {
   id: string;
@@ -11,6 +13,7 @@ export type MemberAddress = {
   phone: string;
   addressLine1: string;
   addressLine2?: string | null;
+  subdistrict?: string | null;
   district?: string | null;
   province?: string | null;
   postalCode?: string | null;
@@ -23,6 +26,7 @@ type AddressFormState = {
   phone: string;
   addressLine1: string;
   addressLine2: string;
+  subdistrict: string;
   district: string;
   province: string;
   postalCode: string;
@@ -34,6 +38,7 @@ const EMPTY_FORM: AddressFormState = {
   phone: "",
   addressLine1: "",
   addressLine2: "",
+  subdistrict: "",
   district: "",
   province: "",
   postalCode: "",
@@ -46,6 +51,7 @@ function formFromAddress(addr: MemberAddress): AddressFormState {
     phone: addr.phone,
     addressLine1: addr.addressLine1,
     addressLine2: addr.addressLine2 ?? "",
+    subdistrict: addr.subdistrict ?? "",
     district: addr.district ?? "",
     province: addr.province ?? "",
     postalCode: addr.postalCode ?? "",
@@ -59,6 +65,7 @@ function AddressForm({
   form,
   isSubmitting,
   editingId,
+  thaiAddress,
   onChange,
   onSubmit,
   onCancel,
@@ -66,6 +73,7 @@ function AddressForm({
   form: AddressFormState;
   isSubmitting: boolean;
   editingId: string | null;
+  thaiAddress: ProvinceEntry[];
   onChange: (next: Partial<AddressFormState>) => void;
   onSubmit: (e: React.FormEvent) => Promise<void>;
   onCancel: () => void;
@@ -78,8 +86,8 @@ function AddressForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-dark-5">ชื่อที่อยู่ (เช่น บ้าน, ที่ทำงาน)</label>
-          <input className={inputCls} value={form.label} onChange={(e) => onChange({ label: e.target.value })} placeholder="บ้าน" />
+          <label className="mb-1.5 block text-xs font-medium text-dark-5">ชื่อร้านหรือบริษัทของท่าน (ถ้ามี)</label>
+          <input className={inputCls} value={form.label} onChange={(e) => onChange({ label: e.target.value })} placeholder="เช่น ร้านบิวตี้อัพ" />
         </div>
         <div>
           <label className="mb-1.5 block text-xs font-medium text-dark-5">ชื่อผู้รับ *</label>
@@ -102,18 +110,72 @@ function AddressForm({
         <input className={inputCls} value={form.addressLine2} onChange={(e) => onChange({ addressLine2: e.target.value })} placeholder="อาคาร / ห้อง / หมู่บ้าน (ถ้ามี)" />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div>
-          <label className="mb-1.5 block text-xs font-medium text-dark-5">เขต/อำเภอ</label>
-          <input className={inputCls} value={form.district} onChange={(e) => onChange({ district: e.target.value })} placeholder="คลองเตย" />
-        </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* จังหวัด */}
         <div>
           <label className="mb-1.5 block text-xs font-medium text-dark-5">จังหวัด</label>
-          <input className={inputCls} value={form.province} onChange={(e) => onChange({ province: e.target.value })} placeholder="กรุงเทพมหานคร" />
+          <select
+            className={inputCls}
+            value={form.province}
+            onChange={(e) => onChange({ province: e.target.value, district: "", subdistrict: "", postalCode: "" })}
+          >
+            <option value="">-- เลือกจังหวัด --</option>
+            {thaiAddress.map((p) => (
+              <option key={p.name} value={p.name}>{p.name}</option>
+            ))}
+          </select>
         </div>
+
+        {/* เขต/อำเภอ */}
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-dark-5">เขต/อำเภอ</label>
+          <select
+            className={inputCls}
+            value={form.district}
+            disabled={!form.province}
+            onChange={(e) => onChange({ district: e.target.value, subdistrict: "", postalCode: "" })}
+          >
+            <option value="">-- เลือกเขต/อำเภอ --</option>
+            {(thaiAddress.find((p) => p.name === form.province)?.districts ?? []).map((d) => (
+              <option key={d.name} value={d.name}>{d.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* ตำบล/แขวง */}
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-dark-5">ตำบล/แขวง</label>
+          <select
+            className={inputCls}
+            value={form.subdistrict}
+            disabled={!form.district}
+            onChange={(e) => {
+              const selected = thaiAddress
+                .find((p) => p.name === form.province)?.districts
+                .find((d) => d.name === form.district)?.subdistricts
+                .find((s) => s.name === e.target.value);
+              onChange({ subdistrict: e.target.value, postalCode: selected?.zipcode ?? "" });
+            }}
+          >
+            <option value="">-- เลือกตำบล/แขวง --</option>
+            {(thaiAddress
+              .find((p) => p.name === form.province)?.districts
+              .find((d) => d.name === form.district)?.subdistricts ?? []).map((s) => (
+              <option key={s.name} value={s.name}>{s.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* รหัสไปรษณีย์ */}
         <div>
           <label className="mb-1.5 block text-xs font-medium text-dark-5">รหัสไปรษณีย์</label>
-          <input className={inputCls} value={form.postalCode} onChange={(e) => onChange({ postalCode: e.target.value })} placeholder="10110" maxLength={5} />
+          <input
+            className={inputCls}
+            value={form.postalCode}
+            onChange={(e) => onChange({ postalCode: e.target.value })}
+            placeholder="10110"
+            maxLength={5}
+          />
         </div>
       </div>
 
@@ -207,6 +269,7 @@ export function MemberAddressModal({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<AddressFormState>(EMPTY_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const thaiAddress = _thaiAddressDb;
 
   useEffect(() => {
     void loadAddresses();
@@ -253,6 +316,7 @@ export function MemberAddressModal({
         phone: form.phone,
         addressLine1: form.addressLine1,
         addressLine2: form.addressLine2 || undefined,
+        subdistrict: form.subdistrict || undefined,
         district: form.district || undefined,
         province: form.province || undefined,
         postalCode: form.postalCode || undefined,
@@ -348,6 +412,7 @@ export function MemberAddressModal({
                   form={form}
                   isSubmitting={isSubmitting}
                   editingId={editingId}
+                  thaiAddress={thaiAddress}
                   onChange={(next) => setForm((prev) => ({ ...prev, ...next }))}
                   onSubmit={handleSubmit}
                   onCancel={cancelForm}
