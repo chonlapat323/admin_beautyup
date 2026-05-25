@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "@/components/shared/toast-provider";
 import type { ProvinceEntry } from "@/data/thailand-address";
-import { thaiAddress as _thaiAddressDb } from "@/data/thailand-address";
+import { getThaiAddress } from "@/data/thailand-address";
 
 export type MemberAddress = {
   id: string;
@@ -269,7 +269,11 @@ export function MemberAddressModal({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<AddressFormState>(EMPTY_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const thaiAddress = _thaiAddressDb;
+  const [thaiAddress, setThaiAddress] = useState<ProvinceEntry[]>([]);
+
+  useEffect(() => {
+    void getThaiAddress().then(setThaiAddress);
+  }, []);
 
   useEffect(() => {
     void loadAddresses();
