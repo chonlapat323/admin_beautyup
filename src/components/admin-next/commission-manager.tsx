@@ -327,6 +327,17 @@ export function CommissionManager() {
           {showSettings && (
             <div className="flex flex-wrap items-end gap-4 rounded-2xl border border-stroke bg-[#f8fbf9] px-5 py-4 dark:border-dark-3 dark:bg-dark-2">
               <div>
+                <label className="mb-1 block text-xs text-dark-5">SALES (%)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={salesRate}
+                  onChange={(e) => setSalesRate(Number(e.target.value))}
+                  className="w-24 rounded-xl border border-stroke bg-white px-3 py-2 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                />
+              </div>
+              <div>
                 <label className="mb-1 block text-xs text-dark-5">SALON (%)</label>
                 <input
                   type="number"
@@ -345,17 +356,6 @@ export function CommissionManager() {
                   max={100}
                   value={regularRate}
                   onChange={(e) => setRegularRate(Number(e.target.value))}
-                  className="w-24 rounded-xl border border-stroke bg-white px-3 py-2 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-dark-5">SALES (%)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={salesRate}
-                  onChange={(e) => setSalesRate(Number(e.target.value))}
                   className="w-24 rounded-xl border border-stroke bg-white px-3 py-2 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
                 />
               </div>
