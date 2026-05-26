@@ -303,6 +303,7 @@ export function BrandManager() {
                 <th className="px-4 py-3 font-semibold">ชื่อแบรนด์</th>
                 <th className="px-4 py-3 font-semibold">Slug</th>
                 <th className="px-4 py-3 font-semibold">ลำดับ</th>
+                <th className="px-4 py-3 font-semibold">หมวดหมู่</th>
                 <th className="px-4 py-3 font-semibold">สถานะ</th>
                 <th className="px-4 py-3 font-semibold">จัดการ</th>
               </tr>
@@ -321,6 +322,9 @@ export function BrandManager() {
                       <div className="h-4 w-8 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
                     </td>
                     <td className="px-4 py-3">
+                      <div className="h-4 w-8 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+                    </td>
+                    <td className="px-4 py-3">
                       <div className="h-6 w-20 animate-pulse rounded-full bg-neutral-100 dark:bg-dark-2" />
                     </td>
                     <td className="px-4 py-3">
@@ -334,7 +338,7 @@ export function BrandManager() {
 
               {!isLoading && brands.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-16 text-center">
+                  <td colSpan={6} className="px-4 py-16 text-center">
                     <div className="flex flex-col items-center">
                       <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f6f2]">
                         <svg className="h-7 w-7 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -370,6 +374,9 @@ export function BrandManager() {
                     </td>
                     <td className="px-4 py-3 tabular-nums text-dark-5 dark:text-dark-6">
                       {brand.sortOrder}
+                    </td>
+                    <td className="px-4 py-3 tabular-nums text-dark-5 dark:text-dark-6">
+                      {brand._count?.categories ?? "—"}
                     </td>
                     <td className="px-4 py-3">
                       <StatusPill

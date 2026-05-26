@@ -122,6 +122,8 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
               year: "numeric",
             }).format(new Date(response.processedAt))
           : "Just now",
+        brandId: response.brandId ?? null,
+        brandName: response.brand?.name ?? null,
         source: "api",
       };
 

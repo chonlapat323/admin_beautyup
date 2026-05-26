@@ -5,9 +5,11 @@ import { createPortal } from "react-dom";
 import { useToast } from "@/components/shared/toast-provider";
 import {
   ApiCollection,
+  CategoryRecord,
   createCollection,
   deleteCollection,
   getCollections,
+  getCategories,
   updateCollection,
 } from "@/lib/admin-api";
 import { ContentCard, StatusPill } from "./page-elements";
@@ -16,12 +18,14 @@ type CollectionFormState = {
   name: string;
   isActive: boolean;
   sortOrder: string;
+  categoryId: string;
 };
 
 const INITIAL_FORM: CollectionFormState = {
   name: "",
   isActive: true,
   sortOrder: "0",
+  categoryId: "",
 };
 
 function ConfirmDeleteModal({
@@ -93,6 +97,7 @@ function CollectionFormModal({
   editingId,
   form,
   isSubmitting,
+  categories,
   onChange,
   onClose,
   onSubmit,
@@ -100,6 +105,7 @@ function CollectionFormModal({
   editingId: string | null;
   form: CollectionFormState;
   isSubmitting: boolean;
+  categories: CategoryRecord[];
   onChange: (next: Partial<CollectionFormState>) => void;
   onClose: () => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
@@ -139,6 +145,20 @@ function CollectionFormModal({
               placeholder="เช่น Summer Collection, Pro Series"
               value={form.name}
             />
+          </div>
+
+          <div>
+            <label className={LABEL_CLS}>หมวดหมู่</label>
+            <select
+              className={INPUT_CLS}
+              onChange={(e) => onChange({ categoryId: e.target.value })}
+              value={form.categoryId}
+            >
+              <option value="">ไม่ระบุหมวดหมู่</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -192,6 +212,7 @@ function CollectionFormModal({
 export function CollectionManager() {
   const { showToast } = useToast();
   const [collections, setCollections] = useState<ApiCollection[]>([]);
+  const [categories, setCategories] = useState<CategoryRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -212,8 +233,18 @@ export function CollectionManager() {
     }
   }
 
+  async function loadCategories() {
+    try {
+      const data = await getCategories();
+      setCategories(data);
+    } catch {
+      // silently fail — category dropdown will be empty
+    }
+  }
+
   useEffect(() => {
     void loadCollections();
+    void loadCategories();
   }, []);
 
   function openCreateModal() {
@@ -228,6 +259,7 @@ export function CollectionManager() {
       name: collection.name,
       isActive: collection.isActive,
       sortOrder: String(collection.sortOrder),
+      categoryId: collection.categoryId ?? "",
     });
     setIsModalOpen(true);
   }
@@ -247,11 +279,13 @@ export function CollectionManager() {
     setIsSubmitting(true);
     try {
       const sortOrder = parseInt(form.sortOrder, 10);
+      const categoryId = form.categoryId || null;
       if (editingId) {
         const updated = await updateCollection(editingId, {
           name: form.name.trim(),
           isActive: form.isActive,
           sortOrder: isNaN(sortOrder) ? 0 : sortOrder,
+          categoryId,
         });
         setCollections((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
         showToast("อัปเดตคอลเลกชันสำเร็จ", "success");
@@ -259,6 +293,7 @@ export function CollectionManager() {
         const created = await createCollection({
           name: form.name.trim(),
           sortOrder: isNaN(sortOrder) ? 0 : sortOrder,
+          categoryId,
         });
         setCollections((prev) => [...prev, created]);
         showToast("เพิ่มคอลเลกชันสำเร็จ", "success");
@@ -305,6 +340,7 @@ export function CollectionManager() {
             <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
                 <th className="px-4 py-3 font-semibold">ชื่อคอลเลกชัน</th>
+                <th className="px-4 py-3 font-semibold">หมวดหมู่</th>
                 <th className="px-4 py-3 font-semibold">Slug</th>
                 <th className="px-4 py-3 font-semibold">ลำดับ</th>
                 <th className="px-4 py-3 font-semibold">สถานะ</th>
@@ -317,6 +353,9 @@ export function CollectionManager() {
                   <tr key={i} className="border-t border-stroke dark:border-dark-3">
                     <td className="px-4 py-3">
                       <div className="h-4 w-36 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="h-4 w-24 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
                     </td>
                     <td className="px-4 py-3">
                       <div className="h-4 w-24 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
@@ -338,7 +377,7 @@ export function CollectionManager() {
 
               {!isLoading && collections.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-16 text-center">
+                  <td colSpan={6} className="px-4 py-16 text-center">
                     <div className="flex flex-col items-center">
                       <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f6f2]">
                         <svg className="h-7 w-7 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -367,6 +406,9 @@ export function CollectionManager() {
                   >
                     <td className="px-4 py-3 font-semibold text-dark dark:text-white">
                       {collection.name}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-dark-5 dark:text-dark-6">
+                      {collection.category?.name ?? "—"}
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-dark-5 dark:text-dark-6">
                       {collection.slug}
@@ -439,6 +481,7 @@ export function CollectionManager() {
               editingId={editingId}
               form={form}
               isSubmitting={isSubmitting}
+              categories={categories}
               onChange={(next) => setForm((c) => ({ ...c, ...next }))}
               onClose={closeModal}
               onSubmit={handleSubmit}

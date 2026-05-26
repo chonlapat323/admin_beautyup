@@ -37,6 +37,8 @@ export type ApiCategory = {
   processedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
+  brandId?: string | null;
+  brand?: { id: string; name: string } | null;
   _count?: {
     products: number;
   };
@@ -78,6 +80,8 @@ export type CategoryRecord = {
   updatedAt: string;
   processedBy: string;
   processedAt: string;
+  brandId: string | null;
+  brandName: string | null;
   source: "api" | "mock";
 };
 
@@ -91,6 +95,7 @@ export type CategoryFormPayload = {
   tempImageFile?: string;
   sortOrder?: number;
   isActive?: boolean;
+  brandId?: string | null;
 };
 
 export type ApiProductImage = {
@@ -322,6 +327,8 @@ export async function getCategories() {
               year: "numeric",
             }).format(new Date(category.processedAt))
           : "เชื่อมต่อหลังบ้าน",
+        brandId: category.brandId ?? null,
+        brandName: category.brand?.name ?? null,
         source: "api" as const,
       }),
     );
@@ -342,6 +349,8 @@ export async function getCategories() {
         updatedAt: category.updatedAt,
         processedBy: "system",
         processedAt: category.updatedAt,
+        brandId: null,
+        brandName: null,
         source: "mock" as const,
       }),
     );
@@ -376,6 +385,8 @@ function mapCategoryRecord(category: ApiCategory): CategoryRecord {
     updatedAt: formatCategoryDate(category.updatedAt),
     processedBy: category.processedBy ?? "system",
     processedAt: formatCategoryDate(category.processedAt),
+    brandId: category.brandId ?? null,
+    brandName: category.brand?.name ?? null,
     source: "api",
   };
 }
@@ -446,6 +457,8 @@ export async function getCategoriesPageData(params: CategoryListParams = {}) {
           updatedAt: category.updatedAt,
           processedBy: "system",
           processedAt: category.updatedAt,
+          brandId: null,
+          brandName: null,
           source: "mock",
         }),
       ),
@@ -1420,6 +1433,7 @@ export type ApiBrand = {
   slug: string;
   isActive: boolean;
   sortOrder: number;
+  _count?: { categories: number };
 };
 
 export async function getBrands(): Promise<ApiBrand[]> {
@@ -1473,6 +1487,8 @@ export type ApiCollection = {
   slug: string;
   isActive: boolean;
   sortOrder: number;
+  categoryId?: string | null;
+  category?: { id: string; name: string } | null;
 };
 
 export async function getCollections(): Promise<ApiCollection[]> {
@@ -1484,6 +1500,7 @@ export async function getCollections(): Promise<ApiCollection[]> {
 export async function createCollection(data: {
   name: string;
   sortOrder?: number;
+  categoryId?: string | null;
 }): Promise<ApiCollection> {
   const response = await fetch("/api/collections", {
     method: "POST",

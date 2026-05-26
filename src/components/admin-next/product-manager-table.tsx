@@ -34,7 +34,7 @@ type ProductApiResponse = {
 type StatusFilter = "all" | "active" | "inactive" | "draft";
 type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE";
 type SelectOption<T extends string | number> = { label: string; value: T };
-type FormCategory = { id: string; name: string; requiresShadeSelection: boolean };
+type FormCategory = { id: string; name: string; requiresShadeSelection: boolean; brandId: string | null };
 type FormShadeGroup = { id: string; name: string; shades: { id: string; name: string }[] };
 
 type ProductFormState = {
@@ -350,9 +350,23 @@ function ProductFormModal({
   const selectedCategory = categories.find((c) => c.id === form.categoryId);
   const requiresShade = selectedCategory?.requiresShadeSelection ?? false;
 
+  // Cascading: filter categories by selected brand, filter collections by selected category
+  const filteredCategories = form.brandId
+    ? categories.filter((c) => c.brandId === form.brandId)
+    : categories;
+
+  const filteredCollections = form.categoryId
+    ? collections.filter((c) => c.categoryId === form.categoryId)
+    : collections;
+
+  const brandOptions: SelectOption<string>[] = [
+    { label: "ไม่ระบุแบรนด์", value: "" },
+    ...brands.map((b) => ({ label: b.name, value: b.id })),
+  ];
+
   const categoryOptions: SelectOption<string>[] = [
     { label: "เลือกหมวดหมู่", value: "" },
-    ...categories.map((c) => ({ label: c.name, value: c.id })),
+    ...filteredCategories.map((c) => ({ label: c.name, value: c.id })),
   ];
 
   const shadeGroupOptions: SelectOption<string>[] = [
@@ -366,14 +380,9 @@ function ProductFormModal({
     ...(selectedGroup?.shades ?? []).map((s) => ({ label: s.name, value: s.id })),
   ];
 
-  const brandOptions: SelectOption<string>[] = [
-    { label: "ไม่ระบุแบรนด์", value: "" },
-    ...brands.map((b) => ({ label: b.name, value: b.id })),
-  ];
-
   const collectionOptions: SelectOption<string>[] = [
     { label: "ไม่ระบุคอลเลกชัน", value: "" },
-    ...collections.map((c) => ({ label: c.name, value: c.id })),
+    ...filteredCollections.map((c) => ({ label: c.name, value: c.id })),
   ];
 
   return (
@@ -445,9 +454,16 @@ function ProductFormModal({
           </div>
 
           <SelectField
+            label="แบรนด์"
+            options={brandOptions}
+            onChange={(v) => onChange({ brandId: v, categoryId: "", collectionId: "", shadeId: "" })}
+            value={form.brandId}
+          />
+
+          <SelectField
             label="หมวดหมู่ *"
             options={categoryOptions}
-            onChange={(v) => onChange({ categoryId: v, shadeId: "" })}
+            onChange={(v) => onChange({ categoryId: v, collectionId: "", shadeId: "" })}
             value={form.categoryId}
           />
 
@@ -468,20 +484,12 @@ function ProductFormModal({
             </div>
           ) : null}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <SelectField
-              label="แบรนด์"
-              options={brandOptions}
-              onChange={(v) => onChange({ brandId: v })}
-              value={form.brandId}
-            />
-            <SelectField
-              label="คอลเลกชัน"
-              options={collectionOptions}
-              onChange={(v) => onChange({ collectionId: v })}
-              value={form.collectionId}
-            />
-          </div>
+          <SelectField
+            label="คอลเลกชัน"
+            options={collectionOptions}
+            onChange={(v) => onChange({ collectionId: v })}
+            value={form.collectionId}
+          />
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -702,8 +710,8 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
     try {
       const response = await fetch("/api/categories?status=active&pageSize=100", { cache: "no-store" });
       if (!response.ok) return;
-      const data = await response.json() as { items?: { id: string; name: string; requiresShadeSelection?: boolean }[] };
-      setFormCategories((data.items ?? []).map((c) => ({ id: c.id, name: c.name, requiresShadeSelection: c.requiresShadeSelection ?? false })));
+      const data = await response.json() as { items?: { id: string; name: string; requiresShadeSelection?: boolean; brandId?: string | null }[] };
+      setFormCategories((data.items ?? []).map((c) => ({ id: c.id, name: c.name, requiresShadeSelection: c.requiresShadeSelection ?? false, brandId: c.brandId ?? null })));
     } catch {
       // silently fail
     }

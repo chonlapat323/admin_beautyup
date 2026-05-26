@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "@/components/shared/toast-provider";
 import {
+  ApiBrand,
   ApiCategory,
   ApiShadeGroup,
   ApiShadeItem,
@@ -15,6 +16,7 @@ import {
   createShadeItem,
   deleteShadeGroup,
   deleteShadeItem,
+  getBrands,
   getShadeGroups,
   softDeleteCategory,
   updateCategory,
@@ -51,6 +53,7 @@ const INITIAL_FORM: CategoryFormPayload = {
   requiresShadeSelection: false,
   tempImageFile: undefined,
   isActive: true,
+  brandId: null,
 };
 
 const STATUS_OPTIONS: SelectOption<StatusFilter>[] = [
@@ -65,7 +68,7 @@ const PAGE_SIZE_OPTIONS: SelectOption<number>[] = [
   { label: "50 รายการ", value: 50 },
 ];
 
-const NUM_COLS = 6;
+const NUM_COLS = 7;
 
 const FORM_STATUS_OPTIONS: SelectOption<"active" | "inactive">[] = [
   { label: "เปิดใช้งาน", value: "active" },
@@ -100,6 +103,8 @@ function mapCategoryRecord(category: ApiCategory): CategoryRecord {
     updatedAt: formatCategoryDate(category.updatedAt),
     processedBy: category.processedBy ?? "system",
     processedAt: formatCategoryDate(category.processedAt),
+    brandId: category.brandId ?? null,
+    brandName: category.brand?.name ?? null,
     source: "api",
   };
 }
@@ -769,6 +774,7 @@ export function CategoryManagerTable({
   const [shadeManagerCategory, setShadeManagerCategory] = useState<CategoryRecord | null>(null);
   const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const [formBrands, setFormBrands] = useState<ApiBrand[]>([]);
 
   const tableRows = useMemo(
     () =>
@@ -835,6 +841,10 @@ export function CategoryManagerTable({
     void loadCategories();
   }, [page, pageSize, searchTerm, statusFilter]);
 
+  useEffect(() => {
+    getBrands().then(setFormBrands).catch(() => {});
+  }, []);
+
   function resetForm() {
     setEditingId(null);
     setForm(INITIAL_FORM);
@@ -861,6 +871,7 @@ export function CategoryManagerTable({
       imageUrl: category.imageUrl ?? undefined,
       requiresShadeSelection: category.requiresShadeSelection,
       isActive: category.isActive,
+      brandId: category.brandId ?? null,
     });
     setImagePreview(category.imageUrl ?? null);
     setIsModalOpen(true);
@@ -1078,6 +1089,7 @@ export function CategoryManagerTable({
                 <th className="w-8 px-3 py-3" />
                 <th className="px-3 py-3 font-medium">รูป</th>
                 <th className="px-4 py-3 font-medium">หมวดหมู่</th>
+                <th className="hidden px-4 py-3 font-medium md:table-cell">แบรนด์</th>
                 <th className="px-4 py-3 font-medium">สถานะ</th>
                 <th className="hidden px-4 py-3 font-medium lg:table-cell">แก้ไขล่าสุดโดย</th>
                 <th className="px-4 py-3 font-medium">จัดการ</th>
@@ -1094,6 +1106,9 @@ export function CategoryManagerTable({
                     <td className="px-4 py-3">
                       <div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
                       <div className="mt-1.5 h-3 w-24 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
+                    </td>
+                    <td className="hidden px-4 py-3 md:table-cell">
+                      <div className="h-4 w-20 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
                     </td>
                     <td className="px-4 py-3">
                       <div className="h-6 w-20 animate-pulse rounded-full bg-neutral-100 dark:bg-dark-2" />
@@ -1168,6 +1183,11 @@ export function CategoryManagerTable({
                     <td className="px-4 py-3">
                       <p className="font-semibold text-dark dark:text-white">{category.name}</p>
                       <p className="mt-0.5 font-mono text-xs text-dark-5">{category.slug}</p>
+                    </td>
+                    <td className="hidden px-4 py-3 md:table-cell">
+                      <span className="text-sm text-dark-5 dark:text-dark-6">
+                        {category.brandName ?? "—"}
+                      </span>
                     </td>
                     <td className="px-4 py-3">
                       <button
@@ -1378,6 +1398,21 @@ export function CategoryManagerTable({
                       />
                     </label>
                   </div>
+                </div>
+
+                {/* แบรนด์ */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-dark dark:text-white">แบรนด์</label>
+                  <select
+                    className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
+                    onChange={(e) => setForm((c) => ({ ...c, brandId: e.target.value || null }))}
+                    value={form.brandId ?? ""}
+                  >
+                    <option value="">ไม่ระบุแบรนด์</option>
+                    {formBrands.map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* ต้องเลือกเฉดสี */}
