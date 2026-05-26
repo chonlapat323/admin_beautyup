@@ -29,14 +29,14 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
-        title: "หมวดหมู่",
-        url: "/categories",
+        title: "แบรนด์",
+        url: "/brands",
         icon: Icons.Alphabet,
         items: [],
       },
       {
-        title: "แบรนด์",
-        url: "/brands",
+        title: "หมวดหมู่",
+        url: "/categories",
         icon: Icons.Alphabet,
         items: [],
       },
