@@ -17,6 +17,7 @@ import {
 import { ContentCard, StatusPill } from "./page-elements";
 import { MemberAddressModal } from "./member-address-modal";
 import { MemberCreditModal } from "./member-credit-modal";
+import { toProxiedImageUrl } from "@/lib/utils";
 
 type MemberManagerTableProps = {
   initialItems: MemberRecord[];
@@ -41,6 +42,12 @@ type MemberFormState = {
   tiktok: string;
   shopee: string;
   lazada: string;
+  profileImageUrl: string | null;
+  bannerImageUrl: string | null;
+  tempProfileImageFile: string | undefined;
+  tempBannerImageFile: string | undefined;
+  profileImagePreview: string | null;
+  bannerImagePreview: string | null;
 };
 
 type MemberTypeFilter = "all" | "REGULAR" | "SALON" | "SALES";
@@ -55,6 +62,12 @@ const INITIAL_FORM: MemberFormState = {
   tiktok: "",
   shopee: "",
   lazada: "",
+  profileImageUrl: null,
+  bannerImageUrl: null,
+  tempProfileImageFile: undefined,
+  tempBannerImageFile: undefined,
+  profileImagePreview: null,
+  bannerImagePreview: null,
 };
 
 const STATUS_OPTIONS: SelectOption<StatusFilter>[] = [
@@ -94,6 +107,8 @@ function mapMemberRecord(member: ApiMember): MemberRecord {
     orders: member._count?.orders ?? 0,
     referrals: member._count?.referrals ?? 0,
     referredByName: member.referredBy?.fullName,
+    profileImageUrl: member.profileImageUrl ?? null,
+    bannerImageUrl: member.bannerImageUrl ?? null,
     createdAt: fmt(member.createdAt),
     updatedAt: formatMemberDate(member.updatedAt),
     source: "api",
@@ -230,17 +245,25 @@ function MemberFormModal({
   referredByName,
   form,
   isSubmitting,
+  isUploadingProfile,
+  isUploadingBanner,
   onChange,
   onClose,
   onSubmit,
+  onProfileImageChange,
+  onBannerImageChange,
 }: {
   editingId: string | null;
   referredByName?: string;
   form: MemberFormState;
   isSubmitting: boolean;
+  isUploadingProfile: boolean;
+  isUploadingBanner: boolean;
   onChange: (next: Partial<MemberFormState>) => void;
   onClose: () => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
+  onProfileImageChange: (file: File) => Promise<void>;
+  onBannerImageChange: (file: File) => Promise<void>;
 }) {
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/55 px-4 py-8">
@@ -400,12 +423,83 @@ function MemberFormModal({
             </div>
           </div>
 
+          <div className="rounded-[18px] border border-[#d8e6dd] bg-[#f4fbf6] p-4 dark:border-dark-3 dark:bg-dark-2">
+            <p className="mb-4 text-sm font-semibold text-dark dark:text-white">รูปโปรไฟล์และแบนเนอร์</p>
+            <div className="space-y-4">
+              {/* Profile Image */}
+              <div>
+                <p className="mb-2 text-xs font-medium text-dark-5 dark:text-dark-6">รูปโปรไฟล์</p>
+                <div className="flex items-center gap-4">
+                  {form.profileImagePreview ?? form.profileImageUrl ? (
+                    <div className="relative">
+                      <img
+                        alt="profile preview"
+                        className="h-16 w-16 rounded-full border border-[#d8e6dd] object-cover"
+                        src={toProxiedImageUrl((form.profileImagePreview ?? form.profileImageUrl)!)}
+                      />
+                      <button
+                        className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#c84b44] text-xs text-white hover:bg-[#ad3d37]"
+                        onClick={() => onChange({ profileImagePreview: null, profileImageUrl: null, tempProfileImageFile: undefined })}
+                        type="button"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : null}
+                  <label className={`cursor-pointer rounded-[14px] border-2 border-dashed border-[#c8ddd1] px-4 py-2.5 text-sm text-[#45745a] transition-colors hover:border-[#5f8f74] hover:bg-white ${isUploadingProfile ? "opacity-60" : ""}`}>
+                    {isUploadingProfile ? "กำลังอัปโหลด..." : (form.profileImagePreview ?? form.profileImageUrl) ? "เปลี่ยนรูป" : "เลือกรูป"}
+                    <input
+                      accept="image/*"
+                      className="sr-only"
+                      disabled={isUploadingProfile}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) void onProfileImageChange(f); e.target.value = ""; }}
+                      type="file"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Banner Image */}
+              <div>
+                <p className="mb-2 text-xs font-medium text-dark-5 dark:text-dark-6">รูปแบนเนอร์</p>
+                <div className="space-y-2">
+                  {form.bannerImagePreview ?? form.bannerImageUrl ? (
+                    <div className="relative inline-block">
+                      <img
+                        alt="banner preview"
+                        className="h-20 w-full max-w-xs rounded-xl border border-[#d8e6dd] object-cover"
+                        src={toProxiedImageUrl((form.bannerImagePreview ?? form.bannerImageUrl)!)}
+                      />
+                      <button
+                        className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#c84b44] text-xs text-white hover:bg-[#ad3d37]"
+                        onClick={() => onChange({ bannerImagePreview: null, bannerImageUrl: null, tempBannerImageFile: undefined })}
+                        type="button"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : null}
+                  <label className={`inline-block cursor-pointer rounded-[14px] border-2 border-dashed border-[#c8ddd1] px-4 py-2.5 text-sm text-[#45745a] transition-colors hover:border-[#5f8f74] hover:bg-white ${isUploadingBanner ? "opacity-60" : ""}`}>
+                    {isUploadingBanner ? "กำลังอัปโหลด..." : (form.bannerImagePreview ?? form.bannerImageUrl) ? "เปลี่ยนรูป" : "เลือกรูป"}
+                    <input
+                      accept="image/*"
+                      className="sr-only"
+                      disabled={isUploadingBanner}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) void onBannerImageChange(f); e.target.value = ""; }}
+                      type="file"
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </form>
         </div>
         <div className="shrink-0 flex flex-wrap gap-3 border-t border-[#edf4ef] px-7 py-5 dark:border-dark-3">
           <button
             className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:cursor-not-allowed disabled:opacity-70"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingProfile || isUploadingBanner}
             form="member-form"
             type="submit"
           >
@@ -455,6 +549,8 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
   const [detailMember, setDetailMember] = useState<MemberRecord | null>(null);
   const [memberOrders, setMemberOrders] = useState<{ id: string; orderNumber: string; status: string; totalAmount: number | string; createdAt?: string }[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [isUploadingProfile, setIsUploadingProfile] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
 
   const tableRows = useMemo(
     () => members.map((m, i) => ({ ...m, no: (meta.page - 1) * meta.pageSize + i + 1 })),
@@ -549,8 +645,44 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
       tiktok: member.tiktok ?? "",
       shopee: member.shopee ?? "",
       lazada: member.lazada ?? "",
+      profileImageUrl: member.profileImageUrl ?? null,
+      bannerImageUrl: member.bannerImageUrl ?? null,
+      tempProfileImageFile: undefined,
+      tempBannerImageFile: undefined,
+      profileImagePreview: null,
+      bannerImagePreview: null,
     });
     setIsModalOpen(true);
+  }
+
+  async function handleProfileImageUpload(file: File) {
+    setIsUploadingProfile(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/uploads/temp", { method: "POST", body: fd });
+      const data = await res.json() as { filename: string; url: string };
+      setForm((c) => ({ ...c, tempProfileImageFile: data.filename, profileImagePreview: data.url, profileImageUrl: null }));
+    } catch {
+      showToast("อัปโหลดรูปโปรไฟล์ล้มเหลว", "error");
+    } finally {
+      setIsUploadingProfile(false);
+    }
+  }
+
+  async function handleBannerImageUpload(file: File) {
+    setIsUploadingBanner(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/uploads/temp", { method: "POST", body: fd });
+      const data = await res.json() as { filename: string; url: string };
+      setForm((c) => ({ ...c, tempBannerImageFile: data.filename, bannerImagePreview: data.url, bannerImageUrl: null }));
+    } catch {
+      showToast("อัปโหลดรูปแบนเนอร์ล้มเหลว", "error");
+    } finally {
+      setIsUploadingBanner(false);
+    }
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -569,11 +701,16 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
         lazada: form.lazada.trim() || null,
       };
 
+      const imageFields: Pick<MemberFormPayload, "tempProfileImageFile" | "tempBannerImageFile"> = {};
+      if (form.tempProfileImageFile) imageFields.tempProfileImageFile = form.tempProfileImageFile;
+      if (form.tempBannerImageFile) imageFields.tempBannerImageFile = form.tempBannerImageFile;
+
       const payload: MemberFormPayload = editingId
         ? {
             fullName: form.fullName.trim(),
             memberType: form.memberType,
             ...socialFields,
+            ...imageFields,
           }
         : {
             fullName: form.fullName.trim(),
@@ -582,6 +719,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
             referredById: form.referredById.trim() || undefined,
             memberType: form.memberType,
             ...socialFields,
+            ...imageFields,
           };
 
       await (editingId ? updateMember(editingId, payload) : createMember(payload));
@@ -883,9 +1021,13 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
               referredByName={editingReferredByName}
               form={form}
               isSubmitting={isSubmitting}
+              isUploadingProfile={isUploadingProfile}
+              isUploadingBanner={isUploadingBanner}
               onChange={(next) => setForm((c) => ({ ...c, ...next }))}
               onClose={closeModal}
               onSubmit={handleSubmit}
+              onProfileImageChange={handleProfileImageUpload}
+              onBannerImageChange={handleBannerImageUpload}
             />,
             document.body,
           )

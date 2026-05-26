@@ -213,6 +213,8 @@ export type ApiMember = {
   tiktok?: string | null;
   shopee?: string | null;
   lazada?: string | null;
+  profileImageUrl?: string | null;
+  bannerImageUrl?: string | null;
   createdAt?: string;
   updatedAt?: string;
   _count?: {
@@ -852,6 +854,8 @@ export type MemberRecord = {
   tiktok?: string | null;
   shopee?: string | null;
   lazada?: string | null;
+  profileImageUrl?: string | null;
+  bannerImageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
   source: "api" | "mock";
@@ -867,6 +871,8 @@ export type MemberFormPayload = {
   tiktok?: string | null;
   shopee?: string | null;
   lazada?: string | null;
+  tempProfileImageFile?: string;
+  tempBannerImageFile?: string;
 };
 
 type MemberApiResponse = {
@@ -894,6 +900,8 @@ function mapMemberRecord(member: ApiMember): MemberRecord {
     tiktok: member.tiktok ?? null,
     shopee: member.shopee ?? null,
     lazada: member.lazada ?? null,
+    profileImageUrl: member.profileImageUrl ?? null,
+    bannerImageUrl: member.bannerImageUrl ?? null,
     createdAt: fmt(member.createdAt),
     updatedAt: fmt(member.updatedAt),
     source: "api",
