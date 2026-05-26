@@ -10,6 +10,7 @@ import {
   MemberRecord,
   createMember,
   deleteMember,
+  getMemberOrders,
   updateMember,
   updateMemberStatus,
 } from "@/lib/admin-api";
@@ -36,7 +37,13 @@ type MemberFormState = {
   email: string;
   referredById: string;
   memberType: "REGULAR" | "SALON" | "SALES";
+  facebook: string;
+  tiktok: string;
+  shopee: string;
+  lazada: string;
 };
+
+type MemberTypeFilter = "all" | "REGULAR" | "SALON" | "SALES";
 
 const INITIAL_FORM: MemberFormState = {
   fullName: "",
@@ -44,6 +51,10 @@ const INITIAL_FORM: MemberFormState = {
   email: "",
   referredById: "",
   memberType: "REGULAR",
+  facebook: "",
+  tiktok: "",
+  shopee: "",
+  lazada: "",
 };
 
 const STATUS_OPTIONS: SelectOption<StatusFilter>[] = [
@@ -347,6 +358,48 @@ function MemberFormModal({
             </div>
           </div>
 
+          <div className="rounded-[18px] border border-[#d8e6dd] bg-[#f4fbf6] p-4 dark:border-dark-3 dark:bg-dark-2">
+            <p className="mb-3 text-sm font-semibold text-dark dark:text-white">ช่องทางติดต่อ</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-dark-5 dark:text-dark-6">Facebook URL / Username</label>
+                <input
+                  className="w-full rounded-[14px] border border-[#d8e6dd] bg-white px-3 py-2.5 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-3 dark:text-white"
+                  onChange={(e) => onChange({ facebook: e.target.value })}
+                  placeholder="https://facebook.com/..."
+                  value={form.facebook}
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-dark-5 dark:text-dark-6">TikTok URL / Username</label>
+                <input
+                  className="w-full rounded-[14px] border border-[#d8e6dd] bg-white px-3 py-2.5 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-3 dark:text-white"
+                  onChange={(e) => onChange({ tiktok: e.target.value })}
+                  placeholder="https://tiktok.com/@..."
+                  value={form.tiktok}
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-dark-5 dark:text-dark-6">Shopee URL / Username</label>
+                <input
+                  className="w-full rounded-[14px] border border-[#d8e6dd] bg-white px-3 py-2.5 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-3 dark:text-white"
+                  onChange={(e) => onChange({ shopee: e.target.value })}
+                  placeholder="https://shopee.co.th/..."
+                  value={form.shopee}
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-dark-5 dark:text-dark-6">Lazada URL / Username</label>
+                <input
+                  className="w-full rounded-[14px] border border-[#d8e6dd] bg-white px-3 py-2.5 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-3 dark:text-white"
+                  onChange={(e) => onChange({ lazada: e.target.value })}
+                  placeholder="https://lazada.co.th/..."
+                  value={form.lazada}
+                />
+              </div>
+            </div>
+          </div>
+
         </form>
         </div>
         <div className="shrink-0 flex flex-wrap gap-3 border-t border-[#edf4ef] px-7 py-5 dark:border-dark-3">
@@ -392,12 +445,16 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [memberTypeFilter, setMemberTypeFilter] = useState<MemberTypeFilter>("all");
   const [page, setPage] = useState(initialMeta.page);
   const [pageSize, setPageSize] = useState(initialMeta.pageSize);
   const [memberToDelete, setMemberToDelete] = useState<MemberRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [addressMember, setAddressMember] = useState<{ id: string; name: string } | null>(null);
   const [creditMember, setCreditMember] = useState<{ id: string; name: string; balance: number } | null>(null);
+  const [detailMember, setDetailMember] = useState<MemberRecord | null>(null);
+  const [memberOrders, setMemberOrders] = useState<{ id: string; orderNumber: string; status: string; totalAmount: number | string; createdAt?: string }[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
 
   const tableRows = useMemo(
     () => members.map((m, i) => ({ ...m, no: (meta.page - 1) * meta.pageSize + i + 1 })),
@@ -405,16 +462,18 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
   );
 
   async function loadMembers(
-    overrides?: Partial<Record<"page" | "pageSize" | "searchTerm" | "statusFilter", string | number>>,
+    overrides?: Partial<Record<"page" | "pageSize" | "searchTerm" | "statusFilter" | "memberTypeFilter", string | number>>,
   ) {
     const nextPage = typeof overrides?.page === "number" ? overrides.page : page;
     const nextPageSize = typeof overrides?.pageSize === "number" ? overrides.pageSize : pageSize;
     const nextSearch = typeof overrides?.searchTerm === "string" ? overrides.searchTerm : searchTerm;
     const nextStatus = typeof overrides?.statusFilter === "string" ? overrides.statusFilter : statusFilter;
+    const nextMemberType = typeof overrides?.memberTypeFilter === "string" ? overrides.memberTypeFilter : memberTypeFilter;
 
     const params = new URLSearchParams({ page: String(nextPage), pageSize: String(nextPageSize) });
     if (nextSearch.trim()) params.set("search", nextSearch.trim());
     if (nextStatus !== "all") params.set("status", nextStatus);
+    if (nextMemberType !== "all") params.set("memberType", nextMemberType);
 
     setIsLoading(true);
     try {
@@ -440,11 +499,26 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
       return;
     }
     void loadMembers();
-  }, [page, pageSize, searchTerm, statusFilter]);
+  }, [page, pageSize, searchTerm, statusFilter, memberTypeFilter]);
 
   async function refreshAfterMutation(targetPage = page) {
     await loadMembers({ page: targetPage });
     setPage(targetPage);
+  }
+
+  async function openDetail(member: MemberRecord) {
+    setDetailMember(member);
+    setMemberOrders([]);
+    setIsLoadingOrders(true);
+    try {
+      const data = await getMemberOrders(member.id);
+      const orders = Array.isArray(data) ? data : (data as { items?: unknown[] }).items ?? [];
+      setMemberOrders(orders.slice(0, 10) as typeof memberOrders);
+    } catch {
+      setMemberOrders([]);
+    } finally {
+      setIsLoadingOrders(false);
+    }
   }
 
   function resetForm() {
@@ -471,6 +545,10 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
       email: member.email,
       referredById: "",
       memberType: member.memberType,
+      facebook: member.facebook ?? "",
+      tiktok: member.tiktok ?? "",
+      shopee: member.shopee ?? "",
+      lazada: member.lazada ?? "",
     });
     setIsModalOpen(true);
   }
@@ -484,10 +562,18 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
         throw new Error("กรุณากรอกชื่อ-นามสกุล");
       }
 
+      const socialFields = {
+        facebook: form.facebook.trim() || null,
+        tiktok: form.tiktok.trim() || null,
+        shopee: form.shopee.trim() || null,
+        lazada: form.lazada.trim() || null,
+      };
+
       const payload: MemberFormPayload = editingId
         ? {
             fullName: form.fullName.trim(),
             memberType: form.memberType,
+            ...socialFields,
           }
         : {
             fullName: form.fullName.trim(),
@@ -495,6 +581,7 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
             email: form.email.trim() || undefined,
             referredById: form.referredById.trim() || undefined,
             memberType: form.memberType,
+            ...socialFields,
           };
 
       await (editingId ? updateMember(editingId, payload) : createMember(payload));
@@ -561,34 +648,45 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
           </button>
         }
       >
-        <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="grid w-full gap-3 sm:grid-cols-2 lg:max-w-2xl lg:grid-cols-[minmax(0,1fr)_180px_130px]">
-            <input
-              className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-              onChange={(e) => {
-                setPage(1);
-                setSearchTerm(e.target.value);
-              }}
-              placeholder="ค้นหาชื่อ เบอร์โทร หรืออีเมล"
-              value={searchTerm}
-            />
-            <SelectField
-              options={STATUS_OPTIONS}
-              onChange={(v) => {
-                setPage(1);
-                setStatusFilter(v);
-              }}
-              value={statusFilter}
-            />
-            <SelectField
-              options={PAGE_SIZE_OPTIONS}
-              onChange={(v) => {
-                setPage(1);
-                setPageSize(v);
-              }}
-              value={pageSize}
-            />
-          </div>
+        <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_160px_180px_180px_130px]">
+          <input
+            className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+            onChange={(e) => {
+              setPage(1);
+              setSearchTerm(e.target.value);
+            }}
+            placeholder="ค้นหาชื่อ เบอร์โทร หรืออีเมล"
+            value={searchTerm}
+          />
+          <SelectField
+            options={[
+              { label: "ทุกประเภท", value: "all" as MemberTypeFilter },
+              { label: "ลูกค้าทั่วไป", value: "REGULAR" as MemberTypeFilter },
+              { label: "ร้านซาลอน", value: "SALON" as MemberTypeFilter },
+              { label: "พนักงานเซล", value: "SALES" as MemberTypeFilter },
+            ]}
+            onChange={(v: MemberTypeFilter) => {
+              setPage(1);
+              setMemberTypeFilter(v);
+            }}
+            value={memberTypeFilter}
+          />
+          <SelectField
+            options={STATUS_OPTIONS}
+            onChange={(v) => {
+              setPage(1);
+              setStatusFilter(v);
+            }}
+            value={statusFilter}
+          />
+          <SelectField
+            options={PAGE_SIZE_OPTIONS}
+            onChange={(v) => {
+              setPage(1);
+              setPageSize(v);
+            }}
+            value={pageSize}
+          />
         </div>
 
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
@@ -699,6 +797,13 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
                         แก้ไข
                       </button>
                       <button
+                        className="rounded-full border border-[#dde8f5] px-3 py-1 text-xs font-semibold text-[#4a6fa8] transition-colors hover:bg-[#f0f5ff]"
+                        onClick={() => void openDetail(member)}
+                        type="button"
+                      >
+                        รายละเอียด
+                      </button>
+                      <button
                         className="rounded-full border border-[#d0e0f0] px-3 py-1 text-xs font-semibold text-[#2563a8] transition-colors hover:bg-[#f0f7ff]"
                         onClick={() => setAddressMember({ id: member.id, name: member.fullName })}
                         type="button"
@@ -801,6 +906,89 @@ export function MemberManagerTable({ initialItems, initialMeta }: MemberManagerT
           creditBalance={creditMember.balance}
           onClose={() => setCreditMember(null)}
         />
+      ) : null}
+
+      {detailMember ? createPortal(
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/55 px-4 py-8">
+          <div
+            className="flex w-full max-w-xl flex-col rounded-[28px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark"
+            style={{ maxHeight: "88vh" }}
+          >
+            <div className="shrink-0 flex items-center justify-between border-b border-stroke px-6 py-5 dark:border-dark-3">
+              <div>
+                <h3 className="text-lg font-bold text-dark dark:text-white">{detailMember.fullName}</h3>
+                <p className="mt-0.5 text-xs text-dark-5">{detailMember.phone || detailMember.email || "-"}</p>
+              </div>
+              <button
+                className="flex h-8 w-8 items-center justify-center rounded-full text-dark-5 hover:bg-neutral-100 dark:hover:bg-dark-2"
+                onClick={() => setDetailMember(null)}
+                type="button"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-5 px-6 py-5">
+              {/* Orders section */}
+              <div>
+                <p className="mb-3 text-sm font-semibold text-dark dark:text-white">ออเดอร์ล่าสุด (สูงสุด 10 รายการ)</p>
+                {isLoadingOrders ? (
+                  <div className="space-y-2">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="h-10 animate-pulse rounded-xl bg-neutral-100 dark:bg-dark-2" />
+                    ))}
+                  </div>
+                ) : memberOrders.length === 0 ? (
+                  <p className="rounded-xl border border-stroke px-4 py-4 text-sm text-dark-5 dark:border-dark-3">ยังไม่มีออเดอร์</p>
+                ) : (
+                  <div className="overflow-hidden rounded-xl border border-stroke dark:border-dark-3">
+                    <table className="w-full text-sm">
+                      <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
+                        <tr>
+                          <th className="px-4 py-2.5 text-left font-semibold">เลขออเดอร์</th>
+                          <th className="px-4 py-2.5 text-left font-semibold">สถานะ</th>
+                          <th className="px-4 py-2.5 text-right font-semibold">ยอด</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {memberOrders.map((order) => (
+                          <tr key={order.id} className="border-t border-stroke text-sm dark:border-dark-3">
+                            <td className="px-4 py-2.5 font-mono text-xs text-dark dark:text-white">{order.orderNumber}</td>
+                            <td className="px-4 py-2.5 text-dark-5 dark:text-dark-6">{order.status}</td>
+                            <td className="px-4 py-2.5 text-right tabular-nums text-dark dark:text-white">
+                              ฿{Number(order.totalAmount).toLocaleString("th-TH", { minimumFractionDigits: 2 })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Referrals section */}
+              <div>
+                <p className="mb-3 text-sm font-semibold text-dark dark:text-white">ผู้ที่แนะนำ ({detailMember.referrals} คน)</p>
+                <div className="rounded-xl border border-stroke px-4 py-3 text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6">
+                  {detailMember.referrals > 0
+                    ? `สมาชิกรายนี้แนะนำสมาชิกใหม่ทั้งหมด ${detailMember.referrals} คน`
+                    : "ยังไม่มีผู้ถูกแนะนำ"}
+                </div>
+              </div>
+            </div>
+
+            <div className="shrink-0 flex justify-end border-t border-stroke px-6 py-4 dark:border-dark-3">
+              <button
+                className="rounded-full border border-[#d7e7dc] px-5 py-2.5 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+                onClick={() => setDetailMember(null)}
+                type="button"
+              >
+                ปิด
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   );

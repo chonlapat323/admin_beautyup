@@ -209,6 +209,10 @@ export type ApiMember = {
   creditBalance?: number | null;
   referredById?: string | null;
   referredBy?: { id: string; fullName: string } | null;
+  facebook?: string | null;
+  tiktok?: string | null;
+  shopee?: string | null;
+  lazada?: string | null;
   createdAt?: string;
   updatedAt?: string;
   _count?: {
@@ -844,6 +848,10 @@ export type MemberRecord = {
   orders: number;
   referrals: number;
   referredByName?: string;
+  facebook?: string | null;
+  tiktok?: string | null;
+  shopee?: string | null;
+  lazada?: string | null;
   createdAt: string;
   updatedAt: string;
   source: "api" | "mock";
@@ -855,6 +863,10 @@ export type MemberFormPayload = {
   email?: string;
   referredById?: string;
   memberType?: "REGULAR" | "SALON" | "SALES";
+  facebook?: string | null;
+  tiktok?: string | null;
+  shopee?: string | null;
+  lazada?: string | null;
 };
 
 type MemberApiResponse = {
@@ -878,6 +890,10 @@ function mapMemberRecord(member: ApiMember): MemberRecord {
     orders: member._count?.orders ?? 0,
     referrals: member._count?.referrals ?? 0,
     referredByName: member.referredBy?.fullName,
+    facebook: member.facebook ?? null,
+    tiktok: member.tiktok ?? null,
+    shopee: member.shopee ?? null,
+    lazada: member.lazada ?? null,
     createdAt: fmt(member.createdAt),
     updatedAt: fmt(member.updatedAt),
     source: "api",
@@ -1536,4 +1552,27 @@ export async function deleteCollection(id: string): Promise<void> {
     const body = (await response.json().catch(() => null)) as { message?: string } | null;
     throw new Error(body?.message || "ไม่สามารถลบคอลเลกชันได้");
   }
+}
+
+export async function generateProductSku(params: { brandId?: string; categoryId?: string; collectionId?: string }): Promise<string> {
+  const q = new URLSearchParams();
+  if (params.brandId) q.set("brandId", params.brandId);
+  if (params.categoryId) q.set("categoryId", params.categoryId);
+  if (params.collectionId) q.set("collectionId", params.collectionId);
+  const res = await fetch(`/api/products/generate-sku?${q}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error((data as { message?: string }).message || "ไม่สามารถสร้างรหัสได้");
+  return typeof data === "string" ? data : (data as { sku?: string }).sku ?? data;
+}
+
+export async function generateRewardProductSku(): Promise<string> {
+  const res = await fetch("/api/reward-products/generate-sku");
+  const data = await res.json();
+  if (!res.ok) throw new Error((data as { message?: string }).message || "ไม่สามารถสร้างรหัสได้");
+  return typeof data === "string" ? data : (data as { sku?: string }).sku ?? data;
+}
+
+export async function getMemberOrders(memberId: string) {
+  const res = await fetch(`/api/members/${memberId}/orders`);
+  return res.json();
 }

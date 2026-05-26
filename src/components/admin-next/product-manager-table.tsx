@@ -12,6 +12,7 @@ import {
   ProductRecord,
   createProduct,
   deleteProduct,
+  generateProductSku,
   getBrands,
   getCollections,
   updateProduct,
@@ -316,6 +317,7 @@ function ProductFormModal({
   editingId,
   form,
   isSubmitting,
+  isGeneratingSku,
   categories,
   shadeGroups,
   shadeGroupId,
@@ -329,10 +331,12 @@ function ProductFormModal({
   onChange,
   onClose,
   onSubmit,
+  onGenerateSku,
 }: {
   editingId: string | null;
   form: ProductFormState;
   isSubmitting: boolean;
+  isGeneratingSku: boolean;
   categories: FormCategory[];
   shadeGroups: FormShadeGroup[];
   shadeGroupId: string;
@@ -346,6 +350,7 @@ function ProductFormModal({
   onChange: (next: Partial<ProductFormState>) => void;
   onClose: () => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
+  onGenerateSku: () => Promise<void>;
 }) {
   const selectedCategory = categories.find((c) => c.id === form.categoryId);
   const requiresShade = selectedCategory?.requiresShadeSelection ?? false;
@@ -430,14 +435,24 @@ function ProductFormModal({
             </div>
             <div>
               <label className={LABEL_CLS}>
-                รหัสสินค้า <span className="text-red-500">*</span>
+                รหัสสินค้า (SKU) <span className="text-red-500">*</span>
               </label>
-              <input
-                className={INPUT_CLS}
-                onChange={(e) => onChange({ sku: e.target.value })}
-                placeholder="เช่น BU-CLR-001"
-                value={form.sku}
-              />
+              <div className="flex gap-2">
+                <input
+                  className={INPUT_CLS}
+                  onChange={(e) => onChange({ sku: e.target.value })}
+                  placeholder="เช่น BU-CLR-001"
+                  value={form.sku}
+                />
+                <button
+                  className="shrink-0 rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-xs font-semibold text-[#355846] transition-colors hover:border-[#bfd6c7] hover:bg-[#eef8f1] disabled:cursor-not-allowed disabled:opacity-60 dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                  disabled={isGeneratingSku}
+                  onClick={() => void onGenerateSku()}
+                  type="button"
+                >
+                  {isGeneratingSku ? "..." : "สร้างอัตโนมัติ"}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -665,6 +680,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
   const [formCollections, setFormCollections] = useState<ApiCollection[]>([]);
   const [previewImages, setPreviewImages] = useState<PreviewImage[]>([]);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [isGeneratingSku, setIsGeneratingSku] = useState(false);
 
   const tableRows = useMemo(
     () => products.map((p, i) => ({ ...p, no: (meta.page - 1) * meta.pageSize + i + 1 })),
@@ -950,6 +966,22 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
       showToast(err instanceof Error ? err.message : "ไม่สามารถบันทึกสินค้าได้", "error");
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleGenerateSku() {
+    setIsGeneratingSku(true);
+    try {
+      const sku = await generateProductSku({
+        brandId: form.brandId || undefined,
+        categoryId: form.categoryId || undefined,
+        collectionId: form.collectionId || undefined,
+      });
+      setForm((c) => ({ ...c, sku }));
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "ไม่สามารถสร้างรหัสสินค้าได้", "error");
+    } finally {
+      setIsGeneratingSku(false);
     }
   }
 
@@ -1330,6 +1362,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
           editingId={editingId}
           form={form}
           isSubmitting={isSubmitting}
+          isGeneratingSku={isGeneratingSku}
           categories={formCategories}
           shadeGroups={formShadeGroups}
           shadeGroupId={formShadeGroupId}
@@ -1343,6 +1376,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
           onChange={(next) => setForm((c) => ({ ...c, ...next }))}
           onClose={closeModal}
           onSubmit={handleSubmit}
+          onGenerateSku={handleGenerateSku}
         />,
         document.body,
       ) : null}
