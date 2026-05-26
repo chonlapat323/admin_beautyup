@@ -35,6 +35,18 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
+        title: "แบรนด์",
+        url: "/brands",
+        icon: Icons.Alphabet,
+        items: [],
+      },
+      {
+        title: "คอลเลกชัน",
+        url: "/collections",
+        icon: Icons.Alphabet,
+        items: [],
+      },
+      {
         title: "สินค้า",
         url: "/products",
         icon: Icons.Table,

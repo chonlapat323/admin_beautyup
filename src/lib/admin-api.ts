@@ -116,6 +116,12 @@ export type ApiProduct = {
   category?: { id: string; name: string } | null;
   shadeId?: string | null;
   shade?: { id: string; name: string; shadeGroupId?: string } | null;
+  brandId?: string | null;
+  brand?: { id: string; name: string } | null;
+  collectionId?: string | null;
+  collection?: { id: string; name: string } | null;
+  colorCode?: string | null;
+  colorName?: string | null;
   images?: ApiProductImage[];
   createdAt?: string;
   updatedAt?: string;
@@ -134,6 +140,12 @@ export type ProductRecord = {
   shadeId: string | null;
   shadeName: string | null;
   shadeGroupId: string | null;
+  brandId: string | null;
+  brandName: string | null;
+  collectionId: string | null;
+  collectionName: string | null;
+  colorCode: string | null;
+  colorName: string | null;
   stock: number;
   status: "DRAFT" | "ACTIVE" | "INACTIVE";
   isFeatured: boolean;
@@ -152,6 +164,10 @@ export type ProductFormPayload = {
   specialPrice?: number;
   categoryId: string;
   shadeId?: string | null;
+  brandId?: string | null;
+  collectionId?: string | null;
+  colorCode?: string | null;
+  colorName?: string | null;
   stock: number;
   status: "DRAFT" | "ACTIVE" | "INACTIVE";
   isFeatured?: boolean;
@@ -528,6 +544,12 @@ function mapProductRecord(product: ApiProduct): ProductRecord {
     shadeId: product.shadeId ?? null,
     shadeName: product.shade?.name ?? null,
     shadeGroupId: product.shade?.shadeGroupId ?? null,
+    brandId: product.brandId ?? null,
+    brandName: product.brand?.name ?? null,
+    collectionId: product.collectionId ?? null,
+    collectionName: product.collection?.name ?? null,
+    colorCode: product.colorCode ?? null,
+    colorName: product.colorName ?? null,
     stock: product.stock,
     status: product.status,
     isFeatured: product.isFeatured ?? false,
@@ -576,6 +598,12 @@ export async function getProductsPageData(
         shadeId: null,
         shadeName: null,
         shadeGroupId: null,
+        brandId: null,
+        brandName: null,
+        collectionId: null,
+        collectionName: null,
+        colorCode: null,
+        colorName: null,
         stock: p.stock,
         status: p.status === "Active" ? "ACTIVE" : "INACTIVE",
         isFeatured: false,
@@ -1381,5 +1409,114 @@ export async function getCommissionStats(): Promise<CommissionStatsResult> {
     return { todayCount, todayTotal, source: "api" };
   } catch {
     return { todayCount: 0, todayTotal: 0, source: "mock" };
+  }
+}
+
+// ===== Brands =====
+
+export type ApiBrand = {
+  id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+  sortOrder: number;
+};
+
+export async function getBrands(): Promise<ApiBrand[]> {
+  const response = await fetch("/api/brands", { cache: "no-store" });
+  if (!response.ok) throw new Error("ไม่สามารถดึงข้อมูลแบรนด์ได้");
+  return response.json() as Promise<ApiBrand[]>;
+}
+
+export async function createBrand(data: { name: string; sortOrder?: number }): Promise<ApiBrand> {
+  const response = await fetch("/api/brands", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message || "ไม่สามารถสร้างแบรนด์ได้");
+  }
+  return response.json() as Promise<ApiBrand>;
+}
+
+export async function updateBrand(
+  id: string,
+  data: Partial<Omit<ApiBrand, "id" | "slug">>,
+): Promise<ApiBrand> {
+  const response = await fetch(`/api/brands/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message || "ไม่สามารถแก้ไขแบรนด์ได้");
+  }
+  return response.json() as Promise<ApiBrand>;
+}
+
+export async function deleteBrand(id: string): Promise<void> {
+  const response = await fetch(`/api/brands/${id}`, { method: "DELETE" });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message || "ไม่สามารถลบแบรนด์ได้");
+  }
+}
+
+// ===== Collections =====
+
+export type ApiCollection = {
+  id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+  sortOrder: number;
+};
+
+export async function getCollections(): Promise<ApiCollection[]> {
+  const response = await fetch("/api/collections", { cache: "no-store" });
+  if (!response.ok) throw new Error("ไม่สามารถดึงข้อมูลคอลเลกชันได้");
+  return response.json() as Promise<ApiCollection[]>;
+}
+
+export async function createCollection(data: {
+  name: string;
+  sortOrder?: number;
+}): Promise<ApiCollection> {
+  const response = await fetch("/api/collections", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message || "ไม่สามารถสร้างคอลเลกชันได้");
+  }
+  return response.json() as Promise<ApiCollection>;
+}
+
+export async function updateCollection(
+  id: string,
+  data: Partial<Omit<ApiCollection, "id" | "slug">>,
+): Promise<ApiCollection> {
+  const response = await fetch(`/api/collections/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message || "ไม่สามารถแก้ไขคอลเลกชันได้");
+  }
+  return response.json() as Promise<ApiCollection>;
+}
+
+export async function deleteCollection(id: string): Promise<void> {
+  const response = await fetch(`/api/collections/${id}`, { method: "DELETE" });
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as { message?: string } | null;
+    throw new Error(body?.message || "ไม่สามารถลบคอลเลกชันได้");
   }
 }

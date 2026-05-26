@@ -4,12 +4,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "@/components/shared/toast-provider";
 import {
+  ApiBrand,
+  ApiCollection,
   ApiProduct,
   CategoryListMeta,
   ProductFormPayload,
   ProductRecord,
   createProduct,
   deleteProduct,
+  getBrands,
+  getCollections,
   updateProduct,
   updateProductStatus,
 } from "@/lib/admin-api";
@@ -42,6 +46,10 @@ type ProductFormState = {
   specialPrice: string;
   categoryId: string;
   shadeId: string;
+  brandId: string;
+  collectionId: string;
+  colorCode: string;
+  colorName: string;
   stock: string;
   status: ProductStatus;
   isFeatured: boolean;
@@ -57,6 +65,10 @@ const INITIAL_FORM: ProductFormState = {
   specialPrice: "",
   categoryId: "",
   shadeId: "",
+  brandId: "",
+  collectionId: "",
+  colorCode: "",
+  colorName: "",
   stock: "0",
   status: "DRAFT",
   isFeatured: false,
@@ -125,6 +137,12 @@ function mapProductRecord(product: ApiProduct): ProductRecord {
     shadeId: product.shadeId ?? null,
     shadeName: product.shade?.name ?? null,
     shadeGroupId: product.shade?.shadeGroupId ?? null,
+    brandId: product.brandId ?? null,
+    brandName: product.brand?.name ?? null,
+    collectionId: product.collectionId ?? null,
+    collectionName: product.collection?.name ?? null,
+    colorCode: product.colorCode ?? null,
+    colorName: product.colorName ?? null,
     stock: product.stock,
     status: product.status,
     isFeatured: product.isFeatured ?? false,
@@ -302,6 +320,8 @@ function ProductFormModal({
   shadeGroups,
   shadeGroupId,
   onShadeGroupChange,
+  brands,
+  collections,
   previewImages,
   onFilesDropped,
   onRemoveImage,
@@ -317,6 +337,8 @@ function ProductFormModal({
   shadeGroups: FormShadeGroup[];
   shadeGroupId: string;
   onShadeGroupChange: (groupId: string) => void;
+  brands: ApiBrand[];
+  collections: ApiCollection[];
   previewImages: PreviewImage[];
   onFilesDropped: (files: File[]) => void;
   onRemoveImage: (key: string) => void;
@@ -342,6 +364,16 @@ function ProductFormModal({
   const shadeOptions: SelectOption<string>[] = [
     { label: "เลือกเฉดสี", value: "" },
     ...(selectedGroup?.shades ?? []).map((s) => ({ label: s.name, value: s.id })),
+  ];
+
+  const brandOptions: SelectOption<string>[] = [
+    { label: "ไม่ระบุแบรนด์", value: "" },
+    ...brands.map((b) => ({ label: b.name, value: b.id })),
+  ];
+
+  const collectionOptions: SelectOption<string>[] = [
+    { label: "ไม่ระบุคอลเลกชัน", value: "" },
+    ...collections.map((c) => ({ label: c.name, value: c.id })),
   ];
 
   return (
@@ -435,6 +467,42 @@ function ProductFormModal({
               />
             </div>
           ) : null}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <SelectField
+              label="แบรนด์"
+              options={brandOptions}
+              onChange={(v) => onChange({ brandId: v })}
+              value={form.brandId}
+            />
+            <SelectField
+              label="คอลเลกชัน"
+              options={collectionOptions}
+              onChange={(v) => onChange({ collectionId: v })}
+              value={form.collectionId}
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={LABEL_CLS}>รหัสสี</label>
+              <input
+                className={INPUT_CLS}
+                onChange={(e) => onChange({ colorCode: e.target.value })}
+                placeholder="เช่น #FF5733, NB-03"
+                value={form.colorCode}
+              />
+            </div>
+            <div>
+              <label className={LABEL_CLS}>ชื่อสี</label>
+              <input
+                className={INPUT_CLS}
+                onChange={(e) => onChange({ colorName: e.target.value })}
+                placeholder="เช่น Natural Brown"
+                value={form.colorName}
+              />
+            </div>
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
@@ -576,6 +644,8 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [featuredFilter, setFeaturedFilter] = useState<"all" | "featured">("all");
+  const [brandFilter, setBrandFilter] = useState<string>("all");
+  const [collectionFilter, setCollectionFilter] = useState<string>("all");
   const [page, setPage] = useState(initialMeta.page);
   const [pageSize, setPageSize] = useState(initialMeta.pageSize);
   const [productToDelete, setProductToDelete] = useState<ProductRecord | null>(null);
@@ -583,6 +653,8 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
   const [formCategories, setFormCategories] = useState<FormCategory[]>([]);
   const [formShadeGroups, setFormShadeGroups] = useState<FormShadeGroup[]>([]);
   const [formShadeGroupId, setFormShadeGroupId] = useState<string>("");
+  const [formBrands, setFormBrands] = useState<ApiBrand[]>([]);
+  const [formCollections, setFormCollections] = useState<ApiCollection[]>([]);
   const [previewImages, setPreviewImages] = useState<PreviewImage[]>([]);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
@@ -591,17 +663,21 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
     [products, meta.page, meta.pageSize],
   );
 
-  async function loadProducts(overrides?: Partial<Record<"page" | "pageSize" | "searchTerm" | "statusFilter" | "featuredFilter", string | number>>) {
+  async function loadProducts(overrides?: Partial<Record<"page" | "pageSize" | "searchTerm" | "statusFilter" | "featuredFilter" | "brandFilter" | "collectionFilter", string | number>>) {
     const nextPage = typeof overrides?.page === "number" ? overrides.page : page;
     const nextPageSize = typeof overrides?.pageSize === "number" ? overrides.pageSize : pageSize;
     const nextSearch = typeof overrides?.searchTerm === "string" ? overrides.searchTerm : searchTerm;
     const nextStatus = typeof overrides?.statusFilter === "string" ? overrides.statusFilter : statusFilter;
     const nextFeatured = typeof overrides?.featuredFilter === "string" ? overrides.featuredFilter : featuredFilter;
+    const nextBrand = typeof overrides?.brandFilter === "string" ? overrides.brandFilter : brandFilter;
+    const nextCollection = typeof overrides?.collectionFilter === "string" ? overrides.collectionFilter : collectionFilter;
 
     const params = new URLSearchParams({ page: String(nextPage), pageSize: String(nextPageSize) });
     if (nextSearch.trim()) params.set("search", nextSearch.trim());
     if (nextStatus !== "all") params.set("status", nextStatus);
     if (nextFeatured === "featured") params.set("isFeatured", "true");
+    if (nextBrand !== "all") params.set("brandId", nextBrand);
+    if (nextCollection !== "all") params.set("collectionId", nextCollection);
 
     setIsLoading(true);
 
@@ -633,6 +709,16 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
     }
   }
 
+  async function loadFormBrandsAndCollections() {
+    try {
+      const [brandsData, collectionsData] = await Promise.all([getBrands(), getCollections()]);
+      setFormBrands(brandsData);
+      setFormCollections(collectionsData);
+    } catch {
+      // silently fail
+    }
+  }
+
   async function loadShadeGroups(categoryId: string) {
     setFormShadeGroups([]);
     setFormShadeGroupId("");
@@ -650,10 +736,17 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
   useEffect(() => {
     if (isFirstLoad.current) { isFirstLoad.current = false; return; }
     void loadProducts();
-  }, [page, pageSize, searchTerm, statusFilter, featuredFilter]);
+  }, [page, pageSize, searchTerm, statusFilter, featuredFilter, brandFilter, collectionFilter]);
 
   useEffect(() => {
-    if (isModalOpen) void loadFormCategories();
+    void loadFormBrandsAndCollections();
+  }, []);
+
+  useEffect(() => {
+    if (isModalOpen) {
+      void loadFormCategories();
+      void loadFormBrandsAndCollections();
+    }
   }, [isModalOpen]);
 
   useEffect(() => {
@@ -705,6 +798,10 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
       specialPrice: product.specialPrice !== null ? String(product.specialPrice) : "",
       categoryId: product.categoryId,
       shadeId: product.shadeId ?? "",
+      brandId: product.brandId ?? "",
+      collectionId: product.collectionId ?? "",
+      colorCode: product.colorCode ?? "",
+      colorName: product.colorName ?? "",
       stock: String(product.stock),
       status: product.status,
       isFeatured: product.isFeatured,
@@ -814,6 +911,10 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
         specialPrice,
         categoryId: form.categoryId,
         shadeId: selectedCat?.requiresShadeSelection ? (form.shadeId || null) : null,
+        brandId: form.brandId || null,
+        collectionId: form.collectionId || null,
+        colorCode: form.colorCode.trim() || null,
+        colorName: form.colorName.trim() || null,
         stock: isNaN(stock) ? 0 : stock,
         status: form.status,
         isFeatured: form.isFeatured,
@@ -895,7 +996,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
         }
       >
         {/* Filter bar */}
-        <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_180px_160px_130px]">
+        <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_180px_160px_160px_160px_130px]">
           {/* Search */}
           <div className="relative">
             <svg
@@ -926,6 +1027,22 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
             options={[{ label: "ทุกประเภท", value: "all" }, { label: "แนะนำหน้าแรก", value: "featured" }]}
             onChange={(v: "all" | "featured") => { setPage(1); setFeaturedFilter(v); }}
             value={featuredFilter}
+          />
+          <SelectField
+            options={[
+              { label: "ทุกแบรนด์", value: "all" },
+              ...formBrands.map((b) => ({ label: b.name, value: b.id })),
+            ]}
+            onChange={(v: string) => { setPage(1); setBrandFilter(v); }}
+            value={brandFilter}
+          />
+          <SelectField
+            options={[
+              { label: "ทุกคอลเลกชัน", value: "all" },
+              ...formCollections.map((c) => ({ label: c.name, value: c.id })),
+            ]}
+            onChange={(v: string) => { setPage(1); setCollectionFilter(v); }}
+            value={collectionFilter}
           />
           <SelectField
             options={PAGE_SIZE_OPTIONS}
@@ -1038,11 +1155,17 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                     ) : null}
                   </td>
 
-                  {/* Category */}
+                  {/* Category / Brand / Collection */}
                   <td className="hidden px-4 py-3 lg:table-cell">
                     <p className="text-sm text-dark-5 dark:text-dark-6">{product.categoryName}</p>
-                    {product.shadeName ? (
-                      <p className="mt-0.5 text-xs text-dark-5 dark:text-dark-6">{product.shadeName}</p>
+                    {product.brandName ? (
+                      <p className="mt-0.5 text-xs text-dark-5 dark:text-dark-6">{product.brandName}</p>
+                    ) : null}
+                    {product.collectionName ? (
+                      <p className="mt-0.5 text-xs text-dark-5 dark:text-dark-6">{product.collectionName}</p>
+                    ) : null}
+                    {product.colorName ? (
+                      <p className="mt-0.5 text-xs text-dark-5 dark:text-dark-6">{product.colorName}</p>
                     ) : null}
                   </td>
 
@@ -1203,6 +1326,8 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
           shadeGroups={formShadeGroups}
           shadeGroupId={formShadeGroupId}
           onShadeGroupChange={setFormShadeGroupId}
+          brands={formBrands}
+          collections={formCollections}
           previewImages={previewImages}
           onFilesDropped={handleFilesDropped}
           onRemoveImage={handleRemoveImage}
