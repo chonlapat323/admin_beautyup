@@ -1322,6 +1322,21 @@ export function CategoryManagerTable({
             <form onSubmit={handleSubmit}>
               {/* Scrollable body */}
               <div className="max-h-[60vh] space-y-4 overflow-y-auto px-6 py-5">
+                {/* แบรนด์ — ต้องอยู่บนสุด */}
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-dark dark:text-white">แบรนด์ <span className="text-[#c84b44]">*</span></label>
+                  <select
+                    className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
+                    onChange={(e) => setForm((c) => ({ ...c, brandId: e.target.value || null }))}
+                    value={form.brandId ?? ""}
+                  >
+                    <option value="">ไม่ระบุแบรนด์</option>
+                    {formBrands.map((b) => (
+                      <option key={b.id} value={b.id}>{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* ชื่อ + Slug */}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
@@ -1398,21 +1413,6 @@ export function CategoryManagerTable({
                       />
                     </label>
                   </div>
-                </div>
-
-                {/* แบรนด์ */}
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-dark dark:text-white">แบรนด์</label>
-                  <select
-                    className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-gray-dark"
-                    onChange={(e) => setForm((c) => ({ ...c, brandId: e.target.value || null }))}
-                    value={form.brandId ?? ""}
-                  >
-                    <option value="">ไม่ระบุแบรนด์</option>
-                    {formBrands.map((b) => (
-                      <option key={b.id} value={b.id}>{b.name}</option>
-                    ))}
-                  </select>
                 </div>
 
                 {/* ต้องเลือกเฉดสี */}

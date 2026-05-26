@@ -134,19 +134,7 @@ function CollectionFormModal({
 
         {/* Body */}
         <form className="space-y-4 px-6 py-5" onSubmit={onSubmit}>
-          <div>
-            <label className={LABEL_CLS}>
-              ชื่อคอลเลกชัน <span className="text-red-500">*</span>
-            </label>
-            <input
-              autoFocus
-              className={INPUT_CLS}
-              onChange={(e) => onChange({ name: e.target.value })}
-              placeholder="เช่น Summer Collection, Pro Series"
-              value={form.name}
-            />
-          </div>
-
+          {/* หมวดหมู่ — ต้องอยู่บนสุด */}
           <div>
             <label className={LABEL_CLS}>หมวดหมู่</label>
             <select
@@ -159,6 +147,19 @@ function CollectionFormModal({
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className={LABEL_CLS}>
+              ชื่อคอลเลกชัน <span className="text-red-500">*</span>
+            </label>
+            <input
+              autoFocus
+              className={INPUT_CLS}
+              onChange={(e) => onChange({ name: e.target.value })}
+              placeholder="เช่น Summer Collection, Pro Series"
+              value={form.name}
+            />
           </div>
 
           <div>
