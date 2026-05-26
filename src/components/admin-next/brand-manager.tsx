@@ -189,6 +189,12 @@ function BrandFormModal({
   );
 }
 
+const STATUS_OPTIONS = [
+  { label: "ทุกสถานะ", value: "all" as const },
+  { label: "เปิดใช้งาน", value: "active" as const },
+  { label: "ปิดใช้งาน", value: "inactive" as const },
+];
+
 export function BrandManager() {
   const { showToast } = useToast();
   const [brands, setBrands] = useState<ApiBrand[]>([]);
@@ -199,6 +205,17 @@ export function BrandManager() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [brandToDelete, setBrandToDelete] = useState<ApiBrand | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+
+  const filteredBrands = brands.filter((b) => {
+    const matchSearch = !searchTerm || b.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && b.isActive) ||
+      (statusFilter === "inactive" && !b.isActive);
+    return matchSearch && matchStatus;
+  });
 
   async function loadBrands() {
     setIsLoading(true);
@@ -284,18 +301,58 @@ export function BrandManager() {
 
   return (
     <>
-      <ContentCard
-        title="จัดการแบรนด์"
-        aside={
+      <ContentCard title="จัดการแบรนด์">
+        {/* Filter bar */}
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          {/* Left: search + status pills */}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-60">
+              <svg
+                className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-5"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.75}
+                viewBox="0 0 24 24"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] py-2.5 pl-9 pr-4 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="ค้นหาแบรนด์..."
+                value={searchTerm}
+              />
+            </div>
+            <div className="flex gap-1.5">
+              {STATUS_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  className={`rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${
+                    statusFilter === opt.value
+                      ? "bg-[#45745a] text-white"
+                      : "border border-[#d7e7dc] text-[#355846] hover:bg-[#f4fbf6]"
+                  }`}
+                  onClick={() => setStatusFilter(opt.value)}
+                  type="button"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {/* Right: add button */}
           <button
-            className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
+            className="shrink-0 rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
             onClick={openCreateModal}
             type="button"
           >
             + เพิ่มแบรนด์
           </button>
-        }
-      >
+        </div>
+
         <div className="overflow-x-auto rounded-2xl border border-stroke dark:border-dark-3">
           <table className="w-full min-w-[480px] text-left">
             <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
@@ -336,7 +393,7 @@ export function BrandManager() {
                   </tr>
                 ))}
 
-              {!isLoading && brands.length === 0 && (
+              {!isLoading && filteredBrands.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-4 py-16 text-center">
                     <div className="flex flex-col items-center">
@@ -346,22 +403,30 @@ export function BrandManager() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
                         </svg>
                       </div>
-                      <p className="font-semibold text-dark dark:text-white">ยังไม่มีแบรนด์</p>
-                      <p className="mt-1 text-sm text-dark-5">เพิ่มแบรนด์แรกเพื่อเริ่มต้น</p>
-                      <button
-                        className="mt-4 rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
-                        onClick={openCreateModal}
-                        type="button"
-                      >
-                        + เพิ่มแบรนด์แรก
-                      </button>
+                      <p className="font-semibold text-dark dark:text-white">
+                        {searchTerm || statusFilter !== "all" ? "ไม่พบแบรนด์ที่ตรงกัน" : "ยังไม่มีแบรนด์"}
+                      </p>
+                      <p className="mt-1 text-sm text-dark-5">
+                        {searchTerm || statusFilter !== "all"
+                          ? "ลองเปลี่ยนคำค้นหาหรือตัวกรอง"
+                          : "เพิ่มแบรนด์แรกเพื่อเริ่มต้น"}
+                      </p>
+                      {!searchTerm && statusFilter === "all" ? (
+                        <button
+                          className="mt-4 rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
+                          onClick={openCreateModal}
+                          type="button"
+                        >
+                          + เพิ่มแบรนด์แรก
+                        </button>
+                      ) : null}
                     </div>
                   </td>
                 </tr>
               )}
 
               {!isLoading &&
-                brands.map((brand) => (
+                filteredBrands.map((brand) => (
                   <tr
                     key={brand.id}
                     className="border-t border-stroke text-sm transition-colors hover:bg-[#fafcfb] dark:border-dark-3 dark:hover:bg-dark-2/50"
@@ -417,7 +482,7 @@ export function BrandManager() {
               </span>
             ) : (
               <>
-                <span className="font-semibold text-dark dark:text-white">{brands.length}</span>
+                <span className="font-semibold text-dark dark:text-white">{filteredBrands.length}</span>
                 {" แบรนด์"}
               </>
             )}
