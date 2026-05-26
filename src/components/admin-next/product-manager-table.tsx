@@ -36,7 +36,6 @@ type StatusFilter = "all" | "active" | "inactive" | "draft";
 type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE";
 type SelectOption<T extends string | number> = { label: string; value: T };
 type FormCategory = { id: string; name: string; requiresShadeSelection: boolean; brandId: string | null };
-type FormShadeGroup = { id: string; name: string; shades: { id: string; name: string }[] };
 
 type ProductFormState = {
   name: string;
@@ -46,7 +45,6 @@ type ProductFormState = {
   price: string;
   specialPrice: string;
   categoryId: string;
-  shadeId: string;
   brandId: string;
   collectionId: string;
   colorCode: string;
@@ -65,7 +63,6 @@ const INITIAL_FORM: ProductFormState = {
   price: "",
   specialPrice: "",
   categoryId: "",
-  shadeId: "",
   brandId: "",
   collectionId: "",
   colorCode: "",
@@ -135,9 +132,6 @@ function mapProductRecord(product: ApiProduct): ProductRecord {
     specialPrice: product.specialPrice ? parseFloat(product.specialPrice) : null,
     categoryId: product.categoryId,
     categoryName: product.category?.name ?? "ไม่ระบุหมวดหมู่",
-    shadeId: product.shadeId ?? null,
-    shadeName: product.shade?.name ?? null,
-    shadeGroupId: product.shade?.shadeGroupId ?? null,
     brandId: product.brandId ?? null,
     brandName: product.brand?.name ?? null,
     collectionId: product.collectionId ?? null,
@@ -319,9 +313,6 @@ function ProductFormModal({
   isSubmitting,
   isGeneratingSku,
   categories,
-  shadeGroups,
-  shadeGroupId,
-  onShadeGroupChange,
   brands,
   collections,
   previewImages,
@@ -338,9 +329,6 @@ function ProductFormModal({
   isSubmitting: boolean;
   isGeneratingSku: boolean;
   categories: FormCategory[];
-  shadeGroups: FormShadeGroup[];
-  shadeGroupId: string;
-  onShadeGroupChange: (groupId: string) => void;
   brands: ApiBrand[];
   collections: ApiCollection[];
   previewImages: PreviewImage[];
@@ -352,9 +340,6 @@ function ProductFormModal({
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   onGenerateSku: () => Promise<void>;
 }) {
-  const selectedCategory = categories.find((c) => c.id === form.categoryId);
-  const requiresShade = selectedCategory?.requiresShadeSelection ?? false;
-
   // Cascading: filter categories by selected brand, filter collections by selected category
   const filteredCategories = form.brandId
     ? categories.filter((c) => c.brandId === form.brandId)
@@ -372,17 +357,6 @@ function ProductFormModal({
   const categoryOptions: SelectOption<string>[] = [
     { label: "เลือกหมวดหมู่", value: "" },
     ...filteredCategories.map((c) => ({ label: c.name, value: c.id })),
-  ];
-
-  const shadeGroupOptions: SelectOption<string>[] = [
-    { label: "เลือกกลุ่มเฉดสี", value: "" },
-    ...shadeGroups.map((g) => ({ label: g.name, value: g.id })),
-  ];
-
-  const selectedGroup = shadeGroups.find((g) => g.id === shadeGroupId);
-  const shadeOptions: SelectOption<string>[] = [
-    { label: "เลือกเฉดสี", value: "" },
-    ...(selectedGroup?.shades ?? []).map((s) => ({ label: s.name, value: s.id })),
   ];
 
   const collectionOptions: SelectOption<string>[] = [
@@ -471,33 +445,16 @@ function ProductFormModal({
           <SelectField
             label="แบรนด์"
             options={brandOptions}
-            onChange={(v) => onChange({ brandId: v, categoryId: "", collectionId: "", shadeId: "" })}
+            onChange={(v) => onChange({ brandId: v, categoryId: "", collectionId: "" })}
             value={form.brandId}
           />
 
           <SelectField
             label="หมวดหมู่ *"
             options={categoryOptions}
-            onChange={(v) => onChange({ categoryId: v, collectionId: "", shadeId: "" })}
+            onChange={(v) => onChange({ categoryId: v, collectionId: "" })}
             value={form.categoryId}
           />
-
-          {requiresShade ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <SelectField
-                label="กลุ่มเฉดสี *"
-                options={shadeGroupOptions}
-                onChange={(v) => { onShadeGroupChange(v); onChange({ shadeId: "" }); }}
-                value={shadeGroupId}
-              />
-              <SelectField
-                label="เฉดสี *"
-                options={shadeOptions}
-                onChange={(v) => onChange({ shadeId: v })}
-                value={form.shadeId}
-              />
-            </div>
-          ) : null}
 
           <SelectField
             label="คอลเลกชัน"
@@ -674,8 +631,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
   const [productToDelete, setProductToDelete] = useState<ProductRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [formCategories, setFormCategories] = useState<FormCategory[]>([]);
-  const [formShadeGroups, setFormShadeGroups] = useState<FormShadeGroup[]>([]);
-  const [formShadeGroupId, setFormShadeGroupId] = useState<string>("");
   const [formBrands, setFormBrands] = useState<ApiBrand[]>([]);
   const [formCollections, setFormCollections] = useState<ApiCollection[]>([]);
   const [previewImages, setPreviewImages] = useState<PreviewImage[]>([]);
@@ -743,20 +698,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
     }
   }
 
-  async function loadShadeGroups(categoryId: string) {
-    setFormShadeGroups([]);
-    setFormShadeGroupId("");
-    if (!categoryId) return;
-    try {
-      const response = await fetch(`/api/categories/${categoryId}/shade-groups`, { cache: "no-store" });
-      if (!response.ok) return;
-      const data = await response.json() as { id: string; name: string; shades?: { id: string; name: string }[] }[];
-      setFormShadeGroups(data.map((g) => ({ id: g.id, name: g.name, shades: g.shades ?? [] })));
-    } catch {
-      // silently fail
-    }
-  }
-
   useEffect(() => {
     if (isFirstLoad.current) { isFirstLoad.current = false; return; }
     void loadProducts();
@@ -773,16 +714,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
     }
   }, [isModalOpen]);
 
-  useEffect(() => {
-    const cat = formCategories.find((c) => c.id === form.categoryId);
-    if (cat?.requiresShadeSelection) {
-      void loadShadeGroups(form.categoryId);
-    } else {
-      setFormShadeGroups([]);
-      setFormShadeGroupId("");
-    }
-  }, [form.categoryId, formCategories]);
-
   async function refreshAfterMutation(targetPage = page) {
     await loadProducts({ page: targetPage });
     setPage(targetPage);
@@ -792,8 +723,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
     setEditingId(null);
     setForm(INITIAL_FORM);
     setPreviewImages([]);
-    setFormShadeGroups([]);
-    setFormShadeGroupId("");
   }
 
   function openCreateModal() {
@@ -821,7 +750,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
       price: String(product.price),
       specialPrice: product.specialPrice !== null ? String(product.specialPrice) : "",
       categoryId: product.categoryId,
-      shadeId: product.shadeId ?? "",
       brandId: product.brandId ?? "",
       collectionId: product.collectionId ?? "",
       colorCode: product.colorCode ?? "",
@@ -831,7 +759,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
       isFeatured: product.isFeatured,
       tag: product.tag ?? "",
     });
-    if (product.shadeGroupId) setFormShadeGroupId(product.shadeGroupId);
     setIsModalOpen(true);
     void fetch(`/api/products/${product.id}`, { cache: "no-store" })
       .then((r) => r.json())
@@ -924,7 +851,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
       }
 
       const readyImages = previewImages.filter((img) => !img.uploading && !img.error);
-      const selectedCat = formCategories.find((c) => c.id === form.categoryId);
 
       const payload: ProductFormPayload = {
         name: form.name.trim(),
@@ -934,7 +860,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
         price,
         specialPrice,
         categoryId: form.categoryId,
-        shadeId: selectedCat?.requiresShadeSelection ? (form.shadeId || null) : null,
         brandId: form.brandId || null,
         collectionId: form.collectionId || null,
         colorCode: form.colorCode.trim() || null,
@@ -1364,9 +1289,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
           isSubmitting={isSubmitting}
           isGeneratingSku={isGeneratingSku}
           categories={formCategories}
-          shadeGroups={formShadeGroups}
-          shadeGroupId={formShadeGroupId}
-          onShadeGroupChange={setFormShadeGroupId}
           brands={formBrands}
           collections={formCollections}
           previewImages={previewImages}

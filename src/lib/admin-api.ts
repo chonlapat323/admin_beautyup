@@ -119,8 +119,6 @@ export type ApiProduct = {
   tag?: string | null;
   categoryId: string;
   category?: { id: string; name: string } | null;
-  shadeId?: string | null;
-  shade?: { id: string; name: string; shadeGroupId?: string } | null;
   brandId?: string | null;
   brand?: { id: string; name: string } | null;
   collectionId?: string | null;
@@ -142,9 +140,6 @@ export type ProductRecord = {
   specialPrice: number | null;
   categoryId: string;
   categoryName: string;
-  shadeId: string | null;
-  shadeName: string | null;
-  shadeGroupId: string | null;
   brandId: string | null;
   brandName: string | null;
   collectionId: string | null;
@@ -168,7 +163,6 @@ export type ProductFormPayload = {
   price: number;
   specialPrice?: number;
   categoryId: string;
-  shadeId?: string | null;
   brandId?: string | null;
   collectionId?: string | null;
   colorCode?: string | null;
@@ -560,9 +554,6 @@ function mapProductRecord(product: ApiProduct): ProductRecord {
     specialPrice: product.specialPrice ? parseFloat(product.specialPrice) : null,
     categoryId: product.categoryId,
     categoryName: product.category?.name ?? "ไม่ระบุหมวดหมู่",
-    shadeId: product.shadeId ?? null,
-    shadeName: product.shade?.name ?? null,
-    shadeGroupId: product.shade?.shadeGroupId ?? null,
     brandId: product.brandId ?? null,
     brandName: product.brand?.name ?? null,
     collectionId: product.collectionId ?? null,
@@ -614,9 +605,6 @@ export async function getProductsPageData(
         specialPrice: null,
         categoryId: "",
         categoryName: p.category,
-        shadeId: null,
-        shadeName: null,
-        shadeGroupId: null,
         brandId: null,
         brandName: null,
         collectionId: null,
