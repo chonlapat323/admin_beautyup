@@ -31,6 +31,7 @@ type OrderDetail = OrderListItem & {
   shippingPhone: string;
   shippingAddr: string;
   trackingNumber?: string | null;
+  note?: string | null;
   items: {
     id: string;
     productId: string;
@@ -214,6 +215,23 @@ export function OrderManager() {
   const [saveError, setSaveError] = useState("");
   const [trackingInput, setTrackingInput] = useState("");
   const [savingTracking, setSavingTracking] = useState(false);
+  const [noteInput, setNoteInput] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
+  // Admin create order states
+  const [showCreateOrder, setShowCreateOrder] = useState(false);
+  const [createMemberSearch, setCreateMemberSearch] = useState("");
+  const [createMemberResults, setCreateMemberResults] = useState<{ id: string; fullName: string; phone: string | null; email: string | null }[]>([]);
+  const [createMemberId, setCreateMemberId] = useState("");
+  const [createMemberName, setCreateMemberName] = useState("");
+  const [createProductSearch, setCreateProductSearch] = useState("");
+  const [createProductResults, setCreateProductResults] = useState<{ id: string; name: string; sku: string; price: number }[]>([]);
+  const [createItems, setCreateItems] = useState<{ productId: string; quantity: number; name: string; price: number }[]>([]);
+  const [createShippingName, setCreateShippingName] = useState("");
+  const [createShippingPhone, setCreateShippingPhone] = useState("");
+  const [createShippingAddr, setCreateShippingAddr] = useState("");
+  const [createNote, setCreateNote] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
@@ -252,6 +270,7 @@ export function OrderManager() {
       setDetail(d);
       setSelectedStatus((d.status as OrderStatus) ?? "PAID");
       setTrackingInput(d.trackingNumber ?? "");
+      setNoteInput(d.note ?? "");
     } catch {
       setDetail(null);
       setSaveError("ไม่สามารถโหลดรายละเอียดคำสั่งซื้อได้");
@@ -315,6 +334,81 @@ export function OrderManager() {
       }
     } finally {
       setSavingTracking(false);
+    }
+  }
+
+  async function saveNote() {
+    if (!detail) return;
+    setSavingNote(true);
+    try {
+      await fetch(`/api/orders/${detail.id}/note`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note: noteInput || null }),
+      });
+      setDetail((prev) => prev ? { ...prev, note: noteInput || null } : prev);
+    } finally {
+      setSavingNote(false);
+    }
+  }
+
+  async function searchMembers(q: string) {
+    if (!q.trim()) { setCreateMemberResults([]); return; }
+    try {
+      const r = await fetch(`/api/members?search=${encodeURIComponent(q)}&pageSize=10`);
+      if (!r.ok) return;
+      const data = await r.json() as unknown;
+      if (data && typeof data === "object" && "items" in data && Array.isArray((data as { items: unknown[] }).items)) {
+        setCreateMemberResults((data as { items: { id: string; fullName: string; phone: string | null; email: string | null }[] }).items.slice(0, 8));
+      }
+    } catch { /* ignore */ }
+  }
+
+  async function searchProducts(q: string) {
+    if (!q.trim()) { setCreateProductResults([]); return; }
+    try {
+      const r = await fetch(`/api/products?search=${encodeURIComponent(q)}&pageSize=10`);
+      if (!r.ok) return;
+      const data = await r.json() as unknown;
+      if (Array.isArray(data)) {
+        setCreateProductResults((data as { id: string; name: string; sku: string; price: number }[]).slice(0, 8));
+      }
+    } catch { /* ignore */ }
+  }
+
+  async function submitAdminCreate() {
+    if (!createMemberId || createItems.length === 0 || !createShippingName || !createShippingPhone || !createShippingAddr) return;
+    setCreating(true);
+    setCreateError("");
+    try {
+      const r = await fetch("/api/orders/admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberId: createMemberId,
+          items: createItems.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+          shippingName: createShippingName,
+          shippingPhone: createShippingPhone,
+          shippingAddr: createShippingAddr,
+          note: createNote || undefined,
+        }),
+      });
+      if (!r.ok) {
+        const e = await r.json().catch(() => null) as { message?: string } | null;
+        setCreateError(e?.message ?? "ไม่สามารถสร้างคำสั่งซื้อได้");
+        return;
+      }
+      // Refresh order list
+      const listR = await fetch("/api/orders");
+      const listData = await listR.json().catch(() => null) as unknown;
+      if (isOrderList(listData)) setOrders(listData);
+      // Reset and close
+      setShowCreateOrder(false);
+      setCreateMemberId(""); setCreateMemberName(""); setCreateMemberSearch(""); setCreateMemberResults([]);
+      setCreateItems([]); setCreateProductSearch(""); setCreateProductResults([]);
+      setCreateShippingName(""); setCreateShippingPhone(""); setCreateShippingAddr(""); setCreateNote("");
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -433,6 +527,13 @@ export function OrderManager() {
                   <option key={n} value={n}>{n} รายการ</option>
                 ))}
               </select>
+              <button
+                type="button"
+                onClick={() => setShowCreateOrder(true)}
+                className="rounded-2xl bg-[#45745a] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#355846]"
+              >
+                + สร้างคำสั่งซื้อ
+              </button>
             </div>
           </div>
         </div>
@@ -622,6 +723,27 @@ export function OrderManager() {
                       </div>
                     </div>
 
+                    {/* Note */}
+                    <div className="rounded-xl border border-stroke bg-[#f8fbf9] px-5 py-4 dark:border-dark-3 dark:bg-dark-2">
+                      <SectionLabel>หมายเหตุ</SectionLabel>
+                      <div className="flex gap-3">
+                        <textarea
+                          value={noteInput}
+                          onChange={(e) => setNoteInput(e.target.value)}
+                          rows={3}
+                          placeholder="หมายเหตุคำสั่งซื้อ..."
+                          className="flex-1 resize-none rounded-xl border border-stroke bg-white px-4 py-2.5 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-gray-dark dark:text-white"
+                        />
+                        <button
+                          disabled={savingNote || noteInput === (detail.note ?? "")}
+                          onClick={() => void saveNote()}
+                          className="flex-shrink-0 self-start rounded-xl bg-[#45745a] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#355846] disabled:opacity-70"
+                        >
+                          {savingNote ? "กำลังบันทึก..." : "บันทึก"}
+                        </button>
+                      </div>
+                    </div>
+
                     {/* Tracking number */}
                     <div className="rounded-xl border border-stroke bg-[#f8fbf9] px-5 py-4 dark:border-dark-3 dark:bg-dark-2">
                       <SectionLabel>เลขพัสดุ / Tracking</SectionLabel>
@@ -720,6 +842,154 @@ export function OrderManager() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Admin Create Order Modal */}
+      {showCreateOrder && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={() => { if (!creating) setShowCreateOrder(false); }}
+        >
+          <div
+            className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-dark"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between bg-gradient-to-r from-[#f0faf4] to-[#f8fbf9] px-6 py-5 dark:from-dark-2 dark:to-dark-2">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#5f8f74]">Admin</p>
+                <h3 className="mt-1 text-xl font-bold text-dark dark:text-white">สร้างคำสั่งซื้อ</h3>
+                <p className="mt-0.5 text-xs text-dark-5">ข้ามขั้นตอนชำระเงิน — ส่วนลด 100%</p>
+              </div>
+              <button
+                onClick={() => { if (!creating) setShowCreateOrder(false); }}
+                className="ml-4 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-dark-5 transition-colors hover:bg-white hover:text-dark dark:hover:bg-dark-3"
+              >✕</button>
+            </div>
+
+            <div className="max-h-[70vh] overflow-y-auto">
+              <div className="space-y-5 p-6">
+
+                {/* Member */}
+                <div>
+                  <SectionLabel>สมาชิก</SectionLabel>
+                  {createMemberName ? (
+                    <div className="flex items-center justify-between rounded-xl border border-[#45745a] bg-[#f0faf4] px-4 py-3">
+                      <span className="font-semibold text-[#2f7a4f]">{createMemberName}</span>
+                      <button type="button" onClick={() => { setCreateMemberId(""); setCreateMemberName(""); setCreateMemberSearch(""); setCreateMemberResults([]); }} className="text-xs text-dark-5 hover:text-dark">เปลี่ยน</button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={createMemberSearch}
+                        onChange={(e) => { setCreateMemberSearch(e.target.value); void searchMembers(e.target.value); }}
+                        placeholder="ค้นหาชื่อ / เบอร์โทรสมาชิก..."
+                        className="w-full rounded-xl border border-stroke bg-white px-4 py-2.5 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-gray-dark dark:text-white"
+                      />
+                      {createMemberResults.length > 0 && (
+                        <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-stroke bg-white shadow-lg dark:border-dark-3 dark:bg-gray-dark">
+                          {createMemberResults.map((m) => (
+                            <button
+                              key={m.id}
+                              type="button"
+                              onClick={() => { setCreateMemberId(m.id); setCreateMemberName(m.fullName); setCreateMemberResults([]); setCreateMemberSearch(""); }}
+                              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm hover:bg-[#f4faf6] dark:hover:bg-dark-2"
+                            >
+                              <span className="font-semibold text-dark dark:text-white">{m.fullName}</span>
+                              <span className="text-dark-5">{m.phone ?? m.email ?? ""}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Products */}
+                <div>
+                  <SectionLabel>สินค้า</SectionLabel>
+                  <div className="relative mb-2">
+                    <input
+                      type="text"
+                      value={createProductSearch}
+                      onChange={(e) => { setCreateProductSearch(e.target.value); void searchProducts(e.target.value); }}
+                      placeholder="ค้นหาสินค้า..."
+                      className="w-full rounded-xl border border-stroke bg-white px-4 py-2.5 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-gray-dark dark:text-white"
+                    />
+                    {createProductResults.length > 0 && (
+                      <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-stroke bg-white shadow-lg dark:border-dark-3 dark:bg-gray-dark">
+                        {createProductResults.map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => {
+                              if (!createItems.find((i) => i.productId === p.id)) {
+                                setCreateItems((prev) => [...prev, { productId: p.id, quantity: 1, name: p.name, price: p.price }]);
+                              }
+                              setCreateProductSearch(""); setCreateProductResults([]);
+                            }}
+                            className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm hover:bg-[#f4faf6] dark:hover:bg-dark-2"
+                          >
+                            <span className="font-semibold text-dark dark:text-white">{p.name}</span>
+                            <span className="text-dark-5 font-mono">{p.sku}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {createItems.length > 0 && (
+                    <div className="space-y-2">
+                      {createItems.map((item) => (
+                        <div key={item.productId} className="flex items-center gap-3 rounded-xl border border-stroke bg-[#f8fbf9] px-4 py-2.5 dark:border-dark-3 dark:bg-dark-2">
+                          <span className="flex-1 text-sm font-semibold text-dark dark:text-white">{item.name}</span>
+                          <div className="flex items-center gap-2">
+                            <button type="button" onClick={() => setCreateItems((prev) => prev.map((i) => i.productId === item.productId ? { ...i, quantity: Math.max(1, i.quantity - 1) } : i))} className="flex h-6 w-6 items-center justify-center rounded-full border border-stroke text-sm text-dark-5 hover:bg-white">−</button>
+                            <span className="w-6 text-center text-sm font-semibold text-dark dark:text-white">{item.quantity}</span>
+                            <button type="button" onClick={() => setCreateItems((prev) => prev.map((i) => i.productId === item.productId ? { ...i, quantity: i.quantity + 1 } : i))} className="flex h-6 w-6 items-center justify-center rounded-full border border-stroke text-sm text-dark-5 hover:bg-white">+</button>
+                          </div>
+                          <button type="button" onClick={() => setCreateItems((prev) => prev.filter((i) => i.productId !== item.productId))} className="text-xs text-red-400 hover:text-red-600">ลบ</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {createItems.length === 0 && <p className="text-sm text-dark-5">ยังไม่มีสินค้า</p>}
+                </div>
+
+                {/* Shipping */}
+                <div>
+                  <SectionLabel>ที่อยู่จัดส่ง</SectionLabel>
+                  <div className="space-y-2">
+                    <input type="text" value={createShippingName} onChange={(e) => setCreateShippingName(e.target.value)} placeholder="ชื่อผู้รับ *" className="w-full rounded-xl border border-stroke bg-white px-4 py-2.5 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-gray-dark dark:text-white" />
+                    <input type="text" value={createShippingPhone} onChange={(e) => setCreateShippingPhone(e.target.value)} placeholder="เบอร์โทร *" className="w-full rounded-xl border border-stroke bg-white px-4 py-2.5 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-gray-dark dark:text-white" />
+                    <textarea rows={2} value={createShippingAddr} onChange={(e) => setCreateShippingAddr(e.target.value)} placeholder="ที่อยู่ *" className="w-full resize-none rounded-xl border border-stroke bg-white px-4 py-2.5 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-gray-dark dark:text-white" />
+                  </div>
+                </div>
+
+                {/* Note */}
+                <div>
+                  <SectionLabel>หมายเหตุ</SectionLabel>
+                  <textarea rows={2} value={createNote} onChange={(e) => setCreateNote(e.target.value)} placeholder="หมายเหตุ เช่น สาเหตุที่สร้าง order นี้..." className="w-full resize-none rounded-xl border border-stroke bg-white px-4 py-2.5 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-gray-dark dark:text-white" />
+                </div>
+
+                {createError && <p className="text-sm text-red-500">{createError}</p>}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-3 border-t border-stroke px-6 py-4 dark:border-dark-3">
+              <button type="button" onClick={() => { if (!creating) setShowCreateOrder(false); }} className="rounded-xl border border-stroke px-5 py-2.5 text-sm font-semibold text-dark-5 hover:bg-[#f4faf6] dark:border-dark-3 dark:hover:bg-dark-2">ยกเลิก</button>
+              <button
+                type="button"
+                disabled={creating || !createMemberId || createItems.length === 0 || !createShippingName || !createShippingPhone || !createShippingAddr}
+                onClick={() => void submitAdminCreate()}
+                className="rounded-xl bg-[#45745a] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#355846] disabled:opacity-50"
+              >
+                {creating ? "กำลังสร้าง..." : "สร้างคำสั่งซื้อ"}
+              </button>
+            </div>
           </div>
         </div>
       )}
