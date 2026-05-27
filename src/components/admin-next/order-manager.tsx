@@ -242,7 +242,12 @@ export function OrderManager() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [secondsAgo, setSecondsAgo] = useState(0);
+  const [staleWarning, setStaleWarning] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const detailRef = useRef<OrderDetail | null>(null);
+
+  // Keep detailRef in sync with detail state (for use inside polling callback)
+  useEffect(() => { detailRef.current = detail; }, [detail]);
 
   const loadOrders = useCallback(async (silent = false) => {
     if (!silent) setRefreshing(true);
@@ -253,6 +258,14 @@ export function OrderManager() {
         setOrders(data);
         setLastUpdated(new Date());
         setSecondsAgo(0);
+        // Check if currently-open modal order was changed by someone else
+        const open = detailRef.current;
+        if (open) {
+          const fresh = data.find((o) => o.id === open.id);
+          if (fresh && fresh.status !== open.status) {
+            setStaleWarning(true);
+          }
+        }
       }
     } catch { /* ignore */ } finally {
       if (!silent) setRefreshing(false);
@@ -287,6 +300,7 @@ export function OrderManager() {
   async function openDetail(id: string) {
     setDetailLoading(true);
     setSaveError("");
+    setStaleWarning(false);
     try {
       const r = await fetch(`/api/orders/${id}`);
       const d = (await r.json().catch(() => null)) as unknown;
@@ -311,6 +325,7 @@ export function OrderManager() {
     if (saving) return;
     setDetail(null);
     setSaveError("");
+    setStaleWarning(false);
   }
 
   async function saveStatus() {
@@ -705,6 +720,27 @@ export function OrderManager() {
                     className="ml-4 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-dark-5 transition-colors hover:bg-white hover:text-dark dark:hover:bg-dark-3"
                   >✕</button>
                 </div>
+
+                {/* Stale warning banner */}
+                {staleWarning && (
+                  <div className="flex items-center justify-between gap-3 bg-amber-50 px-5 py-3 dark:bg-amber-900/20">
+                    <div className="flex items-center gap-2">
+                      <svg className="h-4 w-4 flex-shrink-0 text-amber-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                      </svg>
+                      <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                        สถานะถูกอัปเดตโดยผู้ดูแลอื่น — ข้อมูลที่แสดงอาจไม่ใช่ล่าสุด
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => void openDetail(detail.id)}
+                      className="flex-shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-600"
+                    >
+                      โหลดใหม่
+                    </button>
+                  </div>
+                )}
 
                 {/* Scrollable body */}
                 <div className="max-h-[65vh] overflow-y-auto">
