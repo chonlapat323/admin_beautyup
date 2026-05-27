@@ -243,7 +243,6 @@ export function OrderManager() {
   const [refreshing, setRefreshing] = useState(false);
   const [secondsAgo, setSecondsAgo] = useState(0);
   const [staleWarning, setStaleWarning] = useState(false);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const detailRef = useRef<OrderDetail | null>(null);
 
   // Keep detailRef in sync with detail state (for use inside polling callback)
@@ -273,11 +272,39 @@ export function OrderManager() {
     }
   }, []);
 
-  // Initial load + polling every 30s
+  // Initial load
   useEffect(() => {
     void loadOrders();
-    pollingRef.current = setInterval(() => { void loadOrders(true); }, 30_000);
-    return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
+  }, [loadOrders]);
+
+  // SSE real-time updates
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function connectSSE() {
+      try {
+        const r = await fetch("/api/orders/events", { signal: controller.signal });
+        if (!r.ok || !r.body) return;
+        const reader = r.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const text = decoder.decode(value, { stream: true });
+          if (text.includes("data:")) {
+            void loadOrders(true);
+          }
+        }
+      } catch {
+        // Reconnect on disconnect (if not aborted)
+        if (!controller.signal.aborted) {
+          setTimeout(() => void connectSSE(), 5_000);
+        }
+      }
+    }
+
+    void connectSSE();
+    return () => controller.abort();
   }, [loadOrders]);
 
   // Refresh when tab becomes visible again
