@@ -12,7 +12,7 @@ type OrderListItem = {
   totalAmount: number | string;
   createdAt: string;
   paymentMethod?: string | null;
-  member?: { fullName: string; email: string | null; phone: string | null } | null;
+  member?: { fullName: string; email: string | null; phone: string | null; storeName?: string | null } | null;
 };
 
 type StatusLog = {
@@ -298,12 +298,21 @@ export function OrderManager() {
     if (!detail) return;
     setSavingTracking(true);
     try {
-      await fetch(`/api/orders/${detail.id}/tracking`, {
+      const r = await fetch(`/api/orders/${detail.id}/tracking`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ trackingNumber: trackingInput }),
       });
-      setDetail((prev) => prev ? { ...prev, trackingNumber: trackingInput } : prev);
+      if (!r.ok) return;
+      const freshResponse = await fetch(`/api/orders/${detail.id}`);
+      const fresh = (await freshResponse.json().catch(() => null)) as unknown;
+      if (freshResponse.ok && isOrderDetail(fresh)) {
+        setDetail(fresh);
+        setSelectedStatus(fresh.status as OrderStatus);
+        setOrders((prev) => prev.map((o) => o.id === detail.id ? { ...o, status: fresh.status } : o));
+      } else {
+        setDetail((prev) => prev ? { ...prev, trackingNumber: trackingInput } : prev);
+      }
     } finally {
       setSavingTracking(false);
     }
@@ -338,7 +347,8 @@ export function OrderManager() {
       o.orderNumber.toLowerCase().includes(q) ||
       (o.member?.fullName ?? "").toLowerCase().includes(q) ||
       (o.member?.email ?? "").toLowerCase().includes(q) ||
-      (o.member?.phone ?? "").toLowerCase().includes(q);
+      (o.member?.phone ?? "").toLowerCase().includes(q) ||
+      (o.member?.storeName ?? "").toLowerCase().includes(q);
     const matchStatus = !statusFilter || o.status === statusFilter;
     let matchDate = true;
     if (dateFrom || dateTo) {
@@ -393,7 +403,7 @@ export function OrderManager() {
                 <input
                   className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] py-2.5 pl-9 pr-4 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                  placeholder="ค้นหาเลขออเดอร์ / สมาชิก..."
+                  placeholder="ค้นหาเลขออเดอร์ / ชื่อ / เบอร์โทร / ชื่อร้าน..."
                   value={search}
                 />
               </div>
@@ -432,6 +442,7 @@ export function OrderManager() {
               <tr>
                 <th className="px-4 py-3 font-semibold">คำสั่งซื้อ</th>
                 <th className="px-4 py-3 font-semibold">สมาชิก</th>
+                <th className="hidden px-4 py-3 font-semibold lg:table-cell">ชื่อร้าน</th>
                 <th className="px-4 py-3 font-semibold">ยอดรวม</th>
                 <th className="hidden px-4 py-3 font-semibold md:table-cell">ช่องทาง</th>
                 <th className="px-4 py-3 font-semibold">วันที่</th>
@@ -444,6 +455,7 @@ export function OrderManager() {
                   <tr key={i} className="border-t border-stroke dark:border-dark-3">
                     <td className="px-4 py-3"><div className="h-4 w-24 animate-pulse rounded bg-dark-5/20" /></td>
                     <td className="px-4 py-3"><div className="h-4 w-32 animate-pulse rounded bg-dark-5/20" /></td>
+                    <td className="hidden px-4 py-3 lg:table-cell"><div className="h-4 w-28 animate-pulse rounded bg-dark-5/20" /></td>
                     <td className="px-4 py-3"><div className="h-4 w-20 animate-pulse rounded bg-dark-5/20" /></td>
                     <td className="hidden px-4 py-3 md:table-cell"><div className="h-6 w-20 animate-pulse rounded-full bg-dark-5/20" /></td>
                     <td className="px-4 py-3"><div className="h-4 w-28 animate-pulse rounded bg-dark-5/20" /></td>
@@ -452,7 +464,7 @@ export function OrderManager() {
                 ))
               ) : pagedOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-16 text-center">
+                  <td colSpan={7} className="px-4 py-16 text-center">
                     <div className="flex flex-col items-center">
                       <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f6f2] dark:bg-dark-2">
                         <svg className="h-7 w-7 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" x2="21" y1="6" y2="6" /><path strokeLinecap="round" strokeLinejoin="round" d="M16 10a4 4 0 0 1-8 0" /></svg>
@@ -471,6 +483,7 @@ export function OrderManager() {
                   >
                     <td className="px-4 py-3 font-semibold text-dark dark:text-white">{order.orderNumber}</td>
                     <td className="px-4 py-3">{order.member?.fullName ?? order.member?.email ?? "-"}</td>
+                    <td className="hidden px-4 py-3 text-dark dark:text-white lg:table-cell">{order.member?.storeName ?? "-"}</td>
                     <td className="px-4 py-3">{fmt(order.totalAmount)}</td>
                     <td className="hidden px-4 py-3 md:table-cell"><PaymentBadge method={order.paymentMethod} /></td>
                     <td className="px-4 py-3">{order.createdAt ? fmtDate(order.createdAt) : "-"}</td>

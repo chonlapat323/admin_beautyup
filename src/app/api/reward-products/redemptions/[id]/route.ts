@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { backendFetch, requireSession } from "@/lib/backend-fetch";
 
 export async function GET(
