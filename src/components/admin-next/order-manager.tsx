@@ -368,22 +368,24 @@ export function OrderManager() {
     if (!detail) return;
     setSaving(true);
     setSaveError("");
+    // Mark before API call — socket event may arrive before await resolves
+    const orderId = detail.id;
+    recentlyChangedRef.current.add(orderId);
     try {
-      const r = await fetch(`/api/orders/${detail.id}/status`, {
+      const r = await fetch(`/api/orders/${orderId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: selectedStatus }),
       });
       if (!r.ok) {
+        recentlyChangedRef.current.delete(orderId);
         const e = (await r.json().catch(() => null)) as { message?: string } | null;
         setSaveError(e?.message ?? "ไม่สามารถบันทึกได้");
         return;
       }
-      // Mark as own change so socket event doesn't trigger stale warning
-      recentlyChangedRef.current.add(detail.id);
-      setTimeout(() => recentlyChangedRef.current.delete(detail.id), 10_000);
-      await loadDetail(detail.id);
-      setOrders((prev) => prev.map((o) => (o.id === detail.id ? { ...o, status: selectedStatus } : o)));
+      setTimeout(() => recentlyChangedRef.current.delete(orderId), 10_000);
+      await loadDetail(orderId);
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: selectedStatus } : o)));
     } finally {
       setSaving(false);
     }
@@ -392,19 +394,22 @@ export function OrderManager() {
   async function saveTracking() {
     if (!detail) return;
     setSavingTracking(true);
+    // Mark before API call — socket event may arrive before await resolves
+    const orderId = detail.id;
+    recentlyChangedRef.current.add(orderId);
     try {
-      const r = await fetch(`/api/orders/${detail.id}/tracking`, {
+      const r = await fetch(`/api/orders/${orderId}/tracking`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ trackingNumber: trackingInput }),
       });
-      if (!r.ok) return;
-      // Mark as own change so socket event doesn't trigger stale warning
-      recentlyChangedRef.current.add(detail.id);
-      setTimeout(() => recentlyChangedRef.current.delete(detail.id), 10_000);
-      await loadDetail(detail.id);
-      // Refresh list status (SHIPPED)
-      setOrders((prev) => prev.map((o) => o.id === detail.id ? { ...o, status: "SHIPPED" } : o));
+      if (!r.ok) {
+        recentlyChangedRef.current.delete(orderId);
+        return;
+      }
+      setTimeout(() => recentlyChangedRef.current.delete(orderId), 10_000);
+      await loadDetail(orderId);
+      setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: "SHIPPED" } : o));
     } finally {
       setSavingTracking(false);
     }
