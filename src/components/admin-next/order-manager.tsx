@@ -847,14 +847,11 @@ export function OrderManager() {
 
                     {/* Tracking number */}
                     {(() => {
-                      const canEnterTracking = detail.status === "PROCESSING" && !detail.trackingNumber;
+                      const canEnterTracking = detail.status === "PROCESSING";
                       return (
                         <div className="rounded-xl border border-stroke bg-[#f8fbf9] px-5 py-4 dark:border-dark-3 dark:bg-dark-2">
                           <SectionLabel>เลขพัสดุ / Tracking</SectionLabel>
-                          {!canEnterTracking && detail.trackingNumber && (
-                            <p className="mb-2 text-xs text-dark-5">บันทึก Tracking แล้ว — ไม่สามารถแก้ไขได้</p>
-                          )}
-                          {!canEnterTracking && !detail.trackingNumber && (
+                          {!canEnterTracking && (
                             <p className="mb-2 text-xs text-dark-5">กรอก Tracking ได้เฉพาะเมื่อสถานะ "รอจัดส่ง"</p>
                           )}
                           <div className="flex gap-3">
@@ -868,7 +865,7 @@ export function OrderManager() {
                             />
                             {canEnterTracking && (
                               <button
-                                disabled={savingTracking || !trackingInput.trim()}
+                                disabled={savingTracking || !trackingInput.trim() || trackingInput === (detail.trackingNumber ?? "")}
                                 onClick={() => void saveTracking()}
                                 className="flex-shrink-0 rounded-xl bg-[#45745a] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#355846] disabled:opacity-70"
                               >
