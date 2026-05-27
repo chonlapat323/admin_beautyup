@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ContentCard, StatusPill } from "@/components/admin-next/page-elements";
 
 type OrderStatus = "PENDING" | "PAID" | "PROCESSING" | "SHIPPED" | "CANCELLED";
@@ -239,21 +239,49 @@ export function OrderManager() {
   const [datePreset, setDatePreset] = useState<"today" | "week" | "month" | "custom" | "">("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [secondsAgo, setSecondsAgo] = useState(0);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    fetch("/api/orders")
-      .then(async (r) => {
-        const data = (await r.json().catch(() => null)) as unknown;
-        if (!r.ok || !isOrderList(data)) {
-          setOrders([]);
-          return;
-        }
+  const loadOrders = useCallback(async (silent = false) => {
+    if (!silent) setRefreshing(true);
+    try {
+      const r = await fetch("/api/orders");
+      const data = (await r.json().catch(() => null)) as unknown;
+      if (r.ok && isOrderList(data)) {
         setOrders(data);
-      })
-      .catch(() => {
-        setOrders([]);
-      })
-      .finally(() => setLoading(false));
+        setLastUpdated(new Date());
+        setSecondsAgo(0);
+      }
+    } catch { /* ignore */ } finally {
+      if (!silent) setRefreshing(false);
+      setLoading(false);
+    }
+  }, []);
+
+  // Initial load + polling every 30s
+  useEffect(() => {
+    void loadOrders();
+    pollingRef.current = setInterval(() => { void loadOrders(true); }, 30_000);
+    return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
+  }, [loadOrders]);
+
+  // Refresh when tab becomes visible again
+  useEffect(() => {
+    function onVisibility() {
+      if (document.visibilityState === "visible") void loadOrders(true);
+    }
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [loadOrders]);
+
+  // Tick "X วินาทีที่แล้ว" every second
+  useEffect(() => {
+    const t = setInterval(() => {
+      setSecondsAgo((s) => s + 1);
+    }, 1_000);
+    return () => clearInterval(t);
   }, []);
 
   async function openDetail(id: string) {
@@ -399,9 +427,7 @@ export function OrderManager() {
         return;
       }
       // Refresh order list
-      const listR = await fetch("/api/orders");
-      const listData = await listR.json().catch(() => null) as unknown;
-      if (isOrderList(listData)) setOrders(listData);
+      await loadOrders(true);
       // Reset and close
       setShowCreateOrder(false);
       setCreateMemberId(""); setCreateMemberName(""); setCreateMemberSearch(""); setCreateMemberResults([]);
@@ -527,6 +553,22 @@ export function OrderManager() {
                   <option key={n} value={n}>{n} รายการ</option>
                 ))}
               </select>
+              <button
+                type="button"
+                onClick={() => void loadOrders()}
+                disabled={refreshing}
+                title="รีเฟรชรายการ"
+                className="flex items-center gap-1.5 rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-sm text-[#45745a] transition-colors hover:bg-[#edf7f1] disabled:opacity-50 dark:border-dark-3 dark:bg-dark-2"
+              >
+                <svg className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {lastUpdated ? (
+                  <span className="hidden sm:inline text-xs text-dark-5">
+                    {secondsAgo < 5 ? "เพิ่งอัปเดต" : `${secondsAgo} วิที่แล้ว`}
+                  </span>
+                ) : null}
+              </button>
               <button
                 type="button"
                 onClick={() => setShowCreateOrder(true)}
