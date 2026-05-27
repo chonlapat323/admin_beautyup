@@ -295,21 +295,30 @@ export function OrderManager() {
 
   // Socket.io real-time updates
   useEffect(() => {
-    const socketUrl = process.env.NEXT_PUBLIC_ADMIN_SOCKET_URL;
-    if (!socketUrl) return;
+    let cleanup = () => {};
 
-    const socket = io(socketUrl, { transports: ["websocket"] });
+    async function connect() {
+      try {
+        const res = await fetch("/api/config");
+        const { socketUrl } = await res.json() as { socketUrl: string };
+        if (!socketUrl) return;
 
-    socket.on("order:updated", (data: { orderId: string; event: string }) => {
-      void loadOrders(true);
-      const open = detailRef.current;
-      if (open && open.id === data.orderId) {
-        // Show stale warning — let admin decide when to reload (avoids losing unsaved note/status)
-        setStaleWarning(true);
-      }
-    });
+        const socket = io(socketUrl, { transports: ["polling", "websocket"] });
 
-    return () => { socket.disconnect(); };
+        socket.on("order:updated", (data: { orderId: string; event: string }) => {
+          void loadOrders(true);
+          const open = detailRef.current;
+          if (open && open.id === data.orderId) {
+            setStaleWarning(true);
+          }
+        });
+
+        cleanup = () => { socket.disconnect(); };
+      } catch { /* ignore */ }
+    }
+
+    void connect();
+    return () => { cleanup(); };
   }, [loadOrders]);
 
   // Refresh when tab becomes visible again
