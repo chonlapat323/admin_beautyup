@@ -1,9 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { io } from "socket.io-client";
 import { ContentCard, StatusPill } from "@/components/admin-next/page-elements";
 
+// Full status type (used for display)
 type OrderStatus = "PENDING" | "PAID" | "PROCESSING" | "SHIPPED" | "CANCELLED";
+// Statuses that admin can set manually (PAID=payment gateway, SHIPPED=tracking number)
+type ManualStatus = "PENDING" | "PROCESSING" | "CANCELLED";
+const MANUAL_STATUSES: ManualStatus[] = ["PENDING", "PROCESSING", "CANCELLED"];
 
 type OrderListItem = {
   id: string;
@@ -54,6 +59,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const ALL_STATUSES: OrderStatus[] = ["PENDING", "PAID", "PROCESSING", "SHIPPED", "CANCELLED"];
+
 
 function statusTone(s: string): "success" | "warning" | "default" {
   if (s === "PAID") return "success";
@@ -210,7 +216,7 @@ export function OrderManager() {
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<OrderDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<OrderStatus>("PAID");
+  const [selectedStatus, setSelectedStatus] = useState<ManualStatus>("PROCESSING");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [trackingInput, setTrackingInput] = useState("");
@@ -257,14 +263,6 @@ export function OrderManager() {
         setOrders(data);
         setLastUpdated(new Date());
         setSecondsAgo(0);
-        // Check if currently-open modal order was changed by someone else
-        const open = detailRef.current;
-        if (open) {
-          const fresh = data.find((o) => o.id === open.id);
-          if (fresh && fresh.status !== open.status) {
-            setStaleWarning(true);
-          }
-        }
       }
     } catch { /* ignore */ } finally {
       if (!silent) setRefreshing(false);
@@ -272,39 +270,46 @@ export function OrderManager() {
     }
   }, []);
 
+  // Load (or silently reload) a single order detail without affecting stale warning
+  const loadDetail = useCallback(async (id: string) => {
+    try {
+      const r = await fetch(`/api/orders/${id}`);
+      const d = (await r.json().catch(() => null)) as unknown;
+      if (r.ok && isOrderDetail(d)) {
+        setDetail(d);
+        const initStatus: ManualStatus = MANUAL_STATUSES.includes(d.status as ManualStatus)
+          ? (d.status as ManualStatus)
+          : "PENDING";
+        setSelectedStatus(initStatus);
+        setTrackingInput(d.trackingNumber ?? "");
+        setNoteInput(d.note ?? "");
+        setStaleWarning(false);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   // Initial load
   useEffect(() => {
     void loadOrders();
   }, [loadOrders]);
 
-  // SSE real-time updates
+  // Socket.io real-time updates
   useEffect(() => {
-    const controller = new AbortController();
+    const socketUrl = process.env.NEXT_PUBLIC_ADMIN_SOCKET_URL;
+    if (!socketUrl) return;
 
-    async function connectSSE() {
-      try {
-        const r = await fetch("/api/orders/events", { signal: controller.signal });
-        if (!r.ok || !r.body) return;
-        const reader = r.body.getReader();
-        const decoder = new TextDecoder();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const text = decoder.decode(value, { stream: true });
-          if (text.includes("data:")) {
-            void loadOrders(true);
-          }
-        }
-      } catch {
-        // Reconnect on disconnect (if not aborted)
-        if (!controller.signal.aborted) {
-          setTimeout(() => void connectSSE(), 5_000);
-        }
+    const socket = io(socketUrl, { transports: ["websocket"] });
+
+    socket.on("order:updated", (data: { orderId: string; event: string }) => {
+      void loadOrders(true);
+      const open = detailRef.current;
+      if (open && open.id === data.orderId) {
+        // Show stale warning — let admin decide when to reload (avoids losing unsaved note/status)
+        setStaleWarning(true);
       }
-    }
+    });
 
-    void connectSSE();
-    return () => controller.abort();
+    return () => { socket.disconnect(); };
   }, [loadOrders]);
 
   // Refresh when tab becomes visible again
@@ -329,17 +334,7 @@ export function OrderManager() {
     setSaveError("");
     setStaleWarning(false);
     try {
-      const r = await fetch(`/api/orders/${id}`);
-      const d = (await r.json().catch(() => null)) as unknown;
-      if (!r.ok || !isOrderDetail(d)) {
-        setDetail(null);
-        setSaveError("ไม่สามารถโหลดรายละเอียดคำสั่งซื้อได้");
-        return;
-      }
-      setDetail(d);
-      setSelectedStatus((d.status as OrderStatus) ?? "PAID");
-      setTrackingInput(d.trackingNumber ?? "");
-      setNoteInput(d.note ?? "");
+      await loadDetail(id);
     } catch {
       setDetail(null);
       setSaveError("ไม่สามารถโหลดรายละเอียดคำสั่งซื้อได้");
@@ -370,13 +365,7 @@ export function OrderManager() {
         setSaveError(e?.message ?? "ไม่สามารถบันทึกได้");
         return;
       }
-      const freshResponse = await fetch(`/api/orders/${detail.id}`);
-      const fresh = (await freshResponse.json().catch(() => null)) as unknown;
-      if (!freshResponse.ok || !isOrderDetail(fresh)) {
-        setSaveError("บันทึกสำเร็จ แต่ไม่สามารถโหลดข้อมูลล่าสุดได้");
-        return;
-      }
-      setDetail(fresh);
+      await loadDetail(detail.id);
       setOrders((prev) => prev.map((o) => (o.id === detail.id ? { ...o, status: selectedStatus } : o)));
     } finally {
       setSaving(false);
@@ -393,15 +382,9 @@ export function OrderManager() {
         body: JSON.stringify({ trackingNumber: trackingInput }),
       });
       if (!r.ok) return;
-      const freshResponse = await fetch(`/api/orders/${detail.id}`);
-      const fresh = (await freshResponse.json().catch(() => null)) as unknown;
-      if (freshResponse.ok && isOrderDetail(fresh)) {
-        setDetail(fresh);
-        setSelectedStatus(fresh.status as OrderStatus);
-        setOrders((prev) => prev.map((o) => o.id === detail.id ? { ...o, status: fresh.status } : o));
-      } else {
-        setDetail((prev) => prev ? { ...prev, trackingNumber: trackingInput } : prev);
-      }
+      await loadDetail(detail.id);
+      // Refresh list status (SHIPPED)
+      setOrders((prev) => prev.map((o) => o.id === detail.id ? { ...o, status: "SHIPPED" } : o));
     } finally {
       setSavingTracking(false);
     }
@@ -850,25 +833,39 @@ export function OrderManager() {
                     </div>
 
                     {/* Tracking number */}
-                    <div className="rounded-xl border border-stroke bg-[#f8fbf9] px-5 py-4 dark:border-dark-3 dark:bg-dark-2">
-                      <SectionLabel>เลขพัสดุ / Tracking</SectionLabel>
-                      <div className="flex gap-3">
-                        <input
-                          type="text"
-                          value={trackingInput}
-                          onChange={(e) => setTrackingInput(e.target.value)}
-                          placeholder="เช่น TH123456789"
-                          className="flex-1 rounded-xl border border-stroke bg-white px-4 py-2.5 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-gray-dark dark:text-white"
-                        />
-                        <button
-                          disabled={savingTracking || trackingInput === (detail.trackingNumber ?? "")}
-                          onClick={() => void saveTracking()}
-                          className="flex-shrink-0 rounded-xl bg-[#45745a] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#355846] disabled:opacity-70"
-                        >
-                          {savingTracking ? "กำลังบันทึก..." : "บันทึก"}
-                        </button>
-                      </div>
-                    </div>
+                    {(() => {
+                      const canEnterTracking = detail.status === "PROCESSING" && !detail.trackingNumber;
+                      return (
+                        <div className="rounded-xl border border-stroke bg-[#f8fbf9] px-5 py-4 dark:border-dark-3 dark:bg-dark-2">
+                          <SectionLabel>เลขพัสดุ / Tracking</SectionLabel>
+                          {!canEnterTracking && detail.trackingNumber && (
+                            <p className="mb-2 text-xs text-dark-5">บันทึก Tracking แล้ว — ไม่สามารถแก้ไขได้</p>
+                          )}
+                          {!canEnterTracking && !detail.trackingNumber && (
+                            <p className="mb-2 text-xs text-dark-5">กรอก Tracking ได้เฉพาะเมื่อสถานะ "รอจัดส่ง"</p>
+                          )}
+                          <div className="flex gap-3">
+                            <input
+                              type="text"
+                              value={trackingInput}
+                              onChange={(e) => canEnterTracking && setTrackingInput(e.target.value)}
+                              readOnly={!canEnterTracking}
+                              placeholder="เช่น TH123456789"
+                              className={`flex-1 rounded-xl border border-stroke bg-white px-4 py-2.5 text-sm text-dark focus:outline-none dark:border-dark-3 dark:bg-gray-dark dark:text-white ${canEnterTracking ? "focus:border-[#45745a]" : "cursor-not-allowed opacity-60"}`}
+                            />
+                            {canEnterTracking && (
+                              <button
+                                disabled={savingTracking || !trackingInput.trim()}
+                                onClick={() => void saveTracking()}
+                                className="flex-shrink-0 rounded-xl bg-[#45745a] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#355846] disabled:opacity-70"
+                              >
+                                {savingTracking ? "กำลังบันทึก..." : "บันทึก"}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* Status change */}
                     <div className="rounded-xl border border-stroke bg-[#f8fbf9] px-5 py-4 dark:border-dark-3 dark:bg-dark-2">
@@ -876,10 +873,10 @@ export function OrderManager() {
                       <div className="flex gap-3">
                         <select
                           value={selectedStatus}
-                          onChange={(e) => setSelectedStatus(e.target.value as OrderStatus)}
+                          onChange={(e) => setSelectedStatus(e.target.value as ManualStatus)}
                           className="flex-1 rounded-xl border border-stroke bg-white px-4 py-2.5 text-sm text-dark shadow-sm focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-gray-dark dark:text-white"
                         >
-                          {ALL_STATUSES.map((s) => (
+                          {MANUAL_STATUSES.map((s) => (
                             <option key={s} value={s}>{STATUS_LABELS[s]}</option>
                           ))}
                         </select>
