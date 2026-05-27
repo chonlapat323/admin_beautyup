@@ -762,6 +762,10 @@ export function OrderManager() {
                 )}
 
                 {/* Scrollable body */}
+                <div className="relative">
+                  {staleWarning && (
+                    <div className="absolute inset-0 z-10 cursor-not-allowed bg-white/70 backdrop-blur-[2px] dark:bg-gray-dark/70" />
+                  )}
                 <div className="max-h-[65vh] overflow-y-auto">
                   <div className="space-y-6 p-6">
 
@@ -950,6 +954,7 @@ export function OrderManager() {
                     </div>
 
                   </div>
+                </div>
                 </div>
               </>
             )}
