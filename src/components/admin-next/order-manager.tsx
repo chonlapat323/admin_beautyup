@@ -250,6 +250,8 @@ export function OrderManager() {
   const [secondsAgo, setSecondsAgo] = useState(0);
   const [staleWarning, setStaleWarning] = useState(false);
   const detailRef = useRef<OrderDetail | null>(null);
+  // Track orders this admin just modified — suppress stale warning for own changes
+  const recentlyChangedRef = useRef<Set<string>>(new Set());
 
   // Keep detailRef in sync with detail state (for use inside polling callback)
   useEffect(() => { detailRef.current = detail; }, [detail]);
@@ -309,7 +311,10 @@ export function OrderManager() {
           void loadOrders(true);
           const open = detailRef.current;
           if (open && open.id === data.orderId) {
-            setStaleWarning(true);
+            // Skip stale warning if this admin was the one who made the change
+            if (!recentlyChangedRef.current.has(data.orderId)) {
+              setStaleWarning(true);
+            }
           }
         });
 
@@ -374,6 +379,9 @@ export function OrderManager() {
         setSaveError(e?.message ?? "ไม่สามารถบันทึกได้");
         return;
       }
+      // Mark as own change so socket event doesn't trigger stale warning
+      recentlyChangedRef.current.add(detail.id);
+      setTimeout(() => recentlyChangedRef.current.delete(detail.id), 10_000);
       await loadDetail(detail.id);
       setOrders((prev) => prev.map((o) => (o.id === detail.id ? { ...o, status: selectedStatus } : o)));
     } finally {
@@ -391,6 +399,9 @@ export function OrderManager() {
         body: JSON.stringify({ trackingNumber: trackingInput }),
       });
       if (!r.ok) return;
+      // Mark as own change so socket event doesn't trigger stale warning
+      recentlyChangedRef.current.add(detail.id);
+      setTimeout(() => recentlyChangedRef.current.delete(detail.id), 10_000);
       await loadDetail(detail.id);
       // Refresh list status (SHIPPED)
       setOrders((prev) => prev.map((o) => o.id === detail.id ? { ...o, status: "SHIPPED" } : o));
