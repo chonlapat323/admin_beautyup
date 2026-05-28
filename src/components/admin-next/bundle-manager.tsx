@@ -28,6 +28,88 @@ type FormItem = { productId: string; quantity: number };
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
+function ProductSearchPicker({
+  value,
+  products,
+  onChange,
+}: {
+  value: string;
+  products: ProductOption[];
+  onChange: (id: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const selected = products.find((p) => p.id === value);
+  const filtered = query.trim()
+    ? products.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query.toLowerCase()) ||
+          p.sku.toLowerCase().includes(query.toLowerCase()),
+      )
+    : products;
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  function select(id: string) {
+    onChange(id);
+    setQuery("");
+    setOpen(false);
+  }
+
+  return (
+    <div className="relative flex-1" ref={ref}>
+      {selected && !open ? (
+        <button
+          className="w-full rounded-[14px] border border-[#5f8f74] bg-[#f0f9f4] px-3 py-2 text-left text-sm text-dark outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+          onClick={() => { setQuery(""); setOpen(true); }}
+          type="button"
+        >
+          <span className="font-medium text-[#355846]">{selected.sku}</span>
+          {" — "}
+          {selected.name}
+        </button>
+      ) : (
+        <input
+          autoFocus={open}
+          className="w-full rounded-[14px] border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          placeholder="พิมพ์ชื่อหรือ SKU..."
+          value={query}
+        />
+      )}
+      {open && (
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-52 overflow-y-auto rounded-[14px] border border-[#d8e6dd] bg-white shadow-lg dark:border-dark-3 dark:bg-dark-2">
+          {filtered.length === 0 ? (
+            <p className="px-3 py-3 text-xs text-dark-5">ไม่พบสินค้า</p>
+          ) : (
+            filtered.map((p) => (
+              <button
+                className="w-full px-3 py-2 text-left text-sm text-dark hover:bg-[#f0f9f4] dark:text-white dark:hover:bg-dark-3"
+                key={p.id}
+                onClick={() => select(p.id)}
+                type="button"
+              >
+                <span className="font-medium text-[#355846]">{p.sku}</span>
+                {" — "}
+                {p.name}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BundleFormModal({
   editingId,
   formName,
@@ -174,16 +256,11 @@ function BundleFormModal({
                 <div className="space-y-2">
                   {formItems.map((item, idx) => (
                     <div key={idx} className="flex items-center gap-2">
-                      <select
-                        className="flex-1 rounded-[14px] border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                        onChange={(e) => updateItem(idx, { productId: e.target.value })}
+                      <ProductSearchPicker
                         value={item.productId}
-                      >
-                        <option value="">เลือกสินค้า</option>
-                        {products.map((p) => (
-                          <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>
-                        ))}
-                      </select>
+                        products={products}
+                        onChange={(id) => updateItem(idx, { productId: id })}
+                      />
                       <button
                         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#f1d0cf] text-[#b42318] hover:bg-[#fff5f4]"
                         onClick={() => removeItem(idx)}
