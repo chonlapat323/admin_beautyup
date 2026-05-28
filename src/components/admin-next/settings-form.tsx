@@ -9,7 +9,7 @@ type Settings = {
   shipping: { freeShippingThreshold: number; defaultShippingFee: number };
   points: { tiers: PointTier[] };
   payment: { gatewayFee: number };
-  social?: { youtubeUrl?: string; tiktokUrl?: string };
+  social?: { youtubeUrl?: string; tiktokUrl?: string; lineOaUrl?: string };
 };
 
 type FormState = {
@@ -19,6 +19,7 @@ type FormState = {
   pointTiers: PointTier[];
   youtubeUrl: string;
   tiktokUrl: string;
+  lineOaUrl: string;
 };
 
 function toForm(s: Settings): FormState {
@@ -29,6 +30,7 @@ function toForm(s: Settings): FormState {
     pointTiers: [...s.points.tiers].sort((a, b) => a.minSpend - b.minSpend),
     youtubeUrl: s.social?.youtubeUrl ?? "",
     tiktokUrl: s.social?.tiktokUrl ?? "",
+    lineOaUrl: s.social?.lineOaUrl ?? "",
   };
 }
 
@@ -182,6 +184,7 @@ export function SettingsForm({ initial }: { initial: Settings }) {
           pointTiers: form.pointTiers,
           youtubeUrl: form.youtubeUrl,
           tiktokUrl: form.tiktokUrl,
+          lineOaUrl: form.lineOaUrl,
         }),
       });
       if (!res.ok) throw new Error("บันทึกไม่สำเร็จ");
@@ -222,6 +225,12 @@ export function SettingsForm({ initial }: { initial: Settings }) {
               value={form.tiktokUrl}
               placeholder="https://tiktok.com/@beautyup"
               onChange={set("tiktokUrl")}
+            />
+            <UrlField
+              label="Line OA URL"
+              value={form.lineOaUrl}
+              placeholder="https://line.me/R/ti/p/@beautyup"
+              onChange={set("lineOaUrl")}
             />
           </div>
         </ContentCard>
