@@ -5,7 +5,10 @@ export async function GET(request: Request) {
   const { unauthorized } = await requireSession();
   if (unauthorized) return unauthorized;
   try {
-    const response = await backendFetch("/reports/stock");
+    const { searchParams } = new URL(request.url);
+    const brandId = searchParams.get("brandId");
+    const qs = brandId ? `?brandId=${encodeURIComponent(brandId)}` : "";
+    const response = await backendFetch(`/reports/stock${qs}`);
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
   } catch {

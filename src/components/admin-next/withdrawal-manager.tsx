@@ -17,6 +17,7 @@ type WithdrawalItem = {
   amount: string;
   status: "PENDING" | "APPROVED" | "REJECTED";
   note: string | null;
+  slipUrl: string | null;
   bankName: string | null;
   bankAccountNumber: string | null;
   bankAccountName: string | null;
@@ -145,6 +146,16 @@ function WithdrawalDetailModal({
               {item.note && (
                 <DetailRow label="หมายเหตุ" value={<span className="text-[#c84b44]">{item.note}</span>} />
               )}
+              {item.slipUrl && (
+                <DetailRow
+                  label="สลิปโอนเงิน"
+                  value={
+                    <a href={item.slipUrl} target="_blank" rel="noreferrer" className="text-[#45745a] underline text-sm">
+                      ดูสลิป
+                    </a>
+                  }
+                />
+              )}
             </div>
           </div>
 
@@ -208,6 +219,8 @@ export function WithdrawalManager() {
   const [actionId, setActionId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<WithdrawalItem | null>(null);
   const [confirmApproveItem, setConfirmApproveItem] = useState<WithdrawalItem | null>(null);
+  const [slipFile, setSlipFile] = useState<File | null>(null);
+  const [slipUploading, setSlipUploading] = useState(false);
   const [rejectNote, setRejectNote] = useState("");
   const [rejectTargetId, setRejectTargetId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -231,14 +244,31 @@ export function WithdrawalManager() {
   async function handleApprove(id: string) {
     setActionId(id);
     try {
-      const res = await fetch(`/api/withdrawals/${id}/approve`, { method: "PATCH" });
+      let slipUrl: string | undefined;
+      if (slipFile) {
+        setSlipUploading(true);
+        const fd = new FormData();
+        fd.append("file", slipFile);
+        const uploadRes = await fetch("/api/uploads/temp", { method: "POST", body: fd });
+        if (!uploadRes.ok) throw new Error("อัปโหลดสลิปไม่สำเร็จ");
+        const uploadData = await uploadRes.json() as { url: string };
+        slipUrl = uploadData.url;
+        setSlipUploading(false);
+      }
+      const res = await fetch(`/api/withdrawals/${id}/approve`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slipUrl }),
+      });
       if (!res.ok) throw new Error("ไม่สามารถอนุมัติได้");
       showToast("อนุมัติการถอน credit แล้ว", "success");
       setConfirmApproveItem(null);
+      setSlipFile(null);
       setSelectedItem(null);
       void load();
     } catch (err) {
       showToast(err instanceof Error ? err.message : "เกิดข้อผิดพลาด", "error");
+      setSlipUploading(false);
     } finally {
       setActionId(null);
     }
@@ -556,21 +586,42 @@ export function WithdrawalManager() {
                 )}
               </div>
             </div>
+            <div className="px-6 pb-2">
+              <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-dark-5">แนบสลิปโอนเงิน (ไม่บังคับ)</p>
+              {slipFile ? (
+                <div className="flex items-center gap-2 rounded-xl border border-[#b7ddc7] bg-[#f0faf4] px-3 py-2">
+                  <svg className="h-4 w-4 shrink-0 text-[#45745a]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                  <span className="flex-1 truncate text-sm text-dark dark:text-white">{slipFile.name}</span>
+                  <button onClick={() => setSlipFile(null)} className="text-dark-5 hover:text-[#c84b44]" type="button">✕</button>
+                </div>
+              ) : (
+                <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-[#b7ddc7] px-4 py-3 text-sm text-[#45745a] hover:bg-[#f0faf4]">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                  อัปโหลดสลิป
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => setSlipFile(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+              )}
+            </div>
             <div className="flex flex-wrap justify-end gap-3 border-t border-[#d4eddd] px-6 py-4 dark:border-dark-3">
               <button
                 className="rounded-full border border-[#d7e7dc] px-5 py-2.5 text-sm font-semibold text-[#355846] hover:bg-[#f4fbf6]"
-                onClick={() => setConfirmApproveItem(null)}
+                onClick={() => { setConfirmApproveItem(null); setSlipFile(null); }}
                 type="button"
               >
                 ยกเลิก
               </button>
               <button
                 className="rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#355846] disabled:opacity-70"
-                disabled={actionId === confirmApproveItem.id}
+                disabled={actionId === confirmApproveItem.id || slipUploading}
                 onClick={() => void handleApprove(confirmApproveItem.id)}
                 type="button"
               >
-                {actionId === confirmApproveItem.id ? "กำลังดำเนินการ..." : "ยืนยันอนุมัติ"}
+                {slipUploading ? "กำลังอัปโหลดสลิป..." : actionId === confirmApproveItem.id ? "กำลังดำเนินการ..." : "ยืนยันอนุมัติ"}
               </button>
             </div>
           </div>

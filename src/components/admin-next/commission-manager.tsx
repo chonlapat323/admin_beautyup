@@ -192,6 +192,14 @@ export function CommissionManager() {
   const [orderDetail, setOrderDetail] = useState<{ commission: CommissionItem; order: OrderDetail } | null>(null);
   const [isLoadingOrder, setIsLoadingOrder] = useState(false);
 
+  const today = new Date();
+  const defaultFrom = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-01`;
+  const defaultTo = today.toISOString().slice(0, 10);
+
+  const [from, setFrom] = useState(defaultFrom);
+  const [to, setTo] = useState(defaultTo);
+  const [search, setSearch] = useState("");
+
   // settings
   const [salonRate, setSalonRate] = useState<number>(10);
   const [regularRate, setRegularRate] = useState<number>(5);
@@ -230,6 +238,8 @@ export function CommissionManager() {
     try {
       const params = new URLSearchParams({ page: String(page), pageSize });
       if (statusFilter !== "all") params.set("status", statusFilter);
+      if (from) params.set("from", from);
+      if (to) params.set("to", to);
       const res = await fetch(`/api/commissions?${params}`);
       const data = await res.json();
       setItems(data.items ?? []);
@@ -237,7 +247,7 @@ export function CommissionManager() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, pageSize, statusFilter]);
+  }, [page, pageSize, statusFilter, from, to]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -303,6 +313,11 @@ export function CommissionManager() {
       setIsLoadingOrder(false);
     }
   }
+
+  const searchTrimmed = search.trim().toLowerCase();
+  const displayItems = searchTrimmed
+    ? items.filter((i) => i.earner.fullName.toLowerCase().includes(searchTrimmed))
+    : items;
 
   const pendingItems = items.filter((i) => i.status === "PENDING");
   const pendingTotal = pendingItems.reduce((s, i) => s + Number(i.amount), 0);
@@ -406,6 +421,34 @@ export function CommissionManager() {
             />
           </div>
 
+          <div className="flex w-full flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-dark-5 whitespace-nowrap">ตั้งแต่</label>
+              <input
+                type="date"
+                value={from}
+                onChange={(e) => { setPage(1); setFrom(e.target.value); }}
+                className="rounded-[20px] border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-sm text-dark focus:border-[#5f8f74] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-dark-5 whitespace-nowrap">ถึง</label>
+              <input
+                type="date"
+                value={to}
+                onChange={(e) => { setPage(1); setTo(e.target.value); }}
+                className="rounded-[20px] border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-sm text-dark focus:border-[#5f8f74] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+              />
+            </div>
+            <input
+              type="text"
+              placeholder="ค้นหาชื่อผู้รับ..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="rounded-[20px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-2.5 text-sm text-dark placeholder:text-dark-5 focus:border-[#5f8f74] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white dark:placeholder:text-dark-6"
+            />
+          </div>
+
           {selected.size > 0 && (
             <button
               onClick={() => void handlePay()}
@@ -452,7 +495,7 @@ export function CommissionManager() {
                     <td className="px-4 py-3"><div className="h-4 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" /></td>
                   </tr>
                 ))
-              ) : items.length === 0 ? (
+              ) : displayItems.length === 0 ? (
                 <tr>
                   <td className="px-4 py-16 text-center" colSpan={8}>
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f7f2] dark:bg-dark-2">
@@ -461,12 +504,12 @@ export function CommissionManager() {
                       </svg>
                     </div>
                     <p className="mt-4 text-sm font-medium text-dark dark:text-white">
-                      {statusFilter !== "all" ? "ไม่พบคอมมิชชันที่ตรงกับเงื่อนไข" : "ยังไม่มีข้อมูลคอมมิชชัน"}
+                      {searchTrimmed ? "ไม่พบผู้รับที่ตรงกับการค้นหา" : statusFilter !== "all" ? "ไม่พบคอมมิชชันที่ตรงกับเงื่อนไข" : "ยังไม่มีข้อมูลคอมมิชชัน"}
                     </p>
                   </td>
                 </tr>
               ) : (
-                items.map((item) => (
+                displayItems.map((item) => (
                   <tr
                     key={item.id}
                     className="border-t border-stroke text-sm text-dark-5 dark:border-dark-3 dark:text-dark-6"

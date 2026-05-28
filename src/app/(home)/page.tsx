@@ -77,6 +77,36 @@ const QUICK_LINKS = [
       </svg>
     ),
   },
+  {
+    label: "คำสั่งซื้อ",
+    href: "/orders",
+    desc: "จัดการออเดอร์ทั้งหมด",
+    icon: (
+      <svg className="h-4 w-4 text-[#5f8f74]" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
+    label: "การถอนเครดิต",
+    href: "/commissions/withdrawals",
+    desc: "อนุมัติและจัดการการถอน",
+    icon: (
+      <svg className="h-4 w-4 text-[#5f8f74]" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
+      </svg>
+    ),
+  },
+  {
+    label: "จัดการ Banner",
+    href: "/banners",
+    desc: "อัปโหลดและจัดการ banner",
+    icon: (
+      <svg className="h-4 w-4 text-[#5f8f74]" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+      </svg>
+    ),
+  },
 ];
 
 export default async function Home() {

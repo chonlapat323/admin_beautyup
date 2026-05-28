@@ -65,6 +65,12 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
+        title: "สูตรพิเศษ",
+        url: "/bundles",
+        icon: Icons.Table,
+        items: [],
+      },
+      {
         title: "สมาชิก",
         url: "/members",
         icon: Icons.User,
