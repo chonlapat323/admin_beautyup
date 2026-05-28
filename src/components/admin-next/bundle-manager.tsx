@@ -184,13 +184,6 @@ function BundleFormModal({
                           <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>
                         ))}
                       </select>
-                      <input
-                        className="w-20 rounded-[14px] border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                        min="1"
-                        onChange={(e) => updateItem(idx, { quantity: Math.max(1, parseInt(e.target.value) || 1) })}
-                        type="number"
-                        value={item.quantity}
-                      />
                       <button
                         className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#f1d0cf] text-[#b42318] hover:bg-[#fff5f4]"
                         onClick={() => removeItem(idx)}
