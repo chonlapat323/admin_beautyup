@@ -16,7 +16,6 @@ type Bundle = {
   id: string;
   name: string;
   description: string | null;
-  price: string;
   imageUrl: string | null;
   isActive: boolean;
   sortOrder: number;
@@ -33,7 +32,6 @@ function BundleFormModal({
   editingId,
   formName,
   formDesc,
-  formPrice,
   formActive,
   formItems,
   imageFile,
@@ -42,7 +40,6 @@ function BundleFormModal({
   products,
   onChangeName,
   onChangeDesc,
-  onChangePrice,
   onChangeActive,
   onChangeItems,
   onImageChange,
@@ -52,7 +49,6 @@ function BundleFormModal({
   editingId: string | null;
   formName: string;
   formDesc: string;
-  formPrice: string;
   formActive: boolean;
   formItems: FormItem[];
   imageFile: File | null;
@@ -61,7 +57,6 @@ function BundleFormModal({
   products: ProductOption[];
   onChangeName: (v: string) => void;
   onChangeDesc: (v: string) => void;
-  onChangePrice: (v: string) => void;
   onChangeActive: (v: boolean) => void;
   onChangeItems: (v: FormItem[]) => void;
   onImageChange: (file: File) => void;
@@ -123,21 +118,6 @@ function BundleFormModal({
                 placeholder="คำอธิบายสั้นๆ (ไม่บังคับ)"
                 rows={2}
                 value={formDesc}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-                ราคาชุด <span className="text-red-500">*</span>
-              </label>
-              <input
-                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                min="0"
-                onChange={(e) => onChangePrice(e.target.value)}
-                placeholder="เช่น 990"
-                step="0.01"
-                type="number"
-                value={formPrice}
               />
             </div>
 
@@ -256,7 +236,6 @@ export function BundleManager() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formName, setFormName] = useState("");
   const [formDesc, setFormDesc] = useState("");
-  const [formPrice, setFormPrice] = useState("");
   const [formActive, setFormActive] = useState(true);
   const [formItems, setFormItems] = useState<FormItem[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -301,7 +280,6 @@ export function BundleManager() {
     setEditingId(null);
     setFormName("");
     setFormDesc("");
-    setFormPrice("");
     setFormActive(true);
     setFormItems([]);
     setImageFile(null);
@@ -312,7 +290,6 @@ export function BundleManager() {
     setEditingId(bundle.id);
     setFormName(bundle.name);
     setFormDesc(bundle.description ?? "");
-    setFormPrice(parseFloat(bundle.price).toString());
     setFormActive(bundle.isActive);
     setFormItems(bundle.items.map((item) => ({ productId: item.productId, quantity: item.quantity })));
     setImagePreview(bundle.imageUrl ?? null);
@@ -331,16 +308,11 @@ export function BundleManager() {
       showToast("กรุณากรอกชื่อสูตรพิเศษ", "error");
       return;
     }
-    if (!formPrice || isNaN(parseFloat(formPrice))) {
-      showToast("กรุณากรอกราคาชุด", "error");
-      return;
-    }
     setIsSubmitting(true);
     try {
       const payload = {
         name: formName.trim(),
         description: formDesc.trim() || undefined,
-        price: parseFloat(formPrice),
         isActive: formActive,
         items: formItems.filter((item) => item.productId !== ""),
       };
@@ -483,7 +455,6 @@ export function BundleManager() {
                 <th className="hidden px-4 py-3 font-semibold w-8 sm:table-cell"></th>
                 <th className="px-4 py-3 font-semibold">รูป</th>
                 <th className="px-4 py-3 font-semibold">ชื่อ / คำอธิบาย</th>
-                <th className="px-4 py-3 font-semibold">ราคา</th>
                 <th className="hidden px-4 py-3 font-semibold md:table-cell">จำนวนสินค้า</th>
                 <th className="px-4 py-3 font-semibold">สถานะ</th>
                 <th className="px-4 py-3 font-semibold">จัดการ</th>
@@ -496,7 +467,6 @@ export function BundleManager() {
                     <td className="hidden px-4 py-4 sm:table-cell"><div className="h-4 w-4 animate-pulse rounded bg-dark-5/20" /></td>
                     <td className="px-3 py-2"><div className="h-12 w-20 animate-pulse rounded-lg bg-dark-5/20" /></td>
                     <td className="px-4 py-4"><div className="h-4 w-36 animate-pulse rounded bg-dark-5/20" /></td>
-                    <td className="px-4 py-4"><div className="h-4 w-20 animate-pulse rounded bg-dark-5/20" /></td>
                     <td className="hidden px-4 py-4 md:table-cell"><div className="h-4 w-16 animate-pulse rounded bg-dark-5/20" /></td>
                     <td className="px-4 py-4"><div className="h-6 w-11 animate-pulse rounded-full bg-dark-5/20" /></td>
                     <td className="px-4 py-4"><div className="h-7 w-20 animate-pulse rounded-full bg-dark-5/20" /></td>
@@ -504,7 +474,7 @@ export function BundleManager() {
                 ))
               ) : pagedBundles.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-16 text-center">
+                  <td colSpan={6} className="px-4 py-16 text-center">
                     <div className="flex flex-col items-center">
                       <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f6f2] dark:bg-dark-2">
                         <svg className="h-7 w-7 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><rect height="18" rx="3" width="18" x="3" y="3" /><path d="M3 9h18M9 21V9" /></svg>
@@ -539,9 +509,6 @@ export function BundleManager() {
                     {bundle.description ? (
                       <div className="text-xs text-dark-5 mt-0.5 line-clamp-1">{bundle.description}</div>
                     ) : null}
-                  </td>
-                  <td className="px-4 py-4 text-sm text-dark dark:text-white">
-                    {parseFloat(bundle.price).toLocaleString()} บาท
                   </td>
                   <td className="hidden px-4 py-4 text-sm text-dark-5 md:table-cell">
                     {bundle.items.length} รายการ
@@ -645,7 +612,6 @@ export function BundleManager() {
           editingId={editingId}
           formName={formName}
           formDesc={formDesc}
-          formPrice={formPrice}
           formActive={formActive}
           formItems={formItems}
           imageFile={imageFile}
@@ -654,7 +620,6 @@ export function BundleManager() {
           products={products}
           onChangeName={setFormName}
           onChangeDesc={setFormDesc}
-          onChangePrice={setFormPrice}
           onChangeActive={setFormActive}
           onChangeItems={setFormItems}
           onImageChange={handleImageChange}
