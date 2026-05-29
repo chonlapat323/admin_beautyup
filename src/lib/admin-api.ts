@@ -297,7 +297,9 @@ export async function loginAdmin(payload: LoginPayload) {
 
 export async function getCategories() {
   try {
-    const data = await fetchFromApi<{ items: ApiCategory[] }>("/categories?pageSize=200&status=all");
+    const response = await fetch("/api/categories?pageSize=200&status=all", { cache: "no-store" });
+    if (!response.ok) throw new Error("โหลดหมวดหมู่ไม่สำเร็จ");
+    const data = (await response.json()) as { items: ApiCategory[] };
 
     return data.items.map(
       (category): CategoryRecord => ({
