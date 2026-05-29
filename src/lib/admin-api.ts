@@ -1501,10 +1501,12 @@ export type ApiCollection = {
   slug: string;
   isActive: boolean;
   sortOrder: number;
-  brandId?: string | null;
-  brand?: { id: string; name: string } | null;
   categoryId?: string | null;
-  category?: { id: string; name: string } | null;
+  category?: {
+    id: string;
+    name: string;
+    brand?: { id: string; name: string } | null;
+  } | null;
 };
 
 export async function getCollections(): Promise<ApiCollection[]> {
@@ -1516,7 +1518,6 @@ export async function getCollections(): Promise<ApiCollection[]> {
 export async function createCollection(data: {
   name: string;
   sortOrder?: number;
-  brandId?: string | null;
   categoryId?: string | null;
 }): Promise<ApiCollection> {
   const response = await fetch("/api/collections", {
@@ -1533,7 +1534,7 @@ export async function createCollection(data: {
 
 export async function updateCollection(
   id: string,
-  data: Partial<Omit<ApiCollection, "id" | "slug">>,
+  data: { name?: string; isActive?: boolean; sortOrder?: number; categoryId?: string | null },
 ): Promise<ApiCollection> {
   const response = await fetch(`/api/collections/${id}`, {
     method: "PATCH",

@@ -20,7 +20,7 @@ type CollectionFormState = {
   name: string;
   isActive: boolean;
   sortOrder: string;
-  brandId: string;
+  filterBrandId: string; // UI-only, not saved to DB
   categoryId: string;
 };
 
@@ -28,7 +28,7 @@ const INITIAL_FORM: CollectionFormState = {
   name: "",
   isActive: true,
   sortOrder: "0",
-  brandId: "",
+  filterBrandId: "",
   categoryId: "",
 };
 
@@ -116,8 +116,8 @@ function CollectionFormModal({
   onClose: () => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
 }) {
-  const filteredCategories = form.brandId
-    ? categories.filter((c) => (c as CategoryRecord & { brandId?: string }).brandId === form.brandId)
+  const filteredCategories = form.filterBrandId
+    ? categories.filter((c) => c.brandId === form.filterBrandId)
     : categories;
 
   return (
@@ -144,16 +144,15 @@ function CollectionFormModal({
 
         {/* Body */}
         <form className="space-y-4 px-6 py-5" onSubmit={onSubmit}>
-          {/* แบรนด์ */}
+          {/* แบรนด์ — กรอง Category เท่านั้น ไม่ได้ save */}
           <div>
-            <label className={LABEL_CLS}>แบรนด์ <span className="text-red-500">*</span></label>
+            <label className={LABEL_CLS}>กรองหมวดหมู่ตามแบรนด์</label>
             <select
               className={INPUT_CLS}
-              onChange={(e) => onChange({ brandId: e.target.value, categoryId: "" })}
-              value={form.brandId}
-              required
+              onChange={(e) => onChange({ filterBrandId: e.target.value, categoryId: "" })}
+              value={form.filterBrandId}
             >
-              <option value="">เลือกแบรนด์</option>
+              <option value="">ทุกแบรนด์</option>
               {brands.map((b) => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
@@ -303,7 +302,7 @@ export function CollectionManager() {
       name: collection.name,
       isActive: collection.isActive,
       sortOrder: String(collection.sortOrder),
-      brandId: collection.brandId ?? "",
+      filterBrandId: collection.category?.brand?.id ?? "",
       categoryId: collection.categoryId ?? "",
     });
     setIsModalOpen(true);
@@ -323,20 +322,13 @@ export function CollectionManager() {
     }
     setIsSubmitting(true);
     try {
-      if (!form.brandId) {
-        showToast("กรุณาเลือกแบรนด์", "error");
-        setIsSubmitting(false);
-        return;
-      }
       const sortOrder = parseInt(form.sortOrder, 10);
-      const brandId = form.brandId || null;
       const categoryId = form.categoryId || null;
       if (editingId) {
         const updated = await updateCollection(editingId, {
           name: form.name.trim(),
           isActive: form.isActive,
           sortOrder: isNaN(sortOrder) ? 0 : sortOrder,
-          brandId,
           categoryId,
         });
         setCollections((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
@@ -345,7 +337,6 @@ export function CollectionManager() {
         const created = await createCollection({
           name: form.name.trim(),
           sortOrder: isNaN(sortOrder) ? 0 : sortOrder,
-          brandId,
           categoryId,
         });
         setCollections((prev) => [...prev, created]);
@@ -443,6 +434,7 @@ export function CollectionManager() {
             <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
                 <th className="px-4 py-3 font-semibold">ชื่อคอลเลกชัน</th>
+                <th className="px-4 py-3 font-semibold">แบรนด์</th>
                 <th className="px-4 py-3 font-semibold">หมวดหมู่</th>
                 <th className="px-4 py-3 font-semibold">Slug</th>
                 <th className="px-4 py-3 font-semibold">ลำดับ</th>
@@ -480,7 +472,7 @@ export function CollectionManager() {
 
               {!isLoading && filteredCollections.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-16 text-center">
+                  <td colSpan={7} className="px-4 py-16 text-center">
                     <div className="flex flex-col items-center">
                       <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f6f2]">
                         <svg className="h-7 w-7 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -515,6 +507,9 @@ export function CollectionManager() {
                   >
                     <td className="px-4 py-3 font-semibold text-dark dark:text-white">
                       {collection.name}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-dark-5 dark:text-dark-6">
+                      {collection.category?.brand?.name ?? "—"}
                     </td>
                     <td className="px-4 py-3 text-sm text-dark-5 dark:text-dark-6">
                       {collection.category?.name ?? "—"}
