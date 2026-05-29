@@ -297,9 +297,9 @@ export async function loginAdmin(payload: LoginPayload) {
 
 export async function getCategories() {
   try {
-    const data = await fetchFromApi<ApiCategory[]>("/categories");
+    const data = await fetchFromApi<{ items: ApiCategory[] }>("/categories?pageSize=200&status=all");
 
-    return data.map(
+    return data.items.map(
       (category): CategoryRecord => ({
         id: category.id,
         name: category.name,
