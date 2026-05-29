@@ -1499,6 +1499,8 @@ export type ApiCollection = {
   slug: string;
   isActive: boolean;
   sortOrder: number;
+  brandId?: string | null;
+  brand?: { id: string; name: string } | null;
   categoryId?: string | null;
   category?: { id: string; name: string } | null;
 };
@@ -1512,6 +1514,7 @@ export async function getCollections(): Promise<ApiCollection[]> {
 export async function createCollection(data: {
   name: string;
   sortOrder?: number;
+  brandId?: string | null;
   categoryId?: string | null;
 }): Promise<ApiCollection> {
   const response = await fetch("/api/collections", {

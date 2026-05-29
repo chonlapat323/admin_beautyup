@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "@/components/shared/toast-provider";
 import {
+  ApiBrand,
   ApiCollection,
   CategoryRecord,
   createCollection,
   deleteCollection,
+  getBrands,
   getCollections,
   getCategories,
   updateCollection,
@@ -18,6 +20,7 @@ type CollectionFormState = {
   name: string;
   isActive: boolean;
   sortOrder: string;
+  brandId: string;
   categoryId: string;
 };
 
@@ -25,6 +28,7 @@ const INITIAL_FORM: CollectionFormState = {
   name: "",
   isActive: true,
   sortOrder: "0",
+  brandId: "",
   categoryId: "",
 };
 
@@ -97,6 +101,7 @@ function CollectionFormModal({
   editingId,
   form,
   isSubmitting,
+  brands,
   categories,
   onChange,
   onClose,
@@ -105,11 +110,16 @@ function CollectionFormModal({
   editingId: string | null;
   form: CollectionFormState;
   isSubmitting: boolean;
+  brands: ApiBrand[];
   categories: CategoryRecord[];
   onChange: (next: Partial<CollectionFormState>) => void;
   onClose: () => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
 }) {
+  const filteredCategories = form.brandId
+    ? categories.filter((c) => (c as CategoryRecord & { brandId?: string }).brandId === form.brandId)
+    : categories;
+
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/55 px-4 py-6">
       <div className="w-full max-w-md rounded-[28px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark">
@@ -134,7 +144,23 @@ function CollectionFormModal({
 
         {/* Body */}
         <form className="space-y-4 px-6 py-5" onSubmit={onSubmit}>
-          {/* หมวดหมู่ — ต้องอยู่บนสุด */}
+          {/* แบรนด์ */}
+          <div>
+            <label className={LABEL_CLS}>แบรนด์ <span className="text-red-500">*</span></label>
+            <select
+              className={INPUT_CLS}
+              onChange={(e) => onChange({ brandId: e.target.value, categoryId: "" })}
+              value={form.brandId}
+              required
+            >
+              <option value="">เลือกแบรนด์</option>
+              {brands.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* หมวดหมู่ */}
           <div>
             <label className={LABEL_CLS}>หมวดหมู่</label>
             <select
@@ -143,7 +169,7 @@ function CollectionFormModal({
               value={form.categoryId}
             >
               <option value="">ไม่ระบุหมวดหมู่</option>
-              {categories.map((c) => (
+              {filteredCategories.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
@@ -213,6 +239,7 @@ function CollectionFormModal({
 export function CollectionManager() {
   const { showToast } = useToast();
   const [collections, setCollections] = useState<ApiCollection[]>([]);
+  const [brands, setBrands] = useState<ApiBrand[]>([]);
   const [categories, setCategories] = useState<CategoryRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -249,18 +276,19 @@ export function CollectionManager() {
     }
   }
 
-  async function loadCategories() {
+  async function loadBrandsAndCategories() {
     try {
-      const data = await getCategories();
-      setCategories(data);
+      const [brandsData, catsData] = await Promise.all([getBrands(), getCategories()]);
+      setBrands(brandsData);
+      setCategories(catsData);
     } catch {
-      // silently fail — category dropdown will be empty
+      // silently fail
     }
   }
 
   useEffect(() => {
     void loadCollections();
-    void loadCategories();
+    void loadBrandsAndCategories();
   }, []);
 
   function openCreateModal() {
@@ -275,6 +303,7 @@ export function CollectionManager() {
       name: collection.name,
       isActive: collection.isActive,
       sortOrder: String(collection.sortOrder),
+      brandId: collection.brandId ?? "",
       categoryId: collection.categoryId ?? "",
     });
     setIsModalOpen(true);
@@ -294,13 +323,20 @@ export function CollectionManager() {
     }
     setIsSubmitting(true);
     try {
+      if (!form.brandId) {
+        showToast("กรุณาเลือกแบรนด์", "error");
+        setIsSubmitting(false);
+        return;
+      }
       const sortOrder = parseInt(form.sortOrder, 10);
+      const brandId = form.brandId || null;
       const categoryId = form.categoryId || null;
       if (editingId) {
         const updated = await updateCollection(editingId, {
           name: form.name.trim(),
           isActive: form.isActive,
           sortOrder: isNaN(sortOrder) ? 0 : sortOrder,
+          brandId,
           categoryId,
         });
         setCollections((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
@@ -309,6 +345,7 @@ export function CollectionManager() {
         const created = await createCollection({
           name: form.name.trim(),
           sortOrder: isNaN(sortOrder) ? 0 : sortOrder,
+          brandId,
           categoryId,
         });
         setCollections((prev) => [...prev, created]);
@@ -553,6 +590,7 @@ export function CollectionManager() {
               editingId={editingId}
               form={form}
               isSubmitting={isSubmitting}
+              brands={brands}
               categories={categories}
               onChange={(next) => setForm((c) => ({ ...c, ...next }))}
               onClose={closeModal}
