@@ -282,6 +282,8 @@ export function BrandManager() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   const filteredBrands = brands.filter((b) => {
     const matchSearch = !searchTerm || b.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -369,6 +371,27 @@ export function BrandManager() {
     }
   }
 
+  async function handleDrop(toIdx: number) {
+    if (draggingIdx === null || draggingIdx === toIdx) return;
+    const next = [...brands];
+    const [moved] = next.splice(draggingIdx, 1);
+    next.splice(toIdx, 0, moved);
+    const reordered = next.map((b, i) => ({ ...b, sortOrder: i }));
+    setBrands(reordered);
+    setDraggingIdx(null);
+    setDragOverIdx(null);
+    try {
+      await fetch("/api/brands/reorder", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: reordered.map((b) => ({ id: b.id, sortOrder: b.sortOrder })) }),
+      });
+    } catch {
+      showToast("ไม่สามารถบันทึกลำดับได้", "error");
+      await loadBrands();
+    }
+  }
+
   async function handleConfirmDelete() {
     if (!brandToDelete) return;
     setIsDeleting(true);
@@ -442,6 +465,7 @@ export function BrandManager() {
           <table className="w-full min-w-[480px] text-left">
             <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
+                <th className="w-8 px-2 py-3" />
                 <th className="px-4 py-3 font-semibold">รูป</th>
                 <th className="px-4 py-3 font-semibold">ชื่อแบรนด์</th>
                 <th className="px-4 py-3 font-semibold">Slug</th>
@@ -514,12 +538,19 @@ export function BrandManager() {
                 </tr>
               )}
 
-              {!isLoading &&
-                filteredBrands.map((brand) => (
+              {!isLoading && (() => {
+                const dragEnabled = !searchTerm && statusFilter === "all";
+                return filteredBrands.map((brand, idx) => (
                   <tr
                     key={brand.id}
-                    className="border-t border-stroke text-sm transition-colors hover:bg-[#fafcfb] dark:border-dark-3 dark:hover:bg-dark-2/50"
+                    className={`group border-t border-stroke text-sm transition-colors dark:border-dark-3 ${draggingIdx === idx ? "opacity-40" : ""} ${dragOverIdx === idx && draggingIdx !== idx ? "bg-[#eef8f1]" : "hover:bg-[#fafcfb] dark:hover:bg-dark-2/50"}`}
+                    draggable={dragEnabled}
+                    onDragStart={() => { if (dragEnabled) setDraggingIdx(idx); }}
+                    onDragEnd={() => { setDraggingIdx(null); setDragOverIdx(null); }}
+                    onDragOver={(e) => { e.preventDefault(); if (dragEnabled) setDragOverIdx(idx); }}
+                    onDrop={() => { if (dragEnabled) void handleDrop(idx); }}
                   >
+                    <td className="cursor-grab select-none px-2 py-3 text-center text-dark-5 opacity-30 transition-opacity group-hover:opacity-70">⠿</td>
                     <td className="px-4 py-3">
                       {brand.imageUrl ? (
                         <img
@@ -572,7 +603,8 @@ export function BrandManager() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                ));
+              })()}
             </tbody>
           </table>
         </div>
