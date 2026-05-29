@@ -1447,6 +1447,7 @@ export type ApiBrand = {
   slug: string;
   isActive: boolean;
   sortOrder: number;
+  imageUrl?: string | null;
   _count?: { categories: number };
 };
 
@@ -1456,7 +1457,7 @@ export async function getBrands(): Promise<ApiBrand[]> {
   return response.json() as Promise<ApiBrand[]>;
 }
 
-export async function createBrand(data: { name: string; sortOrder?: number }): Promise<ApiBrand> {
+export async function createBrand(data: { name: string; sortOrder?: number; tempImageFile?: string }): Promise<ApiBrand> {
   const response = await fetch("/api/brands", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1471,7 +1472,7 @@ export async function createBrand(data: { name: string; sortOrder?: number }): P
 
 export async function updateBrand(
   id: string,
-  data: Partial<Omit<ApiBrand, "id" | "slug">>,
+  data: Partial<Omit<ApiBrand, "id" | "slug">> & { tempImageFile?: string },
 ): Promise<ApiBrand> {
   const response = await fetch(`/api/brands/${id}`, {
     method: "PATCH",
