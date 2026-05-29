@@ -144,30 +144,33 @@ function CollectionFormModal({
 
         {/* Body */}
         <form className="space-y-4 px-6 py-5" onSubmit={onSubmit}>
-          {/* แบรนด์ — กรอง Category เท่านั้น ไม่ได้ save */}
+          {/* แบรนด์ — required, กรอง Category */}
           <div>
-            <label className={LABEL_CLS}>กรองหมวดหมู่ตามแบรนด์</label>
+            <label className={LABEL_CLS}>แบรนด์ <span className="text-red-500">*</span></label>
             <select
               className={INPUT_CLS}
               onChange={(e) => onChange({ filterBrandId: e.target.value, categoryId: "" })}
               value={form.filterBrandId}
+              required
             >
-              <option value="">ทุกแบรนด์</option>
+              <option value="">— เลือกแบรนด์ —</option>
               {brands.map((b) => (
                 <option key={b.id} value={b.id}>{b.name}</option>
               ))}
             </select>
           </div>
 
-          {/* หมวดหมู่ */}
+          {/* หมวดหมู่ — required, แสดงเมื่อเลือก brand แล้ว */}
           <div>
-            <label className={LABEL_CLS}>หมวดหมู่</label>
+            <label className={LABEL_CLS}>หมวดหมู่ <span className="text-red-500">*</span></label>
             <select
               className={INPUT_CLS}
               onChange={(e) => onChange({ categoryId: e.target.value })}
               value={form.categoryId}
+              disabled={!form.filterBrandId}
+              required
             >
-              <option value="">ไม่ระบุหมวดหมู่</option>
+              <option value="">— เลือกหมวดหมู่ —</option>
               {filteredCategories.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -322,8 +325,18 @@ export function CollectionManager() {
     }
     setIsSubmitting(true);
     try {
+      if (!form.filterBrandId) {
+        showToast("กรุณาเลือกแบรนด์ก่อน", "error");
+        setIsSubmitting(false);
+        return;
+      }
+      if (!form.categoryId) {
+        showToast("กรุณาเลือกหมวดหมู่", "error");
+        setIsSubmitting(false);
+        return;
+      }
       const sortOrder = parseInt(form.sortOrder, 10);
-      const categoryId = form.categoryId || null;
+      const categoryId = form.categoryId;
       if (editingId) {
         const updated = await updateCollection(editingId, {
           name: form.name.trim(),
