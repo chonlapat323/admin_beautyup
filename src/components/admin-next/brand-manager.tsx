@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "@/components/shared/toast-provider";
 import {
@@ -11,17 +11,24 @@ import {
   updateBrand,
 } from "@/lib/admin-api";
 import { ContentCard, StatusPill } from "./page-elements";
+import { toProxiedImageUrl } from "@/lib/utils";
 
 type BrandFormState = {
   name: string;
   isActive: boolean;
   sortOrder: string;
+  imageUrl: string;
+  tempImageFile: string;
+  previewUrl: string;
 };
 
 const INITIAL_FORM: BrandFormState = {
   name: "",
   isActive: true,
   sortOrder: "0",
+  imageUrl: "",
+  tempImageFile: "",
+  previewUrl: "",
 };
 
 function ConfirmDeleteModal({
@@ -104,6 +111,26 @@ function BrandFormModal({
   onClose: () => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
 }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleImageChange = useCallback(async (file: File) => {
+    setIsUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/uploads/temp", { method: "POST", body: fd });
+      const data = await res.json() as { filename: string; url: string };
+      onChange({ tempImageFile: data.filename, previewUrl: data.url, imageUrl: "" });
+    } catch {
+      // silently fail
+    } finally {
+      setIsUploading(false);
+    }
+  }, [onChange]);
+
+  const preview = form.previewUrl || form.imageUrl || null;
+
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/55 px-4 py-6">
       <div className="w-full max-w-md rounded-[28px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark">
@@ -139,6 +166,54 @@ function BrandFormModal({
               placeholder="เช่น Wella, Schwarzkopf"
               value={form.name}
             />
+          </div>
+
+          {/* รูปแบรนด์ */}
+          <div>
+            <label className={LABEL_CLS}>รูปแบรนด์</label>
+            <input
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              type="file"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void handleImageChange(file);
+                e.target.value = "";
+              }}
+            />
+            {preview ? (
+              <div className="relative inline-block">
+                <img
+                  alt="brand preview"
+                  className="h-24 w-40 rounded-xl border border-[#d8e6dd] object-cover"
+                  src={preview}
+                />
+                <button
+                  className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#c84b44] text-xs text-white hover:bg-[#ad3d37]"
+                  onClick={() => onChange({ tempImageFile: "", imageUrl: "", previewUrl: "" })}
+                  type="button"
+                >
+                  ×
+                </button>
+                <button
+                  className="mt-2 block text-xs text-[#45745a] underline"
+                  onClick={() => fileInputRef.current?.click()}
+                  type="button"
+                >
+                  เปลี่ยนรูป
+                </button>
+              </div>
+            ) : (
+              <button
+                className="flex h-24 w-40 items-center justify-center rounded-xl border-2 border-dashed border-[#d8e6dd] bg-[#f8fbf9] text-sm text-dark-5 transition-colors hover:border-[#5f8f74] hover:bg-[#f0f8f4] disabled:opacity-50"
+                disabled={isUploading}
+                onClick={() => fileInputRef.current?.click()}
+                type="button"
+              >
+                {isUploading ? "กำลังอัปโหลด..." : "+ เพิ่มรูป"}
+              </button>
+            )}
           </div>
 
           <div>
@@ -241,7 +316,14 @@ export function BrandManager() {
 
   function openEditModal(brand: ApiBrand) {
     setEditingId(brand.id);
-    setForm({ name: brand.name, isActive: brand.isActive, sortOrder: String(brand.sortOrder) });
+    setForm({
+      name: brand.name,
+      isActive: brand.isActive,
+      sortOrder: String(brand.sortOrder),
+      imageUrl: brand.imageUrl ?? "",
+      tempImageFile: "",
+      previewUrl: brand.imageUrl ?? "",
+    });
     setIsModalOpen(true);
   }
 
@@ -265,6 +347,8 @@ export function BrandManager() {
           name: form.name.trim(),
           isActive: form.isActive,
           sortOrder: isNaN(sortOrder) ? 0 : sortOrder,
+          ...(form.tempImageFile ? { tempImageFile: form.tempImageFile } : {}),
+          ...(form.imageUrl === "" && !form.tempImageFile ? { imageUrl: "" } : {}),
         });
         setBrands((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
         showToast("อัปเดตแบรนด์สำเร็จ", "success");
@@ -272,6 +356,7 @@ export function BrandManager() {
         const created = await createBrand({
           name: form.name.trim(),
           sortOrder: isNaN(sortOrder) ? 0 : sortOrder,
+          ...(form.tempImageFile ? { tempImageFile: form.tempImageFile } : {}),
         });
         setBrands((prev) => [...prev, created]);
         showToast("เพิ่มแบรนด์สำเร็จ", "success");
@@ -357,6 +442,7 @@ export function BrandManager() {
           <table className="w-full min-w-[480px] text-left">
             <thead className="bg-[#f8fbf9] text-xs text-dark-5 dark:bg-dark-2 dark:text-dark-6">
               <tr>
+                <th className="px-4 py-3 font-semibold">รูป</th>
                 <th className="px-4 py-3 font-semibold">ชื่อแบรนด์</th>
                 <th className="px-4 py-3 font-semibold">Slug</th>
                 <th className="px-4 py-3 font-semibold">ลำดับ</th>
@@ -369,6 +455,9 @@ export function BrandManager() {
               {isLoading &&
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i} className="border-t border-stroke dark:border-dark-3">
+                    <td className="px-4 py-3">
+                      <div className="h-10 w-16 animate-pulse rounded-lg bg-neutral-100 dark:bg-dark-2" />
+                    </td>
                     <td className="px-4 py-3">
                       <div className="h-4 w-32 animate-pulse rounded bg-neutral-100 dark:bg-dark-2" />
                     </td>
@@ -395,7 +484,7 @@ export function BrandManager() {
 
               {!isLoading && filteredBrands.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-16 text-center">
+                  <td colSpan={7} className="px-4 py-16 text-center">
                     <div className="flex flex-col items-center">
                       <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#f0f6f2]">
                         <svg className="h-7 w-7 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -431,6 +520,21 @@ export function BrandManager() {
                     key={brand.id}
                     className="border-t border-stroke text-sm transition-colors hover:bg-[#fafcfb] dark:border-dark-3 dark:hover:bg-dark-2/50"
                   >
+                    <td className="px-4 py-3">
+                      {brand.imageUrl ? (
+                        <img
+                          alt={brand.name}
+                          className="h-10 w-16 rounded-lg border border-stroke object-cover"
+                          src={toProxiedImageUrl(brand.imageUrl)}
+                        />
+                      ) : (
+                        <div className="flex h-10 w-16 items-center justify-center rounded-lg border border-stroke bg-[#f0f4f2]">
+                          <svg className="h-4 w-4 text-[#a0b8ad]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                          </svg>
+                        </div>
+                      )}
+                    </td>
                     <td className="px-4 py-3 font-semibold text-dark dark:text-white">
                       {brand.name}
                     </td>
