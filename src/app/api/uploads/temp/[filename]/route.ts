@@ -26,7 +26,7 @@ export async function GET(_: Request, context: RouteContext) {
 export async function DELETE(_: Request, context: RouteContext) {
   const { filename } = await context.params;
   try {
-    const response = await fetch(`${getBackendApiBaseUrl()}/uploads/temp/${filename}`, {
+    const response = await fetch(`${getBackendBase()}/uploads/temp/${filename}`, {
       method: "DELETE",
       cache: "no-store",
     });
