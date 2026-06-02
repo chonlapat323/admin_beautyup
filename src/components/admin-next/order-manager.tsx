@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { ContentCard, StatusPill } from "@/components/admin-next/page-elements";
+import { EventOrderModal } from "./EventOrderModal";
 
 // Full status type (used for display)
 type OrderStatus = "PENDING" | "PAID" | "PROCESSING" | "SHIPPED" | "CANCELLED";
@@ -225,6 +226,7 @@ export function OrderManager() {
   const [savingNote, setSavingNote] = useState(false);
   // Admin create order states
   const [showCreateOrder, setShowCreateOrder] = useState(false);
+  const [showEventOrder, setShowEventOrder] = useState(false);
   const [createMemberSearch, setCreateMemberSearch] = useState("");
   const [createMemberResults, setCreateMemberResults] = useState<{ id: string; fullName: string; phone: string | null; email: string | null }[]>([]);
   const [createMemberId, setCreateMemberId] = useState("");
@@ -621,6 +623,13 @@ export function OrderManager() {
               </button>
               <button
                 type="button"
+                onClick={() => setShowEventOrder(true)}
+                className="rounded-2xl border border-[#45745a] bg-white px-4 py-2.5 text-sm font-semibold text-[#45745a] shadow-sm transition-colors hover:bg-[#f0faf4] dark:bg-gray-dark dark:hover:bg-dark-2"
+              >
+                Event Order
+              </button>
+              <button
+                type="button"
                 onClick={() => setShowCreateOrder(true)}
                 className="rounded-2xl bg-[#45745a] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#355846]"
               >
@@ -974,6 +983,13 @@ export function OrderManager() {
           </div>
         </div>
       )}
+
+      {/* Event Order Modal */}
+      <EventOrderModal
+        isOpen={showEventOrder}
+        onClose={() => setShowEventOrder(false)}
+        onSuccess={() => void loadOrders(true)}
+      />
 
       {/* Admin Create Order Modal */}
       {showCreateOrder && (
