@@ -221,6 +221,7 @@ export function OrderManager() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [trackingInput, setTrackingInput] = useState("");
+  const [carrierInput, setCarrierInput] = useState("KERRY");
   const [savingTracking, setSavingTracking] = useState(false);
   const [noteInput, setNoteInput] = useState("");
   const [savingNote, setSavingNote] = useState(false);
@@ -403,7 +404,7 @@ export function OrderManager() {
       const r = await fetch(`/api/orders/${orderId}/tracking`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trackingNumber: trackingInput }),
+        body: JSON.stringify({ trackingNumber: trackingInput, carrierId: carrierInput || undefined }),
       });
       if (!r.ok) {
         recentlyChangedRef.current.delete(orderId);
@@ -878,6 +879,28 @@ export function OrderManager() {
                           <SectionLabel>เลขพัสดุ / Tracking</SectionLabel>
                           {!canEnterTracking && (
                             <p className="mb-2 text-xs text-dark-5">กรอก Tracking ได้เฉพาะเมื่อสถานะ "รอจัดส่ง"</p>
+                          )}
+                          {/* Carrier selector */}
+                          {canEnterTracking && (
+                            <div className="mb-3 flex flex-wrap gap-1.5">
+                              {[
+                                { id: "THPOST", name: "ไปรษณีย์ไทย", img: null, emoji: "✉️" },
+                                { id: "KERRY",  name: "Kerry",  img: "/images/icon/carrier/kerry.png" },
+                                { id: "FLASH",  name: "Flash",  img: "/images/icon/carrier/Flash_Express_Logo.svg" },
+                                { id: "JNT",    name: "J&T",    img: "/images/icon/carrier/jandt.png" },
+                                { id: "DHL",    name: "DHL",    img: "/images/icon/carrier/DHL_idxN0olXHn_1.png" },
+                              ].map((c) => (
+                                <button
+                                  key={c.id}
+                                  type="button"
+                                  onClick={() => setCarrierInput(c.id)}
+                                  className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition-colors ${carrierInput === c.id ? "border-[#45745a] bg-[#45745a] text-white" : "border-stroke bg-white text-dark-5 hover:border-[#5f8f74]"}`}
+                                >
+                                  {c.img ? <img src={c.img} className="h-4 w-auto object-contain" alt={c.name} /> : <span>{(c as any).emoji}</span>}
+                                  {c.name}
+                                </button>
+                              ))}
+                            </div>
                           )}
                           <div className="flex gap-3">
                             <input
