@@ -139,21 +139,26 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
                 </select>
               </div>
 
-              {/* Tracking */}
-              {(status === "SHIPPED" || status === "DELIVERED") && (
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold text-dark dark:text-white">
-                    หมายเลขพัสดุ {status === "SHIPPED" && <span className="text-red-500">*</span>}
-                  </label>
-                  <input
-                    type="text"
-                    value={trackingNumber}
-                    onChange={(e) => setTrackingNumber(e.target.value)}
-                    placeholder="เช่น TH123456789"
-                    className="rounded-xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                  />
-                </div>
-              )}
+              {/* Tracking — always visible, auto-sets SHIPPED when entered */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-semibold text-dark dark:text-white">
+                  หมายเลขพัสดุ
+                  <span className="ml-2 text-xs font-normal text-[#6b7280]">กรอกแล้วสถานะจะเป็น "จัดส่งแล้ว" อัตโนมัติ</span>
+                </label>
+                <input
+                  type="text"
+                  value={trackingNumber}
+                  onChange={(e) => {
+                    setTrackingNumber(e.target.value);
+                    // Auto-set SHIPPED when tracking is entered (like orders)
+                    if (e.target.value.trim() && status !== "DELIVERED") {
+                      setStatus("SHIPPED");
+                    }
+                  }}
+                  placeholder="เช่น TH123456789"
+                  className="rounded-xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white font-mono"
+                />
+              </div>
 
               {/* Message */}
               {message && (
