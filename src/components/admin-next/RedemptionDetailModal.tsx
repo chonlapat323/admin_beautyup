@@ -26,6 +26,14 @@ const STATUS_OPTIONS: { value: RedemptionStatus; label: string }[] = [
   { value: "DELIVERED", label: "ส่งถึงแล้ว" },
 ];
 
+const CARRIERS = [
+  { id: "THPOST", name: "ไปรษณีย์ไทย", icon: "✉️", img: null,     trackingUrl: "https://track.thailandpost.co.th/?trackNumber=" },
+  { id: "KERRY",  name: "Kerry Express", icon: null, img: "/images/icon/carrier/kerry.png", trackingUrl: "https://th.kerryexpress.com/en/track/?track=" },
+  { id: "FLASH",  name: "Flash Express", icon: null, img: "/images/icon/carrier/Flash_Express_Logo.svg", trackingUrl: "https://www.flashexpress.co.th/en/fle/tracking?se=" },
+  { id: "JNT",    name: "J&T Express",   icon: null, img: "/images/icon/carrier/jandt.png", trackingUrl: "https://www.jtexpress.co.th/trajectoryQuery" },
+  { id: "DHL",    name: "DHL Express",   icon: null, img: "/images/icon/carrier/DHL_idxN0olXHn_1.png", trackingUrl: "https://www.dhl.com/th-en/home/tracking.html?tracking-id=" },
+];
+
 type Props = {
   redemptionId: string | null;
   onClose: () => void;
@@ -37,6 +45,7 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<RedemptionStatus>("PENDING");
   const [trackingNumber, setTrackingNumber] = useState("");
+  const [carrierId, setCarrierId] = useState<string>("THPOST");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -66,7 +75,7 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
       const res = await fetch(`/api/reward-products/redemptions/${detail.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, trackingNumber: trackingNumber.trim() || undefined }),
+        body: JSON.stringify({ status, trackingNumber: trackingNumber.trim() || undefined, carrierId: carrierId || undefined }),
       });
       if (!res.ok) throw new Error("บันทึกไม่สำเร็จ");
       setMessage({ type: "success", text: "บันทึกเรียบร้อย" });
@@ -139,18 +148,40 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
                 </select>
               </div>
 
-              {/* Tracking — always visible, auto-sets SHIPPED when entered */}
-              <div className="flex flex-col gap-2">
+              {/* Carrier + Tracking — auto-sets SHIPPED */}
+              <div className="flex flex-col gap-3">
                 <label className="text-sm font-semibold text-dark dark:text-white">
-                  หมายเลขพัสดุ
+                  ขนส่ง &amp; หมายเลขพัสดุ
                   <span className="ml-2 text-xs font-normal text-[#6b7280]">กรอกแล้วสถานะจะเป็น "จัดส่งแล้ว" อัตโนมัติ</span>
                 </label>
+                {/* Carrier selector */}
+                <div className="flex flex-wrap gap-2">
+                  {CARRIERS.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setCarrierId(c.id)}
+                      className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        carrierId === c.id
+                          ? "border-[#45745a] bg-[#45745a] text-white"
+                          : "border-[#d8e6dd] bg-white text-dark-5 hover:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-dark-6"
+                      }`}
+                    >
+                      {c.img ? (
+                        <img src={c.img} alt={c.name} className="h-4 w-auto object-contain" />
+                      ) : (
+                        <span>{c.icon}</span>
+                      )}
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
+                {/* Tracking input */}
                 <input
                   type="text"
                   value={trackingNumber}
                   onChange={(e) => {
                     setTrackingNumber(e.target.value);
-                    // Auto-set SHIPPED when tracking is entered (like orders)
                     if (e.target.value.trim() && status !== "DELIVERED") {
                       setStatus("SHIPPED");
                     }
