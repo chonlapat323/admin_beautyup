@@ -4,21 +4,19 @@ import { loginAdmin } from "./helpers/auth";
 test.describe("Brands", () => {
   test.beforeEach(async ({ page }) => {
     await loginAdmin(page);
+    await page.goto("/brands");
+    await page.waitForLoadState("networkidle");
   });
 
-  test("navigates to brands page and shows brands list", async ({ page }) => {
-    await page.goto("/brands");
-
-    const hasHeading = await page.getByText("แบรนด์").isVisible().catch(() => false);
-    const hasTable = await page.locator("table").isVisible().catch(() => false);
-    const hasList = await page.locator("ul, [role='list']").isVisible().catch(() => false);
-    expect(hasHeading || hasTable || hasList).toBe(true);
+  test("brands page loads", async ({ page }) => {
+    const hasContent =
+      await page.getByText("แบรนด์").isVisible().catch(() => false) ||
+      await page.locator("table").isVisible().catch(() => false);
+    expect(hasContent).toBe(true);
   });
 
-  test('add brand button exists', async ({ page }) => {
-    await page.goto("/brands");
-
-    const addButton = page.getByRole("button", { name: /เพิ่มแบรนด์/i });
-    await expect(addButton).toBeVisible();
+  test("add brand button exists", async ({ page }) => {
+    const addButton = page.locator('button').filter({ hasText: /เพิ่มแบรนด์/ }).first();
+    await expect(addButton).toBeVisible({ timeout: 5000 });
   });
 });

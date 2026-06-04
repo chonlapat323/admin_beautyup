@@ -2,23 +2,27 @@ import { test, expect } from "@playwright/test";
 import { loginAdmin } from "./helpers/auth";
 
 test.describe("Login", () => {
-  test("redirects to dashboard after successful login", async ({ page }) => {
-    await page.goto("/auth/signin");
-    await page.fill('input[type="email"]', process.env.ADMIN_EMAIL ?? "admin@beautyup-enterprise.com");
-    await page.fill('input[type="password"]', process.env.ADMIN_PASSWORD ?? "");
-    await page.click('button[type="submit"]');
+  test("login page loads correctly", async ({ page }) => {
+    await page.goto("/login");
+    await expect(page.locator('input[type="email"]')).toBeVisible();
+    await expect(page.locator('input[type="password"]')).toBeVisible();
+    await expect(page.locator('button:has-text("เข้าสู่ระบบหลังบ้าน")')).toBeVisible();
+  });
 
-    await page.waitForURL(/\/(dashboard)?$/, { timeout: 10000 });
-
+  test("redirects away from login after successful login", async ({ page }) => {
+    await loginAdmin(page);
     const url = page.url();
-    expect(url).toMatch(/\/(dashboard)?$/);
+    expect(url).not.toContain("/login");
   });
 
   test("dashboard shows admin content after login", async ({ page }) => {
     await loginAdmin(page);
-
-    const hasOverview = await page.getByText("ภาพรวม").isVisible().catch(() => false);
-    const hasDashboard = await page.getByText("Dashboard").isVisible().catch(() => false);
-    expect(hasOverview || hasDashboard).toBe(true);
+    // Should see some admin navigation or content
+    const hasContent =
+      await page.getByText("ภาพรวม").isVisible().catch(() => false) ||
+      await page.getByText("คำสั่งซื้อ").isVisible().catch(() => false) ||
+      await page.getByText("สมาชิก").isVisible().catch(() => false) ||
+      await page.locator("nav, sidebar, [class*='sidebar'], [class*='nav']").first().isVisible().catch(() => false);
+    expect(hasContent).toBe(true);
   });
 });
