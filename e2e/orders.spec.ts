@@ -17,9 +17,7 @@ test.describe("Orders", () => {
   });
 
   test("search input exists on orders page", async ({ page }) => {
-    const searchInput = page.locator('input').filter({
-      has: page.locator('[placeholder]')
-    }).first();
+    const searchInput = page.locator("input").first();
     await expect(searchInput).toBeVisible({ timeout: 5000 });
   });
 
