@@ -16,7 +16,7 @@ type RedemptionDetail = {
   statusUpdatedAt: string | null;
   createdAt: string;
   member: { id: string; fullName: string; email: string | null; phone: string | null };
-  rewardProduct: { id: string; name: string };
+  rewardProduct: { id: string; name: string; imageUrl?: string | null; images?: { url: string }[] };
 };
 
 const STATUS_OPTIONS: { value: RedemptionStatus; label: string }[] = [
@@ -132,8 +132,27 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
                   <p className="text-xs text-dark-5">{new Date(detail.createdAt).toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" })}</p>
                 </div>
                 <p className="text-sm text-dark-5">{detail.member.email ?? detail.member.phone ?? ""}</p>
-                <p className="mt-2 text-sm font-medium text-dark dark:text-white">{detail.rewardProduct.name}</p>
-                <p className="text-sm text-[#45745a]">ใช้ {detail.pointsSpent.toLocaleString()} แต้ม</p>
+
+                {/* Product */}
+                <div className="mt-3 flex items-center gap-3">
+                  {(() => {
+                    const img = detail.rewardProduct.imageUrl ?? detail.rewardProduct.images?.[0]?.url;
+                    return img ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={img} alt={detail.rewardProduct.name} className="h-14 w-14 flex-shrink-0 rounded-lg border border-stroke object-cover dark:border-dark-3" />
+                    ) : (
+                      <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-[#edf4ef] dark:bg-dark-2">
+                        <svg className="h-6 w-6 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                        </svg>
+                      </div>
+                    );
+                  })()}
+                  <div>
+                    <p className="text-sm font-medium text-dark dark:text-white">{detail.rewardProduct.name}</p>
+                    <p className="text-sm text-[#45745a]">ใช้ {detail.pointsSpent.toLocaleString()} แต้ม</p>
+                  </div>
+                </div>
               </div>
 
               {/* Shipping */}
