@@ -118,6 +118,7 @@ export default async function Home() {
       <section className="grid grid-cols-2 gap-4 xl:grid-cols-5">
         <StatCard
           label="ยอดขายรวม"
+          href="/orders"
           value={data.orderCount > 0 ? `฿${thb(data.revenue)}` : "-"}
           hint={`${thb(data.orderCount)} คำสั่งซื้อทั้งหมด`}
           icon={
@@ -130,6 +131,7 @@ export default async function Home() {
         />
         <StatCard
           label="คำสั่งซื้อ"
+          href="/orders"
           value={thb(data.orderCount)}
           hint={
             data.pendingOrderCount > 0
@@ -146,6 +148,7 @@ export default async function Home() {
         />
         <StatCard
           label="สมาชิก"
+          href="/members"
           value={data.memberCount > 0 ? thb(data.memberCount) : "-"}
           hint="สมาชิกทั้งหมดในระบบ"
           icon={
@@ -158,6 +161,7 @@ export default async function Home() {
         />
         <StatCard
           label="สต็อกต่ำ"
+          href="/stock"
           value={`${data.lowStockCount} รหัสสินค้า`}
           hint={data.lowStockCount > 0 ? "สินค้าที่เหลือ ≤ 10 ชิ้น" : "สต็อกทุกรายการปกติ"}
           icon={
@@ -171,6 +175,7 @@ export default async function Home() {
         <div className="col-span-2 xl:col-span-1">
           <StatCard
             label="คอมมิชชันวันนี้"
+            href="/commissions"
             value={data.commission.source === "api" ? `฿${thb(data.commission.todayTotal)}` : "-"}
             hint={
               data.commission.source === "api"

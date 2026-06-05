@@ -102,14 +102,16 @@ export function StatCard({
   value,
   hint,
   icon,
+  href,
 }: {
   label: string;
   value: string;
   hint: string;
   icon?: React.ReactNode;
+  href?: string;
 }) {
-  return (
-    <article className="rounded-[22px] border border-stroke bg-white p-4 shadow-1 dark:border-dark-3 dark:bg-gray-dark sm:p-5">
+  const inner = (
+    <article className={`rounded-[22px] border border-stroke bg-white p-4 shadow-1 dark:border-dark-3 dark:bg-gray-dark sm:p-5${href ? " cursor-pointer transition-shadow hover:shadow-md hover:border-[#8EB397]" : ""}`}>
       <div className="flex items-start justify-between gap-2">
         <p className="text-xs font-medium leading-snug text-dark-5 dark:text-dark-6">{label}</p>
         {icon ? <div className="shrink-0">{icon}</div> : null}
@@ -120,6 +122,8 @@ export function StatCard({
       <p className="mt-1.5 text-xs leading-snug text-dark-5 dark:text-dark-6">{hint}</p>
     </article>
   );
+  if (href) return <Link href={href}>{inner}</Link>;
+  return inner;
 }
 
 export function ContentCard({
