@@ -37,6 +37,7 @@ type OrderDetail = OrderListItem & {
   shippingPhone: string;
   shippingAddr: string;
   trackingNumber?: string | null;
+  carrierId?: string | null;
   note?: string | null;
   items: {
     id: string;
@@ -296,6 +297,7 @@ export function OrderManager() {
           : "PENDING";
         setSelectedStatus(initStatus);
         setTrackingInput(d.trackingNumber ?? "");
+        setCarrierInput(d.carrierId ?? "");
         setNoteInput(d.note ?? "");
         setStaleWarning(false);
       }
@@ -895,13 +897,28 @@ export function OrderManager() {
                     {/* Tracking number */}
                     {(() => {
                       const canEnterTracking = detail.status === "PROCESSING";
+                      const savedCarrier = carrierInput
+                        ? carriers.find(c => c.id === carrierInput) ?? carriers.find(c => c.shortName.toLowerCase() === carrierInput.toLowerCase())
+                        : null;
                       return (
                         <div className="rounded-xl border border-stroke bg-[#f8fbf9] px-5 py-4 dark:border-dark-3 dark:bg-dark-2">
                           <SectionLabel>เลขพัสดุ / Tracking</SectionLabel>
                           {!canEnterTracking && (
                             <p className="mb-2 text-xs text-dark-5">กรอก Tracking ได้เฉพาะเมื่อสถานะ "รอจัดส่ง"</p>
                           )}
-                          {/* Carrier selector */}
+                          {/* Saved carrier display (SHIPPED) */}
+                          {!canEnterTracking && savedCarrier && (
+                            <div className="mb-3 flex items-center gap-2">
+                              <span
+                                className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold"
+                                style={{ backgroundColor: savedCarrier.color, color: savedCarrier.textColor }}
+                              >
+                                {savedCarrier.shortName}
+                              </span>
+                              <span className="text-sm font-medium text-dark">{savedCarrier.name}</span>
+                            </div>
+                          )}
+                          {/* Carrier selector (PROCESSING) */}
                           {canEnterTracking && carriers.length > 0 && (
                             <div className="mb-3 flex flex-wrap gap-1.5">
                               {carriers.map((c) => (
