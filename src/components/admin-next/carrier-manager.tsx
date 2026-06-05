@@ -309,40 +309,38 @@ export function CarrierManager() {
                 </div>
 
                 {/* Colors */}
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">สีพื้นหลัง</label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={form.color}
-                        onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
-                        className="h-[42px] w-12 cursor-pointer rounded-xl border border-[#d8e6dd] p-0.5"
-                      />
-                      <input
-                        value={form.color}
-                        onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
-                        className="min-w-0 flex-1 rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                        placeholder="#000000"
-                      />
-                    </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">สีพื้นหลัง</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={form.color}
+                      onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
+                      className="h-[42px] w-12 shrink-0 cursor-pointer rounded-xl border border-[#d8e6dd] p-0.5"
+                    />
+                    <input
+                      value={form.color}
+                      onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
+                      className="min-w-0 flex-1 rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-2.5 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                      placeholder="#000000"
+                    />
                   </div>
-                  <div className="flex-1">
-                    <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">สีตัวอักษร</label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="color"
-                        value={form.textColor}
-                        onChange={e => setForm(f => ({ ...f, textColor: e.target.value }))}
-                        className="h-[42px] w-12 cursor-pointer rounded-xl border border-[#d8e6dd] p-0.5"
-                      />
-                      <input
-                        value={form.textColor}
-                        onChange={e => setForm(f => ({ ...f, textColor: e.target.value }))}
-                        className="min-w-0 flex-1 rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                        placeholder="#FFFFFF"
-                      />
-                    </div>
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">สีตัวอักษร</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={form.textColor}
+                      onChange={e => setForm(f => ({ ...f, textColor: e.target.value }))}
+                      className="h-[42px] w-12 shrink-0 cursor-pointer rounded-xl border border-[#d8e6dd] p-0.5"
+                    />
+                    <input
+                      value={form.textColor}
+                      onChange={e => setForm(f => ({ ...f, textColor: e.target.value }))}
+                      className="min-w-0 flex-1 rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-2.5 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                      placeholder="#FFFFFF"
+                    />
                   </div>
                 </div>
 
