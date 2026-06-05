@@ -101,6 +101,12 @@ export const NAV_DATA: NavSection[] = [
         items: [],
       },
       {
+        title: "ผู้ให้บริการขนส่ง",
+        url: "/carriers",
+        icon: Icons.Table,
+        items: [],
+      },
+      {
         title: "การชำระเงิน",
         url: "/payments",
         icon: Icons.PieChart,

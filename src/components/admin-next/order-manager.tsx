@@ -198,6 +198,14 @@ function isOrderList(value: unknown): value is OrderListItem[] {
   return Array.isArray(value) && value.every(isOrderListItem);
 }
 
+type CarrierOption = {
+  id: string;
+  name: string;
+  shortName: string;
+  color: string;
+  textColor: string;
+};
+
 function isOrderDetail(value: unknown): value is OrderDetail {
   if (!value || typeof value !== "object") return false;
   const detail = value as Partial<OrderDetail>;
@@ -221,7 +229,8 @@ export function OrderManager() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [trackingInput, setTrackingInput] = useState("");
-  const [carrierInput, setCarrierInput] = useState("KERRY");
+  const [carrierInput, setCarrierInput] = useState("");
+  const [carriers, setCarriers] = useState<CarrierOption[]>([]);
   const [savingTracking, setSavingTracking] = useState(false);
   const [noteInput, setNoteInput] = useState("");
   const [savingNote, setSavingNote] = useState(false);
@@ -297,6 +306,18 @@ export function OrderManager() {
   useEffect(() => {
     void loadOrders();
   }, [loadOrders]);
+
+  // Load carriers for tracking form
+  useEffect(() => {
+    fetch("/api/carriers?activeOnly=true")
+      .then((r) => r.json())
+      .then((data: CarrierOption[]) => {
+        const list = Array.isArray(data) ? data : [];
+        setCarriers(list);
+        if (list.length > 0) setCarrierInput(list[0].id);
+      })
+      .catch(() => {});
+  }, []);
 
   // Socket.io real-time updates
   useEffect(() => {
@@ -881,22 +902,21 @@ export function OrderManager() {
                             <p className="mb-2 text-xs text-dark-5">กรอก Tracking ได้เฉพาะเมื่อสถานะ "รอจัดส่ง"</p>
                           )}
                           {/* Carrier selector */}
-                          {canEnterTracking && (
+                          {canEnterTracking && carriers.length > 0 && (
                             <div className="mb-3 flex flex-wrap gap-1.5">
-                              {[
-                                { id: "THPOST", name: "ไปรษณีย์ไทย", img: null, emoji: "✉️" },
-                                { id: "KERRY",  name: "Kerry",  img: "/images/icon/carrier/kerry.png" },
-                                { id: "FLASH",  name: "Flash",  img: "/images/icon/carrier/Flash_Express_Logo.svg" },
-                                { id: "JNT",    name: "J&T",    img: "/images/icon/carrier/jandt.png" },
-                                { id: "DHL",    name: "DHL",    img: "/images/icon/carrier/DHL_idxN0olXHn_1.png" },
-                              ].map((c) => (
+                              {carriers.map((c) => (
                                 <button
                                   key={c.id}
                                   type="button"
                                   onClick={() => setCarrierInput(c.id)}
                                   className={`flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition-colors ${carrierInput === c.id ? "border-[#45745a] bg-[#45745a] text-white" : "border-stroke bg-white text-dark-5 hover:border-[#5f8f74]"}`}
                                 >
-                                  {c.img ? <img src={c.img} className="h-4 w-auto object-contain" alt={c.name} /> : <span>{(c as any).emoji}</span>}
+                                  <span
+                                    className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold"
+                                    style={{ backgroundColor: c.color, color: c.textColor }}
+                                  >
+                                    {c.shortName}
+                                  </span>
                                   {c.name}
                                 </button>
                               ))}

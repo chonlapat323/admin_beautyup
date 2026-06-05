@@ -26,13 +26,13 @@ const STATUS_OPTIONS: { value: RedemptionStatus; label: string }[] = [
   { value: "DELIVERED", label: "ส่งถึงแล้ว" },
 ];
 
-const CARRIERS = [
-  { id: "THPOST", name: "ไปรษณีย์ไทย", icon: "✉️", img: null,     trackingUrl: "https://track.thailandpost.co.th/?trackNumber=" },
-  { id: "KERRY",  name: "Kerry Express", icon: null, img: "/images/icon/carrier/kerry.png", trackingUrl: "https://th.kerryexpress.com/en/track/?track=" },
-  { id: "FLASH",  name: "Flash Express", icon: null, img: "/images/icon/carrier/Flash_Express_Logo.svg", trackingUrl: "https://www.flashexpress.co.th/en/fle/tracking?se=" },
-  { id: "JNT",    name: "J&T Express",   icon: null, img: "/images/icon/carrier/jandt.png", trackingUrl: "https://www.jtexpress.co.th/trajectoryQuery" },
-  { id: "DHL",    name: "DHL Express",   icon: null, img: "/images/icon/carrier/DHL_idxN0olXHn_1.png", trackingUrl: "https://www.dhl.com/th-en/home/tracking.html?tracking-id=" },
-];
+type CarrierOption = {
+  id: string;
+  name: string;
+  shortName: string;
+  color: string;
+  textColor: string;
+};
 
 type Props = {
   redemptionId: string | null;
@@ -45,9 +45,21 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<RedemptionStatus>("PENDING");
   const [trackingNumber, setTrackingNumber] = useState("");
-  const [carrierId, setCarrierId] = useState<string>("THPOST");
+  const [carrierId, setCarrierId] = useState<string>("");
+  const [carriers, setCarriers] = useState<CarrierOption[]>([]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/carriers?activeOnly=true")
+      .then((r) => r.json())
+      .then((data: CarrierOption[]) => {
+        const list = Array.isArray(data) ? data : [];
+        setCarriers(list);
+        if (list.length > 0) setCarrierId(list[0].id);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!redemptionId) { setDetail(null); setMessage(null); return; }
@@ -156,7 +168,7 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
                 </label>
                 {/* Carrier selector */}
                 <div className="flex flex-wrap gap-2">
-                  {CARRIERS.map((c) => (
+                  {carriers.map((c) => (
                     <button
                       key={c.id}
                       type="button"
@@ -167,11 +179,12 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
                           : "border-[#d8e6dd] bg-white text-dark-5 hover:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-dark-6"
                       }`}
                     >
-                      {c.img ? (
-                        <img src={c.img} alt={c.name} className="h-4 w-auto object-contain" />
-                      ) : (
-                        <span>{c.icon}</span>
-                      )}
+                      <span
+                        className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold"
+                        style={{ backgroundColor: c.color, color: c.textColor }}
+                      >
+                        {c.shortName}
+                      </span>
                       {c.name}
                     </button>
                   ))}
