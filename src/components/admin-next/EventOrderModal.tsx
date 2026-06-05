@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ApiBrand, ApiCategory, ApiCollection } from "@/lib/admin-api";
 
@@ -50,76 +50,84 @@ export function EventOrderModal({ isOpen, onClose, onSuccess }: Props) {
   const [filterBrandId, setFilterBrandId] = useState("");
   const [filterCategoryId, setFilterCategoryId] = useState("");
   const [filterCollectionId, setFilterCollectionId] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Data
+  // Reference data (small — load once on open)
   const [brands, setBrands] = useState<ApiBrand[]>([]);
   const [allCategories, setAllCategories] = useState<ApiCategory[]>([]);
   const [allCollections, setAllCollections] = useState<ApiCollection[]>([]);
-  const [allProducts, setAllProducts] = useState<ApiProductSimple[]>([]);
+
+  // Products — fetched on demand
+  const [products, setProducts] = useState<ApiProductSimple[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Selected items
   const [items, setItems] = useState<SelectedItem[]>([]);
 
   // UI
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [error, setError] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
 
-  // Load reference data on open
+  // Load brands/categories/collections on open (small datasets)
   useEffect(() => {
     if (!isOpen) return;
-
-    async function loadData() {
-      setIsLoadingProducts(true);
-      try {
-        const [brandsRes, categoriesRes, collectionsRes, productsRes] = await Promise.all([
-          fetch("/api/brands"),
-          fetch("/api/categories?pageSize=200&status=all"),
-          fetch("/api/collections"),
-          fetch("/api/products?status=active&pageSize=200"),
-        ]);
-
-        if (brandsRes.ok) {
-          const data = await brandsRes.json() as ApiBrand[];
-          setBrands(Array.isArray(data) ? data : []);
-        }
-        if (categoriesRes.ok) {
-          const data = await categoriesRes.json() as { items: ApiCategory[] };
-          setAllCategories(Array.isArray(data?.items) ? data.items : []);
-        }
-        if (collectionsRes.ok) {
-          const data = await collectionsRes.json() as ApiCollection[];
-          setAllCollections(Array.isArray(data) ? data : []);
-        }
-        if (productsRes.ok) {
-          const data = await productsRes.json() as unknown;
-          // products API may return array or { items: [] }
-          if (Array.isArray(data)) {
-            setAllProducts(data as ApiProductSimple[]);
-          } else if (data && typeof data === "object" && "items" in data && Array.isArray((data as { items: unknown[] }).items)) {
-            setAllProducts((data as { items: ApiProductSimple[] }).items);
-          }
-        }
-      } catch {
-        // ignore — products will just be empty
-      } finally {
-        setIsLoadingProducts(false);
+    async function loadRefData() {
+      const [brandsRes, categoriesRes, collectionsRes] = await Promise.all([
+        fetch("/api/brands"),
+        fetch("/api/categories?pageSize=200&status=all"),
+        fetch("/api/collections"),
+      ]);
+      if (brandsRes.ok) setBrands((await brandsRes.json() as ApiBrand[]) ?? []);
+      if (categoriesRes.ok) {
+        const d = await categoriesRes.json() as { items: ApiCategory[] };
+        setAllCategories(Array.isArray(d?.items) ? d.items : []);
       }
+      if (collectionsRes.ok) setAllCollections((await collectionsRes.json() as ApiCollection[]) ?? []);
     }
-
-    void loadData();
+    void loadRefData();
   }, [isOpen]);
 
-  // Reset filter downstream when parent filter changes
-  useEffect(() => {
-    setFilterCategoryId("");
-    setFilterCollectionId("");
-  }, [filterBrandId]);
+  // Fetch products from server whenever filter/search changes (debounced)
+  const fetchProducts = useCallback(async (query: string, brandId: string, categoryId: string, collectionId: string) => {
+    const params = new URLSearchParams({ status: "active", pageSize: "50" });
+    if (query.trim()) params.set("search", query.trim());
+    if (brandId) params.set("brandId", brandId);
+    if (categoryId) params.set("categoryId", categoryId);
+    if (collectionId) params.set("collectionId", collectionId);
 
+    setIsLoadingProducts(true);
+    try {
+      const res = await fetch(`/api/products?${params.toString()}`);
+      if (!res.ok) return;
+      const data = await res.json() as unknown;
+      if (Array.isArray(data)) setProducts(data as ApiProductSimple[]);
+      else if (data && typeof data === "object" && "items" in data) setProducts((data as { items: ApiProductSimple[] }).items ?? []);
+    } catch { /* ignore */ } finally {
+      setIsLoadingProducts(false);
+      setHasSearched(true);
+    }
+  }, []);
+
+  // Trigger fetch when any filter/search changes — debounced 350ms
   useEffect(() => {
-    setFilterCollectionId("");
-  }, [filterCategoryId]);
+    const hasFilter = searchQuery.trim().length >= 2 || filterBrandId || filterCategoryId || filterCollectionId;
+    if (!isOpen || !hasFilter) {
+      setProducts([]);
+      setHasSearched(false);
+      return;
+    }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      void fetchProducts(searchQuery, filterBrandId, filterCategoryId, filterCollectionId);
+    }, 350);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [isOpen, searchQuery, filterBrandId, filterCategoryId, filterCollectionId, fetchProducts]);
+
+  // Reset filter downstream when parent filter changes
+  useEffect(() => { setFilterCategoryId(""); setFilterCollectionId(""); }, [filterBrandId]);
+  useEffect(() => { setFilterCollectionId(""); }, [filterCategoryId]);
 
   // Derived filter lists
   const filteredCategories = useMemo(() => {
@@ -132,16 +140,7 @@ export function EventOrderModal({ isOpen, onClose, onSuccess }: Props) {
     return allCollections.filter((c) => c.categoryId === filterCategoryId);
   }, [allCollections, filterCategoryId]);
 
-  const filteredProducts = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    return allProducts.filter((p) => {
-      if (filterBrandId && p.brandId !== filterBrandId) return false;
-      if (filterCategoryId && p.categoryId !== filterCategoryId) return false;
-      if (filterCollectionId && p.collectionId !== filterCollectionId) return false;
-      if (q && !p.name.toLowerCase().includes(q) && !p.sku.toLowerCase().includes(q)) return false;
-      return true;
-    });
-  }, [allProducts, filterBrandId, filterCategoryId, filterCollectionId, searchQuery]);
+  const hasActiveFilter = searchQuery.trim().length >= 2 || !!filterBrandId || !!filterCategoryId || !!filterCollectionId;
 
   function addItem(product: ApiProductSimple) {
     const existing = items.find((i) => i.productId === product.id);
@@ -201,6 +200,8 @@ export function EventOrderModal({ isOpen, onClose, onSuccess }: Props) {
     setItems([]);
     setError("");
     setSearchQuery("");
+    setProducts([]);
+    setHasSearched(false);
   }
 
   function handleClose() {
@@ -384,10 +385,7 @@ export function EventOrderModal({ isOpen, onClose, onSuccess }: Props) {
                 {isLoadingProducts ? (
                   <div className="space-y-0">
                     {Array.from({ length: 4 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between border-b border-stroke px-4 py-3 last:border-b-0 dark:border-dark-3"
-                      >
+                      <div key={i} className="flex items-center justify-between border-b border-stroke px-4 py-3 last:border-b-0 dark:border-dark-3">
                         <div className="flex flex-col gap-1.5">
                           <div className="h-4 w-40 animate-pulse rounded bg-dark-5/20" />
                           <div className="h-3 w-24 animate-pulse rounded bg-dark-5/10" />
@@ -396,34 +394,34 @@ export function EventOrderModal({ isOpen, onClose, onSuccess }: Props) {
                       </div>
                     ))}
                   </div>
-                ) : filteredProducts.length === 0 ? (
-                  <div className="flex flex-col items-center py-10">
+                ) : !hasActiveFilter ? (
+                  <div className="flex flex-col items-center py-10 text-center">
                     <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0f6f2] dark:bg-dark-2">
                       <svg className="h-6 w-6 text-[#7faa93]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                       </svg>
                     </div>
+                    <p className="font-semibold text-dark dark:text-white">ค้นหาสินค้า</p>
+                    <p className="mt-1 text-sm text-dark-5">พิมพ์ชื่อ / SKU หรือเลือก filter เพื่อดูสินค้า</p>
+                  </div>
+                ) : hasSearched && products.length === 0 ? (
+                  <div className="flex flex-col items-center py-10">
                     <p className="font-semibold text-dark dark:text-white">ไม่พบสินค้า</p>
-                    <p className="mt-1 text-sm text-dark-5">ลองเปลี่ยน filter ด้านบน</p>
+                    <p className="mt-1 text-sm text-dark-5">ลองเปลี่ยนคำค้นหาหรือ filter</p>
                   </div>
                 ) : (
                   <div className="max-h-52 overflow-y-auto">
-                    {filteredProducts.map((product) => {
+                    {products.map((product) => {
                       const outOfStock = product.sellableStock <= 0;
                       const alreadyAdded = items.some((i) => i.productId === product.id);
                       return (
-                        <div
-                          key={product.id}
-                          className="flex items-center justify-between border-b border-stroke px-4 py-3 last:border-b-0 dark:border-dark-3"
-                        >
+                        <div key={product.id} className="flex items-center justify-between border-b border-stroke px-4 py-3 last:border-b-0 dark:border-dark-3">
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-medium text-dark dark:text-white">{product.name}</p>
                             <div className="mt-0.5 flex items-center gap-2">
                               <span className="font-mono text-xs text-dark-5">{product.sku}</span>
                               {outOfStock ? (
-                                <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600 dark:bg-red-900/20 dark:text-red-400">
-                                  หมด
-                                </span>
+                                <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-600 dark:bg-red-900/20 dark:text-red-400">หมด</span>
                               ) : (
                                 <span className="text-xs text-dark-5">stock {product.sellableStock}</span>
                               )}
@@ -441,7 +439,7 @@ export function EventOrderModal({ isOpen, onClose, onSuccess }: Props) {
                                 : "bg-[#45745a] text-white hover:bg-[#355846]"
                             }`}
                           >
-                            {alreadyAdded ? "+ เพิ่ม" : "+ เพิ่ม"}
+                            + เพิ่ม
                           </button>
                         </div>
                       );
