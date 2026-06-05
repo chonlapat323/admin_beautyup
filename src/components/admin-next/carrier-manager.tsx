@@ -23,12 +23,11 @@ type FormState = {
   sortOrder: number;
   tempImageFile: string;
   previewUrl: string;
-  logoUrl: string;
 };
 
 const EMPTY_FORM: FormState = {
   name: "", shortName: "", color: "#000000", textColor: "#FFFFFF",
-  trackingUrl: "", sortOrder: 0, tempImageFile: "", previewUrl: "", logoUrl: "",
+  trackingUrl: "", sortOrder: 0, tempImageFile: "", previewUrl: "",
 };
 
 export function CarrierManager() {
@@ -64,7 +63,7 @@ export function CarrierManager() {
     setForm({
       name: c.name, shortName: c.shortName, color: c.color, textColor: c.textColor,
       trackingUrl: c.trackingUrl ?? "", sortOrder: c.sortOrder,
-      tempImageFile: "", previewUrl: c.logoUrl ?? "", logoUrl: c.logoUrl ?? "",
+      tempImageFile: "", previewUrl: c.logoUrl ?? "",
     });
     setError(null);
     setModalOpen(true);
@@ -120,7 +119,10 @@ export function CarrierManager() {
   return (
     <div>
       <div className="mb-4 flex justify-end">
-        <button onClick={openCreate} className="rounded-full bg-[#45745a] px-4 py-2 text-sm font-semibold text-white hover:bg-[#355846]">
+        <button
+          onClick={openCreate}
+          className="rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846]"
+        >
           + เพิ่มผู้ให้บริการ
         </button>
       </div>
@@ -142,12 +144,16 @@ export function CarrierManager() {
               Array.from({ length: 3 }).map((_, i) => (
                 <tr key={i}>
                   {Array.from({ length: 6 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3"><div className="h-4 w-20 animate-pulse rounded bg-gray-200" /></td>
+                    <td key={j} className="px-4 py-3">
+                      <div className="h-4 w-20 animate-pulse rounded bg-gray-200" />
+                    </td>
                   ))}
                 </tr>
               ))
             ) : carriers.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-dark-5">ยังไม่มีผู้ให้บริการขนส่ง</td></tr>
+              <tr>
+                <td colSpan={6} className="px-4 py-8 text-center text-dark-5">ยังไม่มีผู้ให้บริการขนส่ง</td>
+              </tr>
             ) : carriers.map((c) => (
               <tr key={c.id} className="hover:bg-[#f8fbf9]">
                 <td className="px-4 py-3">
@@ -155,28 +161,47 @@ export function CarrierManager() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={c.logoUrl} alt={c.name} className="h-8 w-8 rounded object-contain" />
                   ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded text-[10px] font-bold" style={{ backgroundColor: c.color, color: c.textColor }}>
+                    <div
+                      className="flex h-8 w-8 items-center justify-center rounded text-[10px] font-bold"
+                      style={{ backgroundColor: c.color, color: c.textColor }}
+                    >
                       {c.shortName.slice(0, 2)}
                     </div>
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <span className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold" style={{ backgroundColor: c.color, color: c.textColor }}>
+                  <span
+                    className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-bold"
+                    style={{ backgroundColor: c.color, color: c.textColor }}
+                  >
                     {c.shortName}
                   </span>
                 </td>
                 <td className="px-4 py-3 font-medium text-dark">{c.name}</td>
-                <td className="px-4 py-3 max-w-xs truncate text-dark-5">{c.trackingUrl ?? "—"}</td>
+                <td className="max-w-xs truncate px-4 py-3 text-dark-5">{c.trackingUrl ?? "—"}</td>
                 <td className="px-4 py-3">
                   <StatusPill label={c.isActive ? "เปิดใช้งาน" : "ปิด"} tone={c.isActive ? "success" : "default"} />
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-2">
-                    <button onClick={() => openEdit(c)} className="rounded-md border border-stroke px-3 py-1.5 text-xs font-medium text-dark hover:bg-[#f4fbf6]">แก้ไข</button>
-                    <button onClick={() => handleToggle(c)} className="rounded-md border border-stroke px-3 py-1.5 text-xs font-medium text-dark hover:bg-[#f4fbf6]">
+                    <button
+                      onClick={() => openEdit(c)}
+                      className="rounded-md border border-stroke px-3 py-1.5 text-xs font-medium text-dark hover:bg-[#f4fbf6]"
+                    >
+                      แก้ไข
+                    </button>
+                    <button
+                      onClick={() => handleToggle(c)}
+                      className="rounded-md border border-stroke px-3 py-1.5 text-xs font-medium text-dark hover:bg-[#f4fbf6]"
+                    >
                       {c.isActive ? "ปิดใช้งาน" : "เปิดใช้งาน"}
                     </button>
-                    <button onClick={() => handleDelete(c)} className="rounded-md border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50">ลบ</button>
+                    <button
+                      onClick={() => handleDelete(c)}
+                      className="rounded-md border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+                    >
+                      ลบ
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -185,80 +210,198 @@ export function CarrierManager() {
         </table>
       </div>
 
+      {/* Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="mb-4 text-lg font-bold text-dark">{editingId ? "แก้ไขผู้ให้บริการ" : "เพิ่มผู้ให้บริการใหม่"}</h3>
-            {error && <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
-            <div className="space-y-3">
-              {/* Logo upload */}
-              <div className="text-sm font-medium text-dark">โลโก้
-                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-                {form.previewUrl ? (
-                  <div className="mt-1 flex items-center gap-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={form.previewUrl} alt="preview" className="h-14 w-14 rounded-lg border border-stroke object-contain p-1" />
-                    <div className="flex flex-col gap-1">
-                      <button type="button" onClick={() => fileRef.current?.click()} className="rounded-md border border-stroke px-3 py-1 text-xs font-medium text-dark hover:bg-[#f4fbf6]">
-                        {uploading ? "กำลังอัปโหลด..." : "เปลี่ยนรูป"}
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/55 px-4 py-6">
+          <div
+            className="flex w-full max-w-md flex-col rounded-[28px] border border-stroke bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark"
+            style={{ maxHeight: "90vh" }}
+          >
+            {/* Header */}
+            <div className="flex shrink-0 items-center justify-between border-b border-stroke px-6 py-4 dark:border-dark-3">
+              <div>
+                <h3 className="text-lg font-bold text-dark dark:text-white">
+                  {editingId ? "แก้ไขผู้ให้บริการ" : "เพิ่มผู้ให้บริการใหม่"}
+                </h3>
+                <p className="mt-0.5 text-xs text-dark-5 dark:text-dark-6">
+                  {editingId ? "แก้ไขข้อมูลผู้ให้บริการขนส่ง" : "กรอกข้อมูลเพื่อเพิ่มผู้ให้บริการใหม่"}
+                </p>
+              </div>
+              <button
+                onClick={() => setModalOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-dark-5 transition-colors hover:bg-neutral-100 dark:hover:bg-dark-2"
+                type="button"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="space-y-4 px-6 py-5">
+                {error && (
+                  <p className="rounded-2xl bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</p>
+                )}
+
+                {/* Logo upload */}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">โลโก้</label>
+                  <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                  {form.previewUrl ? (
+                    <div className="relative inline-block">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={form.previewUrl}
+                        alt="carrier logo preview"
+                        className="h-24 w-40 rounded-xl border border-[#d8e6dd] object-contain p-2"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, previewUrl: "", tempImageFile: "" }))}
+                        className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#c84b44] text-xs text-white hover:bg-[#ad3d37]"
+                      >
+                        ×
                       </button>
-                      <button type="button" onClick={() => setForm(f => ({ ...f, previewUrl: "", tempImageFile: "", logoUrl: "" }))} className="rounded-md border border-red-100 px-3 py-1 text-xs font-medium text-red-500 hover:bg-red-50">
-                        ลบรูป
+                      <button
+                        type="button"
+                        onClick={() => fileRef.current?.click()}
+                        className="mt-2 block text-xs text-[#45745a] underline"
+                      >
+                        เปลี่ยนรูป
                       </button>
                     </div>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current?.click()}
-                    disabled={uploading}
-                    className="mt-1 flex h-14 w-full items-center justify-center rounded-lg border border-dashed border-stroke bg-[#f8fbf9] text-xs text-dark-5 hover:border-[#45745a] hover:text-[#45745a] disabled:opacity-50"
-                  >
-                    {uploading ? "กำลังอัปโหลด..." : "+ เพิ่มรูปโลโก้"}
-                  </button>
-                )}
-              </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current?.click()}
+                      disabled={uploading}
+                      className="flex h-24 w-40 items-center justify-center rounded-xl border-2 border-dashed border-[#d8e6dd] bg-[#f8fbf9] text-sm text-dark-5 transition-colors hover:border-[#5f8f74] hover:bg-[#f0f8f4] disabled:opacity-50"
+                    >
+                      {uploading ? "กำลังอัปโหลด..." : "+ เพิ่มรูป"}
+                    </button>
+                  )}
+                </div>
 
-              <label className="block text-sm font-medium text-dark">ชื่อเต็ม <span className="text-red-500">*</span>
-                <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="mt-1 w-full rounded-lg border border-stroke px-3 py-2 text-sm outline-none focus:border-[#45745a]" placeholder="เช่น Kerry Express" />
-              </label>
-              <label className="block text-sm font-medium text-dark">ชื่อย่อ <span className="text-red-500">*</span>
-                <input value={form.shortName} onChange={e => setForm(f => ({ ...f, shortName: e.target.value }))} className="mt-1 w-full rounded-lg border border-stroke px-3 py-2 text-sm outline-none focus:border-[#45745a]" placeholder="เช่น KERRY" />
-              </label>
-              <div className="flex gap-3">
-                <label className="flex-1 text-sm font-medium text-dark">สีพื้นหลัง
-                  <div className="mt-1 flex items-center gap-2">
-                    <input type="color" value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} className="h-9 w-12 cursor-pointer rounded border border-stroke p-0.5" />
-                    <input value={form.color} onChange={e => setForm(f => ({ ...f, color: e.target.value }))} className="flex-1 rounded-lg border border-stroke px-3 py-2 text-sm outline-none focus:border-[#45745a]" placeholder="#000000" />
+                {/* Name */}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">
+                    ชื่อเต็ม <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    value={form.name}
+                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="เช่น Kerry Express"
+                    className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-2.5 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                  />
+                </div>
+
+                {/* Short name */}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">
+                    ชื่อย่อ <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    value={form.shortName}
+                    onChange={e => setForm(f => ({ ...f, shortName: e.target.value }))}
+                    placeholder="เช่น KERRY"
+                    className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-2.5 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                  />
+                </div>
+
+                {/* Colors */}
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">สีพื้นหลัง</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={form.color}
+                        onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
+                        className="h-[42px] w-12 cursor-pointer rounded-xl border border-[#d8e6dd] p-0.5"
+                      />
+                      <input
+                        value={form.color}
+                        onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
+                        className="min-w-0 flex-1 rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                        placeholder="#000000"
+                      />
+                    </div>
                   </div>
-                </label>
-                <label className="flex-1 text-sm font-medium text-dark">สีตัวอักษร
-                  <div className="mt-1 flex items-center gap-2">
-                    <input type="color" value={form.textColor} onChange={e => setForm(f => ({ ...f, textColor: e.target.value }))} className="h-9 w-12 cursor-pointer rounded border border-stroke p-0.5" />
-                    <input value={form.textColor} onChange={e => setForm(f => ({ ...f, textColor: e.target.value }))} className="flex-1 rounded-lg border border-stroke px-3 py-2 text-sm outline-none focus:border-[#45745a]" placeholder="#FFFFFF" />
+                  <div className="flex-1">
+                    <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">สีตัวอักษร</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={form.textColor}
+                        onChange={e => setForm(f => ({ ...f, textColor: e.target.value }))}
+                        className="h-[42px] w-12 cursor-pointer rounded-xl border border-[#d8e6dd] p-0.5"
+                      />
+                      <input
+                        value={form.textColor}
+                        onChange={e => setForm(f => ({ ...f, textColor: e.target.value }))}
+                        className="min-w-0 flex-1 rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                        placeholder="#FFFFFF"
+                      />
+                    </div>
                   </div>
-                </label>
+                </div>
+
+                {/* Badge preview */}
+                <div className="flex items-center gap-3 rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3">
+                  <span className="text-xs text-dark-5">ตัวอย่าง</span>
+                  {form.previewUrl && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={form.previewUrl} alt="" className="h-6 w-6 rounded object-contain" />
+                  )}
+                  <span
+                    className="rounded-md px-3 py-1 text-sm font-bold"
+                    style={{ backgroundColor: form.color, color: form.textColor }}
+                  >
+                    {form.shortName || "DEMO"}
+                  </span>
+                </div>
+
+                {/* Tracking URL */}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">URL ติดตามพัสดุ</label>
+                  <input
+                    value={form.trackingUrl}
+                    onChange={e => setForm(f => ({ ...f, trackingUrl: e.target.value }))}
+                    placeholder="https://... ใส่ {tracking} แทนเลขพัสดุ"
+                    className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-2.5 text-sm text-dark outline-none transition-colors placeholder:text-dark-5 focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                  />
+                </div>
+
+                {/* Sort order */}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">ลำดับการแสดง</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.sortOrder}
+                    onChange={e => setForm(f => ({ ...f, sortOrder: Number(e.target.value) }))}
+                    className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-2.5 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                  />
+                </div>
               </div>
-              <div className="flex items-center justify-center gap-3">
-                {form.previewUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={form.previewUrl} alt="logo" className="h-8 w-8 rounded object-contain" />
-                )}
-                <span className="rounded-md px-4 py-1.5 text-sm font-bold" style={{ backgroundColor: form.color, color: form.textColor }}>
-                  {form.shortName || "ตัวอย่าง"}
-                </span>
-              </div>
-              <label className="block text-sm font-medium text-dark">URL ติดตามพัสดุ
-                <input value={form.trackingUrl} onChange={e => setForm(f => ({ ...f, trackingUrl: e.target.value }))} className="mt-1 w-full rounded-lg border border-stroke px-3 py-2 text-sm outline-none focus:border-[#45745a]" placeholder="https://... ใส่ {tracking} แทนเลขพัสดุ" />
-              </label>
-              <label className="block text-sm font-medium text-dark">ลำดับการแสดง
-                <input type="number" value={form.sortOrder} onChange={e => setForm(f => ({ ...f, sortOrder: Number(e.target.value) }))} className="mt-1 w-full rounded-lg border border-stroke px-3 py-2 text-sm outline-none focus:border-[#45745a]" />
-              </label>
             </div>
-            <div className="mt-5 flex gap-3">
-              <button onClick={() => setModalOpen(false)} className="flex-1 rounded-full border border-stroke py-2 text-sm font-semibold text-dark hover:bg-[#f4fbf6]">ยกเลิก</button>
-              <button onClick={handleSave} disabled={saving || uploading} className="flex-1 rounded-full bg-[#45745a] py-2 text-sm font-semibold text-white hover:bg-[#355846] disabled:opacity-50">
-                {saving ? "กำลังบันทึก..." : "บันทึก"}
+
+            {/* Footer */}
+            <div className="flex shrink-0 justify-end gap-3 border-t border-stroke px-6 py-4 dark:border-dark-3">
+              <button
+                onClick={() => setModalOpen(false)}
+                type="button"
+                className="rounded-full border border-[#d7e7dc] px-5 py-2.5 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || uploading}
+                type="button"
+                className="rounded-full bg-[#45745a] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {saving ? "กำลังบันทึก..." : editingId ? "บันทึกการเปลี่ยนแปลง" : "เพิ่มผู้ให้บริการ"}
               </button>
             </div>
           </div>
