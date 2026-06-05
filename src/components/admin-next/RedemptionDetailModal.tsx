@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useToast } from "@/components/shared/toast-provider";
 
 type RedemptionStatus = "PENDING" | "PREPARING" | "SHIPPED" | "DELIVERED";
 
@@ -10,6 +11,7 @@ type RedemptionDetail = {
   pointsSpent: number;
   status: RedemptionStatus;
   trackingNumber: string | null;
+  carrierId: string | null;
   shippingRecipient: string | null;
   shippingPhone: string | null;
   shippingAddress: string | null;
@@ -48,7 +50,8 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
   const [carrierId, setCarrierId] = useState<string>("");
   const [carriers, setCarriers] = useState<CarrierOption[]>([]);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetch("/api/carriers?activeOnly=true")
@@ -62,7 +65,7 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
   }, []);
 
   useEffect(() => {
-    if (!redemptionId) { setDetail(null); setMessage(null); return; }
+    if (!redemptionId) { setDetail(null); setErrorMsg(null); return; }
     setLoading(true);
     fetch(`/api/reward-products/redemptions/${redemptionId}`)
       .then((r) => r.json())
@@ -70,6 +73,8 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
         setDetail(data);
         setStatus(data.status);
         setTrackingNumber(data.trackingNumber ?? "");
+        if (data.carrierId) setCarrierId(data.carrierId);
+        setErrorMsg(null);
       })
       .catch(() => setDetail(null))
       .finally(() => setLoading(false));
@@ -78,22 +83,32 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
   async function handleSave() {
     if (!detail) return;
     if (status === "SHIPPED" && !trackingNumber.trim()) {
-      setMessage({ type: "error", text: "กรุณากรอกหมายเลขพัสดุก่อนเปลี่ยนสถานะเป็นจัดส่งแล้ว" });
+      setErrorMsg("กรุณากรอกหมายเลขพัสดุก่อนเปลี่ยนสถานะเป็นจัดส่งแล้ว");
+      showToast("กรุณากรอกหมายเลขพัสดุ", "error");
       return;
     }
     setSaving(true);
-    setMessage(null);
+    setErrorMsg(null);
     try {
       const res = await fetch(`/api/reward-products/redemptions/${detail.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status, trackingNumber: trackingNumber.trim() || undefined, carrierId: carrierId || undefined }),
       });
-      if (!res.ok) throw new Error("บันทึกไม่สำเร็จ");
-      setMessage({ type: "success", text: "บันทึกเรียบร้อย" });
-      setTimeout(() => { onUpdated(); onClose(); }, 800);
-    } catch (e) {
-      setMessage({ type: "error", text: e instanceof Error ? e.message : "เกิดข้อผิดพลาด" });
+      if (!res.ok) {
+        const e = await res.json().catch(() => null) as { message?: string } | null;
+        const msg = e?.message ?? "บันทึกไม่สำเร็จ";
+        setErrorMsg(msg);
+        showToast(msg, "error");
+        return;
+      }
+      showToast("บันทึกเรียบร้อย", "success");
+      onUpdated();
+      onClose();
+    } catch {
+      const msg = "เกิดข้อผิดพลาด กรุณาลองใหม่";
+      setErrorMsg(msg);
+      showToast(msg, "error");
     } finally {
       setSaving(false);
     }
@@ -223,14 +238,10 @@ export function RedemptionDetailModal({ redemptionId, onClose, onUpdated }: Prop
                 />
               </div>
 
-              {/* Message */}
-              {message && (
-                <div className={`rounded-xl px-4 py-3 text-sm font-medium ${
-                  message.type === "success"
-                    ? "bg-green-50 text-green-700"
-                    : "bg-red-50 text-red-600"
-                }`}>
-                  {message.text}
+              {/* Error */}
+              {errorMsg && (
+                <div className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                  {errorMsg}
                 </div>
               )}
             </div>
