@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { useToast } from "@/components/shared/toast-provider";
 import { StatusPill } from "./page-elements";
 
 type Carrier = {
@@ -39,6 +40,7 @@ export function CarrierManager() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function load() {
@@ -81,6 +83,7 @@ export function CarrierManager() {
       setForm(f => ({ ...f, tempImageFile: data.filename, previewUrl: data.url }));
     } catch {
       setError("อัปโหลดรูปไม่สำเร็จ");
+      showToast("อัปโหลดรูปไม่สำเร็จ", "error");
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -100,19 +103,30 @@ export function CarrierManager() {
       ? await fetch(`/api/carriers/${editingId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
       : await fetch("/api/carriers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     setSaving(false);
-    if (!res.ok) { const d = await res.json(); setError(d.message ?? "เกิดข้อผิดพลาด"); return; }
+    if (!res.ok) {
+      const d = await res.json();
+      const msg = d.message ?? "เกิดข้อผิดพลาด";
+      setError(msg);
+      showToast(msg, "error");
+      return;
+    }
+    showToast(editingId ? "อัปเดตผู้ให้บริการสำเร็จ" : "เพิ่มผู้ให้บริการสำเร็จ", "success");
     setModalOpen(false);
     load();
   }
 
   async function handleToggle(c: Carrier) {
-    await fetch(`/api/carriers/${c.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive: !c.isActive }) });
+    const res = await fetch(`/api/carriers/${c.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ isActive: !c.isActive }) });
+    if (res.ok) showToast(c.isActive ? "ปิดใช้งานแล้ว" : "เปิดใช้งานแล้ว", "success");
+    else showToast("ไม่สามารถเปลี่ยนสถานะได้", "error");
     load();
   }
 
   async function handleDelete(c: Carrier) {
     if (!window.confirm(`ลบ "${c.name}" ใช่หรือไม่?`)) return;
-    await fetch(`/api/carriers/${c.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/carriers/${c.id}`, { method: "DELETE" });
+    if (res.ok) showToast(`ลบ "${c.name}" สำเร็จ`, "warning");
+    else showToast("ไม่สามารถลบได้", "error");
     load();
   }
 
