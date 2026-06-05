@@ -196,7 +196,6 @@ export function EventOrderModal({ isOpen, onClose, onSuccess }: Props) {
     setBrands([]);
     setAllCategories([]);
     setAllCollections([]);
-    setAllProducts([]);
     setItems([]);
     setError("");
     setSearchQuery("");
