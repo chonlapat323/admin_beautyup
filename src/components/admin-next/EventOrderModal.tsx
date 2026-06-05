@@ -64,6 +64,7 @@ export function EventOrderModal({ isOpen, onClose, onSuccess }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Load reference data on open
   useEffect(() => {
@@ -132,13 +133,15 @@ export function EventOrderModal({ isOpen, onClose, onSuccess }: Props) {
   }, [allCollections, filterCategoryId]);
 
   const filteredProducts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
     return allProducts.filter((p) => {
       if (filterBrandId && p.brandId !== filterBrandId) return false;
       if (filterCategoryId && p.categoryId !== filterCategoryId) return false;
       if (filterCollectionId && p.collectionId !== filterCollectionId) return false;
+      if (q && !p.name.toLowerCase().includes(q) && !p.sku.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [allProducts, filterBrandId, filterCategoryId, filterCollectionId]);
+  }, [allProducts, filterBrandId, filterCategoryId, filterCollectionId, searchQuery]);
 
   function addItem(product: ApiProductSimple) {
     const existing = items.find((i) => i.productId === product.id);
@@ -197,6 +200,7 @@ export function EventOrderModal({ isOpen, onClose, onSuccess }: Props) {
     setAllProducts([]);
     setItems([]);
     setError("");
+    setSearchQuery("");
   }
 
   function handleClose() {
@@ -317,6 +321,29 @@ export function EventOrderModal({ isOpen, onClose, onSuccess }: Props) {
             {/* Section 2: Products */}
             <div>
               <SectionLabel>เลือกสินค้า</SectionLabel>
+
+              {/* Search */}
+              <div className="relative mb-2">
+                <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-dark-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="ค้นหาชื่อสินค้าหรือ SKU..."
+                  className="w-full rounded-xl border border-stroke bg-white py-2.5 pl-9 pr-4 text-sm text-dark placeholder:text-dark-5 focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-gray-dark dark:text-white"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-5 hover:text-dark"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
 
               {/* Filter row */}
               <div className="mb-3 grid grid-cols-3 gap-2">
