@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
+import { useToast } from "@/components/shared/toast-provider";
 import { ContentCard, StatusPill } from "@/components/admin-next/page-elements";
 import { EventOrderModal } from "./EventOrderModal";
 
@@ -227,6 +228,7 @@ export function OrderManager() {
   const [detail, setDetail] = useState<OrderDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<ManualStatus>("PROCESSING");
+  const { showToast } = useToast();
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [trackingInput, setTrackingInput] = useState("");
@@ -406,9 +408,12 @@ export function OrderManager() {
       if (!r.ok) {
         recentlyChangedRef.current.delete(orderId);
         const e = (await r.json().catch(() => null)) as { message?: string } | null;
-        setSaveError(e?.message ?? "ไม่สามารถบันทึกได้");
+        const msg = e?.message ?? "ไม่สามารถบันทึกได้";
+        setSaveError(msg);
+        showToast(msg, "error");
         return;
       }
+      showToast("อัปเดตสถานะสำเร็จ", "success");
       setTimeout(() => recentlyChangedRef.current.delete(orderId), 10_000);
       await loadDetail(orderId);
       setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, status: selectedStatus } : o)));
@@ -431,8 +436,10 @@ export function OrderManager() {
       });
       if (!r.ok) {
         recentlyChangedRef.current.delete(orderId);
+        showToast("ไม่สามารถบันทึก tracking ได้", "error");
         return;
       }
+      showToast("บันทึก tracking สำเร็จ", "success");
       setTimeout(() => recentlyChangedRef.current.delete(orderId), 10_000);
       await loadDetail(orderId);
       setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: "SHIPPED" } : o));
@@ -445,11 +452,13 @@ export function OrderManager() {
     if (!detail) return;
     setSavingNote(true);
     try {
-      await fetch(`/api/orders/${detail.id}/note`, {
+      const r = await fetch(`/api/orders/${detail.id}/note`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ note: noteInput || null }),
       });
+      if (r.ok) showToast("บันทึก note สำเร็จ", "success");
+      else showToast("ไม่สามารถบันทึก note ได้", "error");
       setDetail((prev) => prev ? { ...prev, note: noteInput || null } : prev);
     } finally {
       setSavingNote(false);

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useToast } from "@/components/shared/toast-provider";
 import { ApiBrand, ApiCategory, ApiCollection } from "@/lib/admin-api";
 
 type ApiProductSimple = {
@@ -69,6 +70,7 @@ export function EventOrderModal({ isOpen, onClose, onSuccess }: Props) {
   // UI
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const { showToast } = useToast();
 
   // Load brands/categories/collections on open (small datasets)
   useEffect(() => {
@@ -227,9 +229,12 @@ export function EventOrderModal({ isOpen, onClose, onSuccess }: Props) {
       });
       if (!r.ok) {
         const e = (await r.json().catch(() => null)) as { message?: string } | null;
-        setError(e?.message ?? "ไม่สามารถสร้างคำสั่งซื้อได้");
+        const msg = e?.message ?? "ไม่สามารถสร้างคำสั่งซื้อได้";
+        setError(msg);
+        showToast(msg, "error");
         return;
       }
+      showToast("สร้าง Event Order สำเร็จ", "success");
       resetState();
       onSuccess();
       onClose();
