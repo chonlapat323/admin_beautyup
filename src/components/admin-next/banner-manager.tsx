@@ -166,7 +166,7 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
           <div className="absolute -right-[4px] top-28 h-14 w-[4px] rounded-r-sm bg-[#3a3a3c]" />
 
           {/* Screen */}
-          <div className="overflow-hidden" style={{ borderRadius: 40, height: 510, backgroundColor: "#046340", fontFamily: "'Noto Sans Thai', sans-serif" }}>
+          <div className="overflow-hidden" style={{ borderRadius: 40, height: 408, backgroundColor: "#046340", fontFamily: "'Noto Sans Thai', sans-serif" }}>
             {/* Status bar */}
             <div className="flex items-center justify-between px-6" style={{ height: 52, paddingTop: 16 }}>
               <span style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>9:41</span>
