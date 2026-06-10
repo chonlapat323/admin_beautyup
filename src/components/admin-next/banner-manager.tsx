@@ -47,6 +47,171 @@ const LINK_TYPE_OPTIONS = [
   { label: "หมวดหมู่ (Category)", value: "category" },
 ];
 
+function RichBodyEditor({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Initialize innerHTML once on mount (value is the initial state from form)
+  useEffect(() => {
+    if (ref.current) ref.current.innerHTML = value;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function format(cmd: string) {
+    ref.current?.focus();
+    document.execCommand(cmd, false, undefined);
+    if (ref.current) onChange(ref.current.innerHTML);
+  }
+
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center gap-1">
+        <button
+          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#d8e6dd] bg-[#f8fbf9] text-sm font-bold text-dark transition-colors hover:bg-[#eef7f2]"
+          onMouseDown={(e) => { e.preventDefault(); format("bold"); }}
+          title="Bold"
+          type="button"
+        >B</button>
+        <button
+          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#d8e6dd] bg-[#f8fbf9] text-sm italic text-dark transition-colors hover:bg-[#eef7f2]"
+          onMouseDown={(e) => { e.preventDefault(); format("italic"); }}
+          title="Italic"
+          type="button"
+        >I</button>
+        <span className="ml-1 text-xs text-dark-5">เลือกข้อความแล้วกด B / I</span>
+      </div>
+      <div
+        ref={ref}
+        className="min-h-[72px] w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white empty:before:text-dark-5 empty:before:content-[attr(data-placeholder)]"
+        contentEditable
+        data-placeholder={placeholder}
+        onInput={() => { if (ref.current) onChange(ref.current.innerHTML); }}
+        suppressContentEditableWarning
+      />
+    </div>
+  );
+}
+
+function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePreview: string | null }) {
+  return (
+    <div>
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-dark-5 dark:text-dark-6">
+        Live Preview — iPhone 11
+      </p>
+      {/* iPhone 11 frame — 393×852pt logical, rendered at ~240px */}
+      <div className="mx-auto" style={{ width: 240 }}>
+        <div
+          className="relative bg-[#1c1c1e]"
+          style={{
+            borderRadius: 50,
+            padding: "14px 8px 22px",
+            boxShadow: "0 0 0 2px #3a3a3c, inset 0 0 0 2px #2c2c2e, 0 24px 48px rgba(0,0,0,0.55)",
+          }}
+        >
+          {/* Wide notch — iPhone 11 */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 bg-[#1c1c1e]"
+            style={{ top: 14, width: 118, height: 26, borderRadius: "0 0 18px 18px", zIndex: 10 }}
+          />
+          {/* Side buttons */}
+          <div className="absolute -left-[3px] top-24 h-8 w-[3px] rounded-l-sm bg-[#3a3a3c]" />
+          <div className="absolute -left-[3px] top-36 h-8 w-[3px] rounded-l-sm bg-[#3a3a3c]" />
+          <div className="absolute -right-[3px] top-28 h-12 w-[3px] rounded-r-sm bg-[#3a3a3c]" />
+          {/* Screen */}
+          <div className="overflow-hidden bg-[#046340]" style={{ borderRadius: 38 }}>
+            {/* Status bar */}
+            <div className="flex items-end justify-between px-5 pb-1 pt-3" style={{ height: 46 }}>
+              <span className="text-[9px] font-semibold text-white">9:41</span>
+              <div className="flex items-center gap-1">
+                <svg fill="white" height="10" viewBox="0 0 15 10" width="15">
+                  <rect height="7" rx="0.5" width="3" x="0" y="3" />
+                  <rect height="8" rx="0.5" width="3" x="4" y="2" />
+                  <rect height="9" rx="0.5" width="3" x="8" y="1" />
+                  <rect height="10" rx="0.5" width="3" x="12" y="0" />
+                </svg>
+                <svg fill="white" height="10" viewBox="0 0 14 10" width="14">
+                  <path d="M7 2.5C4.5 2.5 2.3 3.5.8 5.2L0 4.3C1.8 2.3 4.3 1 7 1s5.2 1.3 7 3.3l-.8.9C11.7 3.5 9.5 2.5 7 2.5z" />
+                  <path d="M7 5c-1.5 0-2.8.6-3.8 1.5L2.4 5.7C3.6 4.5 5.2 3.7 7 3.7s3.4.8 4.6 2L10.8 6.5C9.8 5.6 8.5 5 7 5z" />
+                  <circle cx="7" cy="8" r="1.5" />
+                </svg>
+                <svg fill="none" height="12" viewBox="0 0 25 12" width="25">
+                  <rect height="10" rx="3.5" strokeOpacity=".35" stroke="white" width="21" x="0.5" y="1" />
+                  <rect fill="white" height="7" rx="2" width="16" x="2" y="2.5" />
+                  <path d="M23 4.5v3a1.5 1.5 0 000-3z" fill="white" fillOpacity=".4" />
+                </svg>
+              </div>
+            </div>
+            {/* App body */}
+            <div className="px-3 pb-5">
+              {/* Mini app header */}
+              <div className="mb-2 flex items-center justify-between">
+                <div>
+                  <p className="text-[8px] font-medium text-white/60">สวัสดีตอนเช้า</p>
+                  <p className="text-[11px] font-bold text-white">BeautyUp</p>
+                </div>
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C9A227]">
+                  <svg fill="white" height="12" viewBox="0 0 24 24" width="12">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                  </svg>
+                </div>
+              </div>
+              {/* Banner card */}
+              <div className="relative overflow-hidden rounded-2xl bg-white p-2.5 shadow-sm">
+                <div className="flex gap-2">
+                  <div className="flex flex-1 flex-col gap-1">
+                    {form.eyebrow ? (
+                      <p className="text-[7px] font-bold uppercase tracking-widest text-[#C9A227]">{form.eyebrow}</p>
+                    ) : (
+                      <p className="text-[7px] font-bold uppercase tracking-widest text-[#C9A227]/25">EYEBROW</p>
+                    )}
+                    {form.title ? (
+                      <p className="text-[10px] font-bold leading-tight text-[#173022]">{form.title}</p>
+                    ) : (
+                      <p className="text-[10px] font-bold leading-tight text-[#173022]/20">หัวข้อหลัก</p>
+                    )}
+                    {form.body ? (
+                      <p
+                        className="text-[8px] leading-relaxed text-[#4A7560] [&_b]:font-bold [&_em]:italic [&_i]:italic [&_strong]:font-bold"
+                        dangerouslySetInnerHTML={{ __html: form.body }}
+                      />
+                    ) : null}
+                    <div className="mt-1 inline-block self-start rounded-full bg-[#C9A227] px-2 py-0.5 text-[7px] font-bold text-[#7a5a00]">
+                      {form.buttonLabel || "Shop Now"}
+                    </div>
+                  </div>
+                  <div className="flex w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#f0f6f2]">
+                    {imagePreview ? (
+                      <img alt="banner" className="h-full w-full object-cover" src={imagePreview} />
+                    ) : (
+                      <span className="text-base opacity-20">🖼</span>
+                    )}
+                  </div>
+                </div>
+                {form.tag ? (
+                  <div className="absolute right-1.5 top-1.5 rounded-full bg-[#C9A227] px-1.5 py-0.5 text-[7px] font-bold text-white">
+                    {form.tag}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+          {/* Home indicator */}
+          <div className="mt-2 flex justify-center">
+            <div className="h-1 w-16 rounded-full bg-white/25" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BannerFormModal({
   editingId,
   form,
@@ -73,13 +238,16 @@ function BannerFormModal({
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   return (
+    <>
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#0f172a]/55 px-4 py-8">
       <div
         className="flex w-full max-w-xl flex-col rounded-[30px] border border-[#dce9e1] bg-white shadow-1 dark:border-dark-3 dark:bg-gray-dark"
         style={{ maxHeight: "90vh" }}
       >
+        {/* Header */}
         <div className="shrink-0 flex items-start justify-between gap-4 border-b border-[#edf4ef] px-7 py-6 dark:border-dark-3">
           <h3 className="text-2xl font-bold text-dark dark:text-white">
             {editingId ? "แก้ไขแบนเนอร์" : "เพิ่มแบนเนอร์"}
@@ -93,150 +261,153 @@ function BannerFormModal({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          <form className="space-y-5 px-7 py-7" id="banner-form" onSubmit={onSubmit}>
-            <div>
-              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-                Eyebrow <span className="text-red-500">*</span>
-              </label>
-              <input
-                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                onChange={(e) => onChange({ eyebrow: e.target.value })}
-                placeholder="เช่น Spring Ritual"
-                value={form.eyebrow}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-                หัวข้อหลัก <span className="text-red-500">*</span>
-              </label>
-              <input
-                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                onChange={(e) => onChange({ title: e.target.value })}
-                placeholder="เช่น Care That Feels Premium"
-                value={form.title}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">คำอธิบาย</label>
-              <textarea
-                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                onChange={(e) => onChange({ body: e.target.value })}
-                placeholder="คำอธิบายสั้นๆ (ไม่บังคับ)"
-                rows={2}
-                value={form.body}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-                Badge <span className="text-xs font-normal text-dark-5">(เช่น NEW, BEST SELLER — แสดงมุมบนขวาของ banner)</span>
-              </label>
-              <input
-                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                onChange={(e) => onChange({ tag: e.target.value })}
-                placeholder="NEW / BEST SELLER (ไม่บังคับ)"
-                value={form.tag}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">ชื่อปุ่ม</label>
-              <input
-                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                onChange={(e) => onChange({ buttonLabel: e.target.value })}
-                placeholder="Shop Now"
-                value={form.buttonLabel}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">ลิงก์ปุ่ม</label>
-              <select
-                className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                onChange={(e) => onChange({ linkType: e.target.value, linkId: "" })}
-                value={form.linkType}
-              >
-                {LINK_TYPE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-
-            {form.linkType === "product" ? (
+        {/* Body: Form */}
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto">
+            <form className="space-y-5 px-7 py-7" id="banner-form" onSubmit={onSubmit}>
               <div>
                 <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-                  เลือกสินค้า <span className="text-red-500">*</span>
+                  Eyebrow <span className="text-red-500">*</span>
                 </label>
+                <input
+                  className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                  onChange={(e) => onChange({ eyebrow: e.target.value })}
+                  placeholder="เช่น Spring Ritual"
+                  value={form.eyebrow}
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+                  หัวข้อหลัก <span className="text-red-500">*</span>
+                </label>
+                <input
+                  className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                  onChange={(e) => onChange({ title: e.target.value })}
+                  placeholder="เช่น Care That Feels Premium"
+                  value={form.title}
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">คำอธิบาย</label>
+                <RichBodyEditor
+                  key={editingId ?? "new"}
+                  onChange={(v) => onChange({ body: v })}
+                  placeholder="คำอธิบายสั้นๆ (ไม่บังคับ)"
+                  value={form.body}
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+                  Badge <span className="text-xs font-normal text-dark-5">(เช่น NEW, BEST SELLER — แสดงมุมบนขวาของ banner)</span>
+                </label>
+                <input
+                  className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                  onChange={(e) => onChange({ tag: e.target.value })}
+                  placeholder="NEW / BEST SELLER (ไม่บังคับ)"
+                  value={form.tag}
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">ชื่อปุ่ม</label>
+                <input
+                  className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                  onChange={(e) => onChange({ buttonLabel: e.target.value })}
+                  placeholder="Shop Now"
+                  value={form.buttonLabel}
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">ลิงก์ปุ่ม</label>
                 <select
                   className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                  onChange={(e) => onChange({ linkId: e.target.value })}
-                  value={form.linkId}
+                  onChange={(e) => onChange({ linkType: e.target.value, linkId: "" })}
+                  value={form.linkType}
                 >
-                  <option value="">เลือกสินค้า</option>
-                  {products.map((p) => (
-                    <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>
+                  {LINK_TYPE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </select>
               </div>
-            ) : form.linkType === "category" ? (
-              <div>
-                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
-                  เลือกหมวดหมู่ <span className="text-red-500">*</span>
-                </label>
-                <select
-                  className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                  onChange={(e) => onChange({ linkId: e.target.value })}
-                  value={form.linkId}
-                >
-                  <option value="">เลือกหมวดหมู่</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-            ) : null}
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-dark dark:text-white">รูปภาพ</label>
-              <input
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) onImageChange(f); }}
-                ref={fileRef}
-                type="file"
-              />
-              <button
-                className="flex h-14 w-full items-center justify-center rounded-[18px] border-2 border-dashed border-[#c8ddd1] bg-[#f8fbf9] text-sm text-[#5f8f74] transition-colors hover:border-[#5f8f74]"
-                onClick={() => fileRef.current?.click()}
-                type="button"
-              >
-                {imagePreview ? (
-                  <img alt="preview" className="h-12 w-auto rounded-lg object-cover" src={imagePreview} />
-                ) : (
-                  "คลิกเพื่อเลือกรูป"
-                )}
-              </button>
-              {imageFile ? (
-                <p className="mt-1 text-xs text-dark-5">{imageFile.name}</p>
+              {form.linkType === "product" ? (
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+                    เลือกสินค้า <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                    onChange={(e) => onChange({ linkId: e.target.value })}
+                    value={form.linkId}
+                  >
+                    <option value="">เลือกสินค้า</option>
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : form.linkType === "category" ? (
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-dark dark:text-white">
+                    เลือกหมวดหมู่ <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    className="w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
+                    onChange={(e) => onChange({ linkId: e.target.value })}
+                    value={form.linkId}
+                  >
+                    <option value="">เลือกหมวดหมู่</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
               ) : null}
-            </div>
 
-            <div className="flex items-center gap-3">
-              <button
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.isActive ? "bg-[#45745a]" : "bg-[#d7e2db]"}`}
-                onClick={() => onChange({ isActive: !form.isActive })}
-                type="button"
-              >
-                <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${form.isActive ? "translate-x-6" : "translate-x-1"}`} />
-              </button>
-              <span className="text-sm text-dark dark:text-white">{form.isActive ? "เผยแพร่" : "ซ่อน"}</span>
-            </div>
-          </form>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-dark dark:text-white">รูปภาพ</label>
+                <input
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) onImageChange(f); }}
+                  ref={fileRef}
+                  type="file"
+                />
+                <button
+                  className="flex h-14 w-full items-center justify-center rounded-[18px] border-2 border-dashed border-[#c8ddd1] bg-[#f8fbf9] text-sm text-[#5f8f74] transition-colors hover:border-[#5f8f74]"
+                  onClick={() => fileRef.current?.click()}
+                  type="button"
+                >
+                  {imagePreview ? (
+                    <img alt="preview" className="h-12 w-auto rounded-lg object-cover" src={imagePreview} />
+                  ) : (
+                    "คลิกเพื่อเลือกรูป"
+                  )}
+                </button>
+                {imageFile ? (
+                  <p className="mt-1 text-xs text-dark-5">{imageFile.name}</p>
+                ) : null}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${form.isActive ? "bg-[#45745a]" : "bg-[#d7e2db]"}`}
+                  onClick={() => onChange({ isActive: !form.isActive })}
+                  type="button"
+                >
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${form.isActive ? "translate-x-6" : "translate-x-1"}`} />
+                </button>
+                <span className="text-sm text-dark dark:text-white">{form.isActive ? "เผยแพร่" : "ซ่อน"}</span>
+              </div>
+            </form>
+          </div>
         </div>
 
+        {/* Footer */}
         <div className="shrink-0 flex flex-wrap gap-3 border-t border-[#edf4ef] px-7 py-5 dark:border-dark-3">
           <button
             className="inline-flex items-center justify-center rounded-full bg-[#45745a] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#355846] disabled:opacity-70"
@@ -245,6 +416,14 @@ function BannerFormModal({
             type="submit"
           >
             {isSubmitting ? "กำลังบันทึก..." : editingId ? "บันทึกการเปลี่ยนแปลง" : "เพิ่มแบนเนอร์"}
+          </button>
+          <button
+            className="inline-flex items-center gap-1.5 justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
+            onClick={() => setIsPreviewOpen(true)}
+            type="button"
+          >
+            <svg fill="none" height="15" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="15"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            ดูตัวอย่าง
           </button>
           <button
             className="inline-flex items-center justify-center rounded-full border border-[#d7e7dc] px-5 py-3 text-sm font-semibold text-[#355846] transition-colors hover:bg-[#f4fbf6]"
@@ -256,6 +435,26 @@ function BannerFormModal({
         </div>
       </div>
     </div>
+
+    {/* Preview overlay */}
+    {isPreviewOpen && (
+      <div
+        className="fixed inset-0 z-[130] flex items-center justify-center bg-[#0f172a]/70 px-4"
+        onClick={() => setIsPreviewOpen(false)}
+      >
+        <div onClick={(e) => e.stopPropagation()}>
+          <BannerPreview form={form} imagePreview={imagePreview} />
+          <button
+            className="mt-4 mx-auto flex items-center justify-center rounded-full border border-white/30 bg-white/10 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+            onClick={() => setIsPreviewOpen(false)}
+            type="button"
+          >
+            ปิดตัวอย่าง
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 
@@ -277,6 +476,7 @@ export function BannerManager() {
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [bannerToDelete, setBannerToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [previewBanner, setPreviewBanner] = useState<ApiBanner | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -352,7 +552,7 @@ export function BannerManager() {
       const payload = {
         eyebrow: form.eyebrow.trim(),
         title: form.title.trim(),
-        body: form.body.trim() || undefined,
+        body: form.body.replace(/^(<br\s*\/?>|\s)+$/i, "").trim() || undefined,
         tag: form.tag.trim() || null,
         buttonLabel: form.buttonLabel.trim() || "Shop Now",
         linkType: form.linkType,
@@ -570,6 +770,14 @@ export function BannerManager() {
                   <td className="px-4 py-4">
                     <div className="flex gap-2">
                       <button
+                        className="inline-flex items-center gap-1 rounded-full border border-[#d7e7dc] px-3 py-1 text-xs font-semibold text-[#355846] hover:bg-[#f4fbf6]"
+                        onClick={() => setPreviewBanner(banner)}
+                        type="button"
+                      >
+                        <svg fill="none" height="11" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="11"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        ดูตัวอย่าง
+                      </button>
+                      <button
                         className="rounded-full border border-[#d7e7dc] px-3 py-1 text-xs font-semibold text-[#355846] hover:bg-[#f4fbf6]"
                         onClick={() => startEdit(banner)}
                         type="button"
@@ -624,6 +832,37 @@ export function BannerManager() {
           </div>
         </div>
       </ContentCard>
+
+      {previewBanner ? createPortal(
+        <div
+          className="fixed inset-0 z-[130] flex items-center justify-center bg-[#0f172a]/75 px-4"
+          onClick={() => setPreviewBanner(null)}
+        >
+          <div onClick={(e) => e.stopPropagation()}>
+            <BannerPreview
+              form={{
+                eyebrow: previewBanner.eyebrow,
+                title: previewBanner.title,
+                body: previewBanner.body ?? "",
+                tag: previewBanner.tag ?? "",
+                buttonLabel: previewBanner.buttonLabel,
+                linkType: previewBanner.linkType,
+                linkId: previewBanner.linkId ?? "",
+                isActive: previewBanner.isActive,
+              }}
+              imagePreview={previewBanner.imageUrl ?? null}
+            />
+            <button
+              className="mt-4 mx-auto flex items-center justify-center rounded-full border border-white/30 bg-white/10 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"
+              onClick={() => setPreviewBanner(null)}
+              type="button"
+            >
+              ปิดตัวอย่าง
+            </button>
+          </div>
+        </div>,
+        document.body,
+      ) : null}
 
       {bannerToDelete ? createPortal(
         <div className="fixed inset-0 z-[130] flex items-center justify-center bg-[#0f172a]/55 px-4">
