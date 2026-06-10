@@ -237,8 +237,10 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
                   </p>
                   {/* body: rgba(255,255,255,0.8), fontSize 13, lineHeight 20 — strip HTML for display */}
                   {form.body ? (
-                    <p style={{ color: "rgba(255,255,255,0.80)", fontSize: 13, lineHeight: "20px", margin: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
-                      dangerouslySetInnerHTML={{ __html: form.body.replace(/<\/p>/gi, " ").replace(/<[^>]+>/g, "") }}
+                    <div
+                      style={{ color: "rgba(255,255,255,0.80)", fontSize: 13, lineHeight: "20px", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}
+                      className="[&_p]:m-0 [&_p+p]:mt-0.5 [&_strong]:font-bold [&_em]:italic [&_u]:underline [&_s]:line-through [&_ul]:list-disc [&_ul]:pl-4 [&_li]:m-0"
+                      dangerouslySetInnerHTML={{ __html: form.body }}
                     />
                   ) : null}
                   {/* CTA button: gold bg, goldDark text */}
