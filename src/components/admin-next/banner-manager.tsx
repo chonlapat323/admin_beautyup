@@ -205,74 +205,71 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
                 <span style={{ color: "#9ca3af", fontSize: 13 }}>ค้นหาผลิตภัณฑ์ดูแลเส้นผม</span>
               </div>
 
-              {/* HeroSlide card — exact values from HeroSlide.tsx + theme/tokens.ts */}
-              {/* card: padding 24, borderRadius 28, bg #fff, border rgba(255,255,255,0.12), shadow */}
+              {/* Banner card — matches HomeHeroSliderSection.tsx exactly */}
+              {/* card: bg #1A3A2A, borderRadius 28, px 24 py 20, dark green */}
               <div
                 className="relative overflow-hidden"
                 style={{
                   display: "flex",
                   flexDirection: "row",
-                  padding: 24,
+                  alignItems: "center",
+                  padding: "20px 12px 20px 24px",
                   borderRadius: 28,
-                  backgroundColor: "#ffffff",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  boxShadow: "0 10px 18px rgba(138,104,112,0.08)",
+                  backgroundColor: "#1A3A2A",
+                  boxShadow: "0 8px 18px rgba(0,0,0,0.12)",
                   gap: 0,
+                  minHeight: 160,
                 }}
               >
-                {/* copy — flex:1, paddingRight:16, gap:12 */}
-                <div style={{ flex: 1, paddingRight: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-                  {/* eyebrow: color #D4AF37, fontSize 11, letterSpacing 1.8, semiBold, uppercase */}
-                  <p style={{ color: form.eyebrow ? "#D4AF37" : "rgba(212,175,55,0.25)", fontSize: 11, fontWeight: 600, letterSpacing: 1.8, textTransform: "uppercase", margin: 0 }}>
-                    {form.eyebrow || "EYEBROW"}
+                {/* Decorative circles */}
+                <div style={{ position: "absolute", width: 220, height: 220, borderRadius: 110, backgroundColor: "rgba(255,255,255,0.04)", top: -70, right: -30, pointerEvents: "none" }} />
+                <div style={{ position: "absolute", width: 150, height: 150, borderRadius: 75, backgroundColor: "rgba(255,255,255,0.03)", bottom: -50, left: -20, pointerEvents: "none" }} />
+
+                {/* Left: text — flex:1, gap:8 */}
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, zIndex: 1 }}>
+                  {/* eyebrow: gold, fontSize 10, letterSpacing 1.8, uppercase */}
+                  <p style={{ color: "#D4AF37", fontSize: 10, fontWeight: 600, letterSpacing: 1.8, textTransform: "uppercase", margin: 0 }}>
+                    {form.eyebrow || <span style={{ opacity: 0.3 }}>EYEBROW</span>}
                   </p>
-                  {/* title: color #1a1a1a, fontSize 26, lineHeight 32, fontWeight 600, maxWidth 180 */}
-                  <p style={{ color: form.title ? "#1a1a1a" : "rgba(26,26,26,0.2)", fontSize: 26, lineHeight: "32px", fontWeight: 600, maxWidth: 180, margin: 0 }}>
+                  {/* title: white, fontSize 28, lineHeight 38, extraBold */}
+                  <p style={{ color: form.title ? "#ffffff" : "rgba(255,255,255,0.2)", fontSize: 28, lineHeight: "38px", fontWeight: 800, margin: 0 }}>
                     {form.title || "หัวข้อหลัก"}
                   </p>
-                  {/* body: color #6b7280, fontSize 15, lineHeight 22 */}
+                  {/* body: rgba(255,255,255,0.8), fontSize 13, lineHeight 20 — strip HTML for display */}
                   {form.body ? (
-                    <div
-                      style={{ color: "#6b7280", fontSize: 15, lineHeight: "22px", margin: 0 }}
-                      className="[&_b]:font-bold [&_strong]:font-bold [&_em]:italic [&_i]:italic [&_u]:underline [&_s]:line-through [&_ul]:list-disc [&_ul]:pl-5"
-                      dangerouslySetInnerHTML={{ __html: form.body }}
+                    <p style={{ color: "rgba(255,255,255,0.80)", fontSize: 13, lineHeight: "20px", margin: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+                      dangerouslySetInnerHTML={{ __html: form.body.replace(/<\/p>/gi, " ").replace(/<[^>]+>/g, "") }}
                     />
                   ) : null}
-                  {/* button: bg #D4AF37, px 20, py 12, borderRadius pill, color #1A0F00, fontSize 13, fontWeight 700 */}
-                  <div style={{ marginTop: 8 }}>
+                  {/* CTA button: gold bg, goldDark text */}
+                  <div style={{ marginTop: 4 }}>
                     <span style={{
-                      display: "inline-block",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
                       backgroundColor: "#D4AF37",
-                      paddingLeft: 20,
-                      paddingRight: 20,
-                      paddingTop: 12,
-                      paddingBottom: 12,
+                      paddingLeft: 16,
+                      paddingRight: 16,
+                      paddingTop: 10,
+                      paddingBottom: 10,
                       borderRadius: 999,
                       color: "#1A0F00",
                       fontSize: 13,
                       fontWeight: 700,
-                      boxShadow: "0 4px 8px rgba(212,175,55,0.35)",
                     }}>
-                      {form.buttonLabel || "Shop Now"} →
+                      {form.buttonLabel || "ช้อปเลย"} →
                     </span>
                   </div>
                 </div>
 
-                {/* visual — width 128, borderRadius 20 */}
-                <div style={{ width: 128, borderRadius: 20, overflow: "hidden", backgroundColor: "#eef8f1", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {/* Right: image — borderRadius 20, bg rgba(255,255,255,0.08) */}
+                <div style={{ width: 120, height: 120, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {imagePreview ? (
                     <img alt="banner" src={imagePreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
-                    <span style={{ fontSize: 36, opacity: 0.2 }}>🖼</span>
+                    <span style={{ fontSize: 32, opacity: 0.3 }}>🖼</span>
                   )}
                 </div>
-
-                {/* tag badge */}
-                {form.tag ? (
-                  <div style={{ position: "absolute", top: 10, right: 10, backgroundColor: "#D4AF37", paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 999 }}>
-                    <span style={{ color: "#fff", fontSize: 11, fontWeight: 700 }}>{form.tag}</span>
-                  </div>
-                ) : null}
               </div>
               {/* Dots indicator */}
               <div className="flex justify-center gap-1.5" style={{ marginTop: 10 }}>
