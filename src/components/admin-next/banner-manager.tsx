@@ -217,7 +217,7 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
                   borderRadius: 28,
                   backgroundColor: "#1A3A2A",
                   boxShadow: "0 8px 18px rgba(0,0,0,0.12)",
-                  gap: 16,
+                  gap: 8,
                   minHeight: 160,
                 }}
               >
@@ -264,8 +264,8 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
                   </div>
                 </div>
 
-                {/* Right: image — borderRadius 20, bg rgba(255,255,255,0.08) */}
-                <div style={{ width: 120, height: 120, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {/* Right: image — width proportional, alignSelf stretch to fill card height */}
+                <div style={{ width: 130, alignSelf: "stretch", borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {imagePreview ? (
                     <img alt="banner" src={imagePreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
