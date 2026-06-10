@@ -217,7 +217,7 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
                   borderRadius: 28,
                   backgroundColor: "#1A3A2A",
                   boxShadow: "0 8px 18px rgba(0,0,0,0.12)",
-                  gap: 0,
+                  gap: 16,
                   minHeight: 160,
                 }}
               >
