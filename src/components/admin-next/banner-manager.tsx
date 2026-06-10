@@ -146,9 +146,9 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
   return (
     <div>
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-dark-5 dark:text-dark-6">
-        Live Preview — iPhone 11 (414 × 896px)
+        Live Preview — iPhone 11 (414px)
       </p>
-      {/* iPhone 11 actual logical size: 414px wide */}
+      {/* iPhone 11: 414px logical width */}
       <div className="mx-auto" style={{ width: 430 }}>
         <div
           className="relative bg-[#1c1c1e]"
@@ -158,93 +158,110 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
             boxShadow: "0 0 0 2px #3a3a3c, inset 0 0 0 2px #2c2c2e, 0 32px 64px rgba(0,0,0,0.65)",
           }}
         >
-          {/* Wide notch — iPhone 11 */}
-          <div
-            className="absolute left-1/2 -translate-x-1/2 bg-[#1c1c1e]"
-            style={{ top: 16, width: 150, height: 30, borderRadius: "0 0 22px 22px", zIndex: 10 }}
-          />
+          {/* Notch */}
+          <div className="absolute left-1/2 -translate-x-1/2 bg-[#1c1c1e]" style={{ top: 16, width: 150, height: 30, borderRadius: "0 0 22px 22px", zIndex: 10 }} />
           {/* Side buttons */}
           <div className="absolute -left-[4px] top-28 h-10 w-[4px] rounded-l-sm bg-[#3a3a3c]" />
           <div className="absolute -left-[4px] top-44 h-10 w-[4px] rounded-l-sm bg-[#3a3a3c]" />
           <div className="absolute -right-[4px] top-36 h-16 w-[4px] rounded-r-sm bg-[#3a3a3c]" />
-          {/* Screen — 414px wide, 600px tall (top portion of 896px screen) */}
-          <div className="overflow-hidden bg-[#046340]" style={{ borderRadius: 44, height: 600 }}>
+
+          {/* Screen: bg #046340, 414px wide, show top 560px */}
+          <div className="overflow-hidden" style={{ borderRadius: 44, height: 560, backgroundColor: "#046340" }}>
             {/* Status bar */}
-            <div className="flex items-center justify-between px-6 pb-1 pt-4" style={{ height: 52 }}>
-              <span className="text-[13px] font-semibold text-white">9:41</span>
+            <div className="flex items-center justify-between px-6" style={{ height: 52, paddingTop: 16 }}>
+              <span style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>9:41</span>
               <div className="flex items-center gap-1.5">
-                <svg fill="white" height="12" viewBox="0 0 15 10" width="18">
-                  <rect height="7" rx="0.5" width="3" x="0" y="3" />
-                  <rect height="8" rx="0.5" width="3" x="4" y="2" />
-                  <rect height="9" rx="0.5" width="3" x="8" y="1" />
-                  <rect height="10" rx="0.5" width="3" x="12" y="0" />
-                </svg>
-                <svg fill="white" height="12" viewBox="0 0 14 10" width="16">
-                  <path d="M7 2.5C4.5 2.5 2.3 3.5.8 5.2L0 4.3C1.8 2.3 4.3 1 7 1s5.2 1.3 7 3.3l-.8.9C11.7 3.5 9.5 2.5 7 2.5z" />
-                  <path d="M7 5c-1.5 0-2.8.6-3.8 1.5L2.4 5.7C3.6 4.5 5.2 3.7 7 3.7s3.4.8 4.6 2L10.8 6.5C9.8 5.6 8.5 5 7 5z" />
-                  <circle cx="7" cy="8" r="1.5" />
-                </svg>
-                <svg fill="none" height="14" viewBox="0 0 25 12" width="28">
-                  <rect height="10" rx="3.5" strokeOpacity=".35" stroke="white" width="21" x="0.5" y="1" />
-                  <rect fill="white" height="7" rx="2" width="16" x="2" y="2.5" />
-                  <path d="M23 4.5v3a1.5 1.5 0 000-3z" fill="white" fillOpacity=".4" />
-                </svg>
+                <svg fill="white" height="11" viewBox="0 0 15 10" width="17"><rect height="7" rx="0.5" width="3" x="0" y="3" /><rect height="8" rx="0.5" width="3" x="4" y="2" /><rect height="9" rx="0.5" width="3" x="8" y="1" /><rect height="10" rx="0.5" width="3" x="12" y="0" /></svg>
+                <svg fill="white" height="11" viewBox="0 0 14 10" width="15"><path d="M7 2.5C4.5 2.5 2.3 3.5.8 5.2L0 4.3C1.8 2.3 4.3 1 7 1s5.2 1.3 7 3.3l-.8.9C11.7 3.5 9.5 2.5 7 2.5z" /><path d="M7 5c-1.5 0-2.8.6-3.8 1.5L2.4 5.7C3.6 4.5 5.2 3.7 7 3.7s3.4.8 4.6 2L10.8 6.5C9.8 5.6 8.5 5 7 5z" /><circle cx="7" cy="8" r="1.5" /></svg>
+                <svg fill="none" height="13" viewBox="0 0 25 12" width="27"><rect height="10" rx="3.5" strokeOpacity=".35" stroke="white" width="21" x="0.5" y="1" /><rect fill="white" height="7" rx="2" width="16" x="2" y="2.5" /><path d="M23 4.5v3a1.5 1.5 0 000-3z" fill="white" fillOpacity=".4" /></svg>
               </div>
             </div>
-            {/* App body */}
-            <div className="px-4 pb-6">
-              {/* App header */}
-              <div className="mb-3 flex items-center justify-between">
+
+            {/* App content — px:16 matches RN spacing.lg */}
+            <div style={{ padding: "0 16px 24px" }}>
+              {/* App header row */}
+              <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
                 <div>
-                  <p className="text-[11px] font-medium text-white/60">สวัสดีตอนเช้า</p>
-                  <p className="text-[17px] font-bold text-white">BeautyUp</p>
+                  <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 500, margin: 0 }}>สวัสดีตอนเช้า</p>
+                  <p style={{ color: "#fff", fontSize: 20, fontWeight: 700, margin: 0 }}>BeautyUp</p>
                 </div>
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#C9A227]">
-                  <svg fill="white" height="18" viewBox="0 0 24 24" width="18">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                  </svg>
+                <div style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#D4AF37", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg fill="white" height="18" viewBox="0 0 24 24" width="18"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
                 </div>
               </div>
-              {/* Banner card */}
-              <div className="relative overflow-hidden rounded-[20px] bg-white p-4 shadow-md">
-                <div className="flex gap-3">
-                  <div className="flex flex-1 flex-col gap-1.5">
-                    {form.eyebrow ? (
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-[#C9A227]">{form.eyebrow}</p>
-                    ) : (
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-[#C9A227]/25">EYEBROW</p>
-                    )}
-                    {form.title ? (
-                      <p className="text-[18px] font-bold leading-tight text-[#173022]">{form.title}</p>
-                    ) : (
-                      <p className="text-[18px] font-bold leading-tight text-[#173022]/20">หัวข้อหลัก</p>
-                    )}
-                    {form.body ? (
-                      <div
-                        className="text-[13px] leading-relaxed text-[#4A7560] [&_b]:font-bold [&_em]:italic [&_i]:italic [&_strong]:font-bold [&_u]:underline [&_s]:line-through [&_ul]:list-disc [&_ul]:pl-4"
-                        dangerouslySetInnerHTML={{ __html: form.body }}
-                      />
-                    ) : null}
-                    <div className="mt-2 inline-block self-start rounded-full bg-[#C9A227] px-4 py-1.5 text-[12px] font-bold text-[#7a5a00]">
+
+              {/* HeroSlide card — exact values from HeroSlide.tsx + theme/tokens.ts */}
+              {/* card: padding 24, borderRadius 28, bg #fff, border rgba(255,255,255,0.12), shadow */}
+              <div
+                className="relative overflow-hidden"
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  padding: 24,
+                  borderRadius: 28,
+                  backgroundColor: "#ffffff",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  boxShadow: "0 10px 18px rgba(138,104,112,0.08)",
+                  gap: 0,
+                }}
+              >
+                {/* copy — flex:1, paddingRight:16, gap:12 */}
+                <div style={{ flex: 1, paddingRight: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+                  {/* eyebrow: color #D4AF37, fontSize 11, letterSpacing 1.8, semiBold, uppercase */}
+                  <p style={{ color: form.eyebrow ? "#D4AF37" : "rgba(212,175,55,0.25)", fontSize: 11, fontWeight: 600, letterSpacing: 1.8, textTransform: "uppercase", margin: 0 }}>
+                    {form.eyebrow || "EYEBROW"}
+                  </p>
+                  {/* title: color #1a1a1a, fontSize 26, lineHeight 32, fontWeight 600, maxWidth 180 */}
+                  <p style={{ color: form.title ? "#1a1a1a" : "rgba(26,26,26,0.2)", fontSize: 26, lineHeight: "32px", fontWeight: 600, maxWidth: 180, margin: 0 }}>
+                    {form.title || "หัวข้อหลัก"}
+                  </p>
+                  {/* body: color #6b7280, fontSize 15, lineHeight 22 */}
+                  {form.body ? (
+                    <div
+                      style={{ color: "#6b7280", fontSize: 15, lineHeight: "22px", margin: 0 }}
+                      className="[&_b]:font-bold [&_strong]:font-bold [&_em]:italic [&_i]:italic [&_u]:underline [&_s]:line-through [&_ul]:list-disc [&_ul]:pl-5"
+                      dangerouslySetInnerHTML={{ __html: form.body }}
+                    />
+                  ) : null}
+                  {/* button: bg #D4AF37, px 20, py 12, borderRadius pill, color #1A0F00, fontSize 13, fontWeight 700 */}
+                  <div style={{ marginTop: 8 }}>
+                    <span style={{
+                      display: "inline-block",
+                      backgroundColor: "#D4AF37",
+                      paddingLeft: 20,
+                      paddingRight: 20,
+                      paddingTop: 12,
+                      paddingBottom: 12,
+                      borderRadius: 999,
+                      color: "#1A0F00",
+                      fontSize: 13,
+                      fontWeight: 700,
+                      boxShadow: "0 4px 8px rgba(212,175,55,0.35)",
+                    }}>
                       {form.buttonLabel || "Shop Now"}
-                    </div>
-                  </div>
-                  <div className="flex w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#f0f6f2]">
-                    {imagePreview ? (
-                      <img alt="banner" className="h-full w-full object-cover" src={imagePreview} />
-                    ) : (
-                      <span className="text-3xl opacity-20">🖼</span>
-                    )}
+                    </span>
                   </div>
                 </div>
+
+                {/* visual — width 128, borderRadius 20 */}
+                <div style={{ width: 128, borderRadius: 20, overflow: "hidden", backgroundColor: "#eef8f1", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {imagePreview ? (
+                    <img alt="banner" src={imagePreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <span style={{ fontSize: 36, opacity: 0.2 }}>🖼</span>
+                  )}
+                </div>
+
+                {/* tag badge */}
                 {form.tag ? (
-                  <div className="absolute right-2.5 top-2.5 rounded-full bg-[#C9A227] px-2.5 py-1 text-[11px] font-bold text-white">
-                    {form.tag}
+                  <div style={{ position: "absolute", top: 10, right: 10, backgroundColor: "#D4AF37", paddingLeft: 10, paddingRight: 10, paddingTop: 4, paddingBottom: 4, borderRadius: 999 }}>
+                    <span style={{ color: "#fff", fontSize: 11, fontWeight: 700 }}>{form.tag}</span>
                   </div>
                 ) : null}
               </div>
             </div>
           </div>
+
           {/* Home indicator */}
           <div className="mt-3 flex justify-center">
             <div className="h-1.5 w-24 rounded-full bg-white/25" />
