@@ -146,45 +146,45 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
   return (
     <div>
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-dark-5 dark:text-dark-6">
-        Live Preview — iPhone 11
+        Live Preview — iPhone 11 (414 × 896px)
       </p>
-      {/* iPhone 11 frame — 393×852pt logical, rendered at ~240px */}
-      <div className="mx-auto" style={{ width: 320 }}>
+      {/* iPhone 11 actual logical size: 414px wide */}
+      <div className="mx-auto" style={{ width: 430 }}>
         <div
           className="relative bg-[#1c1c1e]"
           style={{
-            borderRadius: 50,
-            padding: "14px 8px 22px",
-            boxShadow: "0 0 0 2px #3a3a3c, inset 0 0 0 2px #2c2c2e, 0 24px 48px rgba(0,0,0,0.55)",
+            borderRadius: 55,
+            padding: "16px 8px 28px",
+            boxShadow: "0 0 0 2px #3a3a3c, inset 0 0 0 2px #2c2c2e, 0 32px 64px rgba(0,0,0,0.65)",
           }}
         >
           {/* Wide notch — iPhone 11 */}
           <div
             className="absolute left-1/2 -translate-x-1/2 bg-[#1c1c1e]"
-            style={{ top: 14, width: 118, height: 26, borderRadius: "0 0 18px 18px", zIndex: 10 }}
+            style={{ top: 16, width: 150, height: 30, borderRadius: "0 0 22px 22px", zIndex: 10 }}
           />
           {/* Side buttons */}
-          <div className="absolute -left-[3px] top-24 h-8 w-[3px] rounded-l-sm bg-[#3a3a3c]" />
-          <div className="absolute -left-[3px] top-36 h-8 w-[3px] rounded-l-sm bg-[#3a3a3c]" />
-          <div className="absolute -right-[3px] top-28 h-12 w-[3px] rounded-r-sm bg-[#3a3a3c]" />
-          {/* Screen */}
-          <div className="overflow-hidden bg-[#046340]" style={{ borderRadius: 38 }}>
+          <div className="absolute -left-[4px] top-28 h-10 w-[4px] rounded-l-sm bg-[#3a3a3c]" />
+          <div className="absolute -left-[4px] top-44 h-10 w-[4px] rounded-l-sm bg-[#3a3a3c]" />
+          <div className="absolute -right-[4px] top-36 h-16 w-[4px] rounded-r-sm bg-[#3a3a3c]" />
+          {/* Screen — 414px wide, 600px tall (top portion of 896px screen) */}
+          <div className="overflow-hidden bg-[#046340]" style={{ borderRadius: 44, height: 600 }}>
             {/* Status bar */}
-            <div className="flex items-end justify-between px-5 pb-1 pt-3" style={{ height: 46 }}>
-              <span className="text-[9px] font-semibold text-white">9:41</span>
-              <div className="flex items-center gap-1">
-                <svg fill="white" height="10" viewBox="0 0 15 10" width="15">
+            <div className="flex items-center justify-between px-6 pb-1 pt-4" style={{ height: 52 }}>
+              <span className="text-[13px] font-semibold text-white">9:41</span>
+              <div className="flex items-center gap-1.5">
+                <svg fill="white" height="12" viewBox="0 0 15 10" width="18">
                   <rect height="7" rx="0.5" width="3" x="0" y="3" />
                   <rect height="8" rx="0.5" width="3" x="4" y="2" />
                   <rect height="9" rx="0.5" width="3" x="8" y="1" />
                   <rect height="10" rx="0.5" width="3" x="12" y="0" />
                 </svg>
-                <svg fill="white" height="10" viewBox="0 0 14 10" width="14">
+                <svg fill="white" height="12" viewBox="0 0 14 10" width="16">
                   <path d="M7 2.5C4.5 2.5 2.3 3.5.8 5.2L0 4.3C1.8 2.3 4.3 1 7 1s5.2 1.3 7 3.3l-.8.9C11.7 3.5 9.5 2.5 7 2.5z" />
                   <path d="M7 5c-1.5 0-2.8.6-3.8 1.5L2.4 5.7C3.6 4.5 5.2 3.7 7 3.7s3.4.8 4.6 2L10.8 6.5C9.8 5.6 8.5 5 7 5z" />
                   <circle cx="7" cy="8" r="1.5" />
                 </svg>
-                <svg fill="none" height="12" viewBox="0 0 25 12" width="25">
+                <svg fill="none" height="14" viewBox="0 0 25 12" width="28">
                   <rect height="10" rx="3.5" strokeOpacity=".35" stroke="white" width="21" x="0.5" y="1" />
                   <rect fill="white" height="7" rx="2" width="16" x="2" y="2.5" />
                   <path d="M23 4.5v3a1.5 1.5 0 000-3z" fill="white" fillOpacity=".4" />
@@ -192,53 +192,53 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
               </div>
             </div>
             {/* App body */}
-            <div className="px-3 pb-5">
-              {/* Mini app header */}
-              <div className="mb-2 flex items-center justify-between">
+            <div className="px-4 pb-6">
+              {/* App header */}
+              <div className="mb-3 flex items-center justify-between">
                 <div>
-                  <p className="text-[8px] font-medium text-white/60">สวัสดีตอนเช้า</p>
-                  <p className="text-[11px] font-bold text-white">BeautyUp</p>
+                  <p className="text-[11px] font-medium text-white/60">สวัสดีตอนเช้า</p>
+                  <p className="text-[17px] font-bold text-white">BeautyUp</p>
                 </div>
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C9A227]">
-                  <svg fill="white" height="12" viewBox="0 0 24 24" width="12">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#C9A227]">
+                  <svg fill="white" height="18" viewBox="0 0 24 24" width="18">
                     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
                   </svg>
                 </div>
               </div>
               {/* Banner card */}
-              <div className="relative overflow-hidden rounded-2xl bg-white p-2.5 shadow-sm">
-                <div className="flex gap-2">
-                  <div className="flex flex-1 flex-col gap-1">
+              <div className="relative overflow-hidden rounded-[20px] bg-white p-4 shadow-md">
+                <div className="flex gap-3">
+                  <div className="flex flex-1 flex-col gap-1.5">
                     {form.eyebrow ? (
-                      <p className="text-[7px] font-bold uppercase tracking-widest text-[#C9A227]">{form.eyebrow}</p>
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-[#C9A227]">{form.eyebrow}</p>
                     ) : (
-                      <p className="text-[7px] font-bold uppercase tracking-widest text-[#C9A227]/25">EYEBROW</p>
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-[#C9A227]/25">EYEBROW</p>
                     )}
                     {form.title ? (
-                      <p className="text-[10px] font-bold leading-tight text-[#173022]">{form.title}</p>
+                      <p className="text-[18px] font-bold leading-tight text-[#173022]">{form.title}</p>
                     ) : (
-                      <p className="text-[10px] font-bold leading-tight text-[#173022]/20">หัวข้อหลัก</p>
+                      <p className="text-[18px] font-bold leading-tight text-[#173022]/20">หัวข้อหลัก</p>
                     )}
                     {form.body ? (
-                      <p
-                        className="text-[8px] leading-relaxed text-[#4A7560] [&_b]:font-bold [&_em]:italic [&_i]:italic [&_strong]:font-bold"
+                      <div
+                        className="text-[13px] leading-relaxed text-[#4A7560] [&_b]:font-bold [&_em]:italic [&_i]:italic [&_strong]:font-bold [&_u]:underline [&_s]:line-through [&_ul]:list-disc [&_ul]:pl-4"
                         dangerouslySetInnerHTML={{ __html: form.body }}
                       />
                     ) : null}
-                    <div className="mt-1 inline-block self-start rounded-full bg-[#C9A227] px-2 py-0.5 text-[7px] font-bold text-[#7a5a00]">
+                    <div className="mt-2 inline-block self-start rounded-full bg-[#C9A227] px-4 py-1.5 text-[12px] font-bold text-[#7a5a00]">
                       {form.buttonLabel || "Shop Now"}
                     </div>
                   </div>
-                  <div className="flex w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#f0f6f2]">
+                  <div className="flex w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#f0f6f2]">
                     {imagePreview ? (
                       <img alt="banner" className="h-full w-full object-cover" src={imagePreview} />
                     ) : (
-                      <span className="text-base opacity-20">🖼</span>
+                      <span className="text-3xl opacity-20">🖼</span>
                     )}
                   </div>
                 </div>
                 {form.tag ? (
-                  <div className="absolute right-1.5 top-1.5 rounded-full bg-[#C9A227] px-1.5 py-0.5 text-[7px] font-bold text-white">
+                  <div className="absolute right-2.5 top-2.5 rounded-full bg-[#C9A227] px-2.5 py-1 text-[11px] font-bold text-white">
                     {form.tag}
                   </div>
                 ) : null}
@@ -246,8 +246,8 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
             </div>
           </div>
           {/* Home indicator */}
-          <div className="mt-2 flex justify-center">
-            <div className="h-1 w-16 rounded-full bg-white/25" />
+          <div className="mt-3 flex justify-center">
+            <div className="h-1.5 w-24 rounded-full bg-white/25" />
           </div>
         </div>
       </div>
