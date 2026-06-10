@@ -166,7 +166,7 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
           <div className="absolute -right-[4px] top-28 h-14 w-[4px] rounded-r-sm bg-[#3a3a3c]" />
 
           {/* Screen */}
-          <div className="overflow-hidden" style={{ borderRadius: 40, height: 408, backgroundColor: "#046340", fontFamily: "'Noto Sans Thai', sans-serif" }}>
+          <div className="overflow-hidden" style={{ borderRadius: 40, height: 500, backgroundColor: "#046340", fontFamily: "'Noto Sans Thai', sans-serif" }}>
             {/* Status bar */}
             <div className="flex items-center justify-between px-6" style={{ height: 52, paddingTop: 16 }}>
               <span style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>9:41</span>
@@ -178,16 +178,31 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
             </div>
 
             {/* App content — px:16 matches RN spacing.lg */}
-            <div style={{ padding: "0 16px 24px" }}>
-              {/* App header row */}
-              <div className="flex items-center justify-between" style={{ marginBottom: 16 }}>
-                <div>
-                  <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 500, margin: 0 }}>สวัสดีตอนเช้า</p>
-                  <p style={{ color: "#fff", fontSize: 20, fontWeight: 700, margin: 0 }}>BeautyUp</p>
+            <div style={{ padding: "0 16px 20px" }}>
+              {/* User header row — matches HomeScreen */}
+              <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
+                <div className="flex items-center gap-2.5">
+                  {/* Avatar */}
+                  <div style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "#1f5236", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid rgba(212,175,55,0.5)" }}>
+                    <svg fill="rgba(255,255,255,0.5)" height="26" viewBox="0 0 24 24" width="26"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                  </div>
+                  <div>
+                    <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, fontWeight: 500, margin: 0 }}>สวัสดีตอนเช้า</p>
+                    <p style={{ color: "#fff", fontSize: 18, fontWeight: 700, margin: 0 }}>chonlapat</p>
+                  </div>
                 </div>
-                <div style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#D4AF37", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg fill="white" height="18" viewBox="0 0 24 24" width="18"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+                {/* Points pill */}
+                <div style={{ backgroundColor: "rgba(212,175,55,0.2)", border: "1px solid rgba(212,175,55,0.5)", borderRadius: 999, padding: "5px 12px", display: "flex", alignItems: "center", gap: 5 }}>
+                  <div style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: "#D4AF37", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg fill="white" height="10" viewBox="0 0 24 24" width="10"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+                  </div>
+                  <span style={{ color: "#D4AF37", fontSize: 13, fontWeight: 700 }}>1,300 แต้ม</span>
                 </div>
+              </div>
+              {/* Search bar */}
+              <div style={{ backgroundColor: "#fff", borderRadius: 999, padding: "10px 16px", display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <svg fill="none" height="16" stroke="#9ca3af" strokeWidth="2" viewBox="0 0 24 24" width="16"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+                <span style={{ color: "#9ca3af", fontSize: 13 }}>ค้นหาผลิตภัณฑ์ดูแลเส้นผม</span>
               </div>
 
               {/* HeroSlide card — exact values from HeroSlide.tsx + theme/tokens.ts */}
@@ -238,7 +253,7 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
                       fontWeight: 700,
                       boxShadow: "0 4px 8px rgba(212,175,55,0.35)",
                     }}>
-                      {form.buttonLabel || "Shop Now"}
+                      {form.buttonLabel || "Shop Now"} →
                     </span>
                   </div>
                 </div>
@@ -258,6 +273,13 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
                     <span style={{ color: "#fff", fontSize: 11, fontWeight: 700 }}>{form.tag}</span>
                   </div>
                 ) : null}
+              </div>
+              {/* Dots indicator */}
+              <div className="flex justify-center gap-1.5" style={{ marginTop: 10 }}>
+                <div style={{ width: 20, height: 6, borderRadius: 3, backgroundColor: "#D4AF37" }} />
+                <div style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.3)" }} />
+                <div style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.3)" }} />
+                <div style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.3)" }} />
               </div>
             </div>
           </div>
