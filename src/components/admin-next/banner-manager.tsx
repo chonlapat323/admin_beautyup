@@ -149,24 +149,24 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
         Live Preview — iPhone 11 (414px)
       </p>
       {/* iPhone 11: 414px logical width */}
-      <div className="mx-auto" style={{ width: 360 }}>
+      <div className="mx-auto" style={{ width: 380 }}>
         <div
           className="relative bg-[#1c1c1e]"
           style={{
-            borderRadius: 46,
-            padding: "14px 7px 24px",
-            boxShadow: "0 0 0 2px #3a3a3c, inset 0 0 0 2px #2c2c2e, 0 28px 56px rgba(0,0,0,0.65)",
+            borderRadius: 50,
+            padding: "15px 8px 26px",
+            boxShadow: "0 0 0 2px #3a3a3c, inset 0 0 0 2px #2c2c2e, 0 30px 60px rgba(0,0,0,0.65)",
           }}
         >
           {/* Notch */}
-          <div className="absolute left-1/2 -translate-x-1/2 bg-[#1c1c1e]" style={{ top: 14, width: 125, height: 25, borderRadius: "0 0 18px 18px", zIndex: 10 }} />
+          <div className="absolute left-1/2 -translate-x-1/2 bg-[#1c1c1e]" style={{ top: 15, width: 135, height: 27, borderRadius: "0 0 20px 20px", zIndex: 10 }} />
           {/* Side buttons */}
           <div className="absolute -left-[4px] top-24 h-9 w-[4px] rounded-l-sm bg-[#3a3a3c]" />
           <div className="absolute -left-[4px] top-36 h-9 w-[4px] rounded-l-sm bg-[#3a3a3c]" />
           <div className="absolute -right-[4px] top-28 h-14 w-[4px] rounded-r-sm bg-[#3a3a3c]" />
 
           {/* Screen */}
-          <div className="overflow-hidden" style={{ borderRadius: 37, height: 470, backgroundColor: "#046340", fontFamily: "'Noto Sans Thai', sans-serif" }}>
+          <div className="overflow-hidden" style={{ borderRadius: 40, height: 510, backgroundColor: "#046340", fontFamily: "'Noto Sans Thai', sans-serif" }}>
             {/* Status bar */}
             <div className="flex items-center justify-between px-6" style={{ height: 52, paddingTop: 16 }}>
               <span style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>9:41</span>
