@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import Placeholder from "@tiptap/extension-placeholder";
 import { useToast } from "@/components/shared/toast-provider";
 import { ContentCard } from "./page-elements";
 
@@ -47,6 +51,33 @@ const LINK_TYPE_OPTIONS = [
   { label: "หมวดหมู่ (Category)", value: "category" },
 ];
 
+function ToolbarBtn({
+  active,
+  onClick,
+  title,
+  children,
+}: {
+  active?: boolean;
+  onClick: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      className={`flex h-7 min-w-[28px] items-center justify-center rounded-md px-1.5 text-sm transition-colors
+        ${active
+          ? "bg-[#45745a] text-white"
+          : "text-dark hover:bg-[#eef7f2] dark:text-white dark:hover:bg-dark-2"
+        }`}
+      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+      title={title}
+      type="button"
+    >
+      {children}
+    </button>
+  );
+}
+
 function RichBodyEditor({
   value,
   onChange,
@@ -56,45 +87,57 @@ function RichBodyEditor({
   onChange: (v: string) => void;
   placeholder?: string;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  // Initialize innerHTML once on mount (value is the initial state from form)
-  useEffect(() => {
-    if (ref.current) ref.current.innerHTML = value;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function format(cmd: string) {
-    ref.current?.focus();
-    document.execCommand(cmd, false, undefined);
-    if (ref.current) onChange(ref.current.innerHTML);
-  }
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      Placeholder.configure({ placeholder: placeholder ?? "" }),
+    ],
+    content: value,
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    editorProps: {
+      attributes: {
+        class: "min-h-[96px] px-4 py-3 text-sm text-dark dark:text-white outline-none",
+      },
+    },
+  });
 
   return (
-    <div>
-      <div className="mb-1.5 flex items-center gap-1">
-        <button
-          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#d8e6dd] bg-[#f8fbf9] text-sm font-bold text-dark transition-colors hover:bg-[#eef7f2]"
-          onMouseDown={(e) => { e.preventDefault(); format("bold"); }}
-          title="Bold"
-          type="button"
-        >B</button>
-        <button
-          className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#d8e6dd] bg-[#f8fbf9] text-sm italic text-dark transition-colors hover:bg-[#eef7f2]"
-          onMouseDown={(e) => { e.preventDefault(); format("italic"); }}
-          title="Italic"
-          type="button"
-        >I</button>
-        <span className="ml-1 text-xs text-dark-5">เลือกข้อความแล้วกด B / I</span>
+    <div className="overflow-hidden rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] focus-within:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-[#d8e6dd] bg-white px-2.5 py-2 dark:border-dark-3 dark:bg-dark-3">
+        <ToolbarBtn active={editor?.isActive("bold")} onClick={() => editor?.chain().focus().toggleBold().run()} title="ตัวหนา (Bold)">
+          <strong>B</strong>
+        </ToolbarBtn>
+        <ToolbarBtn active={editor?.isActive("italic")} onClick={() => editor?.chain().focus().toggleItalic().run()} title="ตัวเอียง (Italic)">
+          <em>I</em>
+        </ToolbarBtn>
+        <ToolbarBtn active={editor?.isActive("underline")} onClick={() => editor?.chain().focus().toggleUnderline().run()} title="ขีดเส้นใต้ (Underline)">
+          <span style={{ textDecoration: "underline" }}>U</span>
+        </ToolbarBtn>
+        <ToolbarBtn active={editor?.isActive("strike")} onClick={() => editor?.chain().focus().toggleStrike().run()} title="ขีดฆ่า (Strike)">
+          <span style={{ textDecoration: "line-through" }}>S</span>
+        </ToolbarBtn>
+        <div className="mx-1 h-4 w-px bg-[#d8e6dd] dark:bg-dark-3" />
+        <ToolbarBtn active={editor?.isActive("bulletList")} onClick={() => editor?.chain().focus().toggleBulletList().run()} title="รายการ (Bullet list)">
+          <svg fill="none" height="14" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="14">
+            <line x1="9" x2="20" y1="6" y2="6" /><line x1="9" x2="20" y1="12" y2="12" /><line x1="9" x2="20" y1="18" y2="18" />
+            <circle cx="4" cy="6" fill="currentColor" r="1.5" /><circle cx="4" cy="12" fill="currentColor" r="1.5" /><circle cx="4" cy="18" fill="currentColor" r="1.5" />
+          </svg>
+        </ToolbarBtn>
+        <ToolbarBtn active={false} onClick={() => editor?.chain().focus().undo().run()} title="ย้อนกลับ (Undo)">
+          <svg fill="none" height="14" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="14">
+            <path d="M3 7v6h6" /><path d="M3 13C5.4 7.4 12 4 18 7.5" />
+          </svg>
+        </ToolbarBtn>
+        <ToolbarBtn active={false} onClick={() => editor?.chain().focus().redo().run()} title="ทำซ้ำ (Redo)">
+          <svg fill="none" height="14" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="14">
+            <path d="M21 7v6h-6" /><path d="M21 13C18.6 7.4 12 4 6 7.5" />
+          </svg>
+        </ToolbarBtn>
       </div>
-      <div
-        ref={ref}
-        className="min-h-[72px] w-full rounded-[18px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark outline-none focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white empty:before:text-dark-5 empty:before:content-[attr(data-placeholder)]"
-        contentEditable
-        data-placeholder={placeholder}
-        onInput={() => { if (ref.current) onChange(ref.current.innerHTML); }}
-        suppressContentEditableWarning
-      />
+      {/* Editor area */}
+      <EditorContent editor={editor} />
     </div>
   );
 }
@@ -106,7 +149,7 @@ function BannerPreview({ form, imagePreview }: { form: BannerFormState; imagePre
         Live Preview — iPhone 11
       </p>
       {/* iPhone 11 frame — 393×852pt logical, rendered at ~240px */}
-      <div className="mx-auto" style={{ width: 240 }}>
+      <div className="mx-auto" style={{ width: 320 }}>
         <div
           className="relative bg-[#1c1c1e]"
           style={{
