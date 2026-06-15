@@ -322,7 +322,6 @@ function ProductFormModal({
   onChange,
   onClose,
   onSubmit,
-  onGenerateSku,
 }: {
   editingId: string | null;
   form: ProductFormState;
@@ -338,7 +337,6 @@ function ProductFormModal({
   onChange: (next: Partial<ProductFormState>) => void;
   onClose: () => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
-  onGenerateSku: () => Promise<void>;
 }) {
   // Cascading: filter categories by selected brand, filter collections by selected category
   const filteredCategories = form.brandId
@@ -411,22 +409,12 @@ function ProductFormModal({
               <label className={LABEL_CLS}>
                 รหัสสินค้า (SKU) <span className="text-red-500">*</span>
               </label>
-              <div className="flex gap-2">
-                <input
-                  className={INPUT_CLS}
-                  onChange={(e) => onChange({ sku: e.target.value })}
-                  placeholder="เช่น BU-CLR-001"
-                  value={form.sku}
-                />
-                <button
-                  className="shrink-0 rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-xs font-semibold text-[#355846] transition-colors hover:border-[#bfd6c7] hover:bg-[#eef8f1] disabled:cursor-not-allowed disabled:opacity-60 dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                  disabled={isGeneratingSku}
-                  onClick={() => void onGenerateSku()}
-                  type="button"
-                >
-                  {isGeneratingSku ? "..." : "สร้างอัตโนมัติ"}
-                </button>
-              </div>
+              <input
+                className={INPUT_CLS}
+                onChange={(e) => onChange({ sku: e.target.value })}
+                placeholder={isGeneratingSku ? "กำลังสร้าง..." : "เช่น BU-CLR-001"}
+                value={form.sku}
+              />
             </div>
           </div>
 
@@ -728,6 +716,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
   function openCreateModal() {
     resetForm();
     setIsModalOpen(true);
+    void handleGenerateSku();
   }
 
   function closeModal() {
@@ -1298,7 +1287,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
           onChange={(next) => setForm((c) => ({ ...c, ...next }))}
           onClose={closeModal}
           onSubmit={handleSubmit}
-          onGenerateSku={handleGenerateSku}
         />,
         document.body,
       ) : null}

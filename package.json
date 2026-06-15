@@ -11,6 +11,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@tiptap/extension-character-count": "^3.26.0",
     "@tiptap/extension-placeholder": "^3.26.0",
     "@tiptap/extension-underline": "^3.26.0",
     "@tiptap/pm": "^3.26.0",
