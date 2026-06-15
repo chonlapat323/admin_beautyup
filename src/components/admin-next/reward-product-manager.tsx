@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "@/components/shared/toast-provider";
-import { generateRewardProductSku } from "@/lib/admin-api";
+
 import { ProductImageManager, type PreviewImage } from "./product-image-manager";
 import { ContentCard, StatusPill } from "./page-elements";
 
@@ -28,7 +28,6 @@ type RewardProduct = {
 type FormState = {
   name: string;
   description: string;
-  sku: string;
   pointCost: string;
   stock: string;
   isActive: boolean;
@@ -54,7 +53,6 @@ const PAGE_SIZE_OPTIONS: SelectOption<number>[] = [
 const INITIAL_FORM: FormState = {
   name: "",
   description: "",
-  sku: "",
   pointCost: "",
   stock: "",
   isActive: true,
@@ -133,23 +131,19 @@ function RewardProductModal({
   form,
   images,
   isSubmitting,
-  isGeneratingSku,
   onChange,
   onImagesChange,
   onClose,
   onSubmit,
-  onGenerateSku,
 }: {
   title: string;
   form: FormState;
   images: PreviewImage[];
   isSubmitting: boolean;
-  isGeneratingSku: boolean;
   onChange: (next: Partial<FormState>) => void;
   onImagesChange: React.Dispatch<React.SetStateAction<PreviewImage[]>>;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => Promise<void>;
-  onGenerateSku: () => Promise<void>;
 }) {
   const inputCls =
     "w-full rounded-[14px] border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-3 text-sm text-dark focus:border-[#5f8f74] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white";
@@ -225,25 +219,6 @@ function RewardProductModal({
               <input className={inputCls} value={form.description} onChange={(e) => onChange({ description: e.target.value })} placeholder="รายละเอียดสั้นๆ" />
             </div>
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">รหัสสินค้า (SKU)</label>
-              <div className="flex gap-2">
-                <input
-                  className={inputCls}
-                  value={form.sku}
-                  onChange={(e) => onChange({ sku: e.target.value })}
-                  placeholder="เช่น PNT-001"
-                />
-                <button
-                  className="shrink-0 rounded-[14px] border border-[#d8e6dd] bg-[#f8fbf9] px-3 py-2.5 text-xs font-semibold text-[#355846] transition-colors hover:border-[#bfd6c7] hover:bg-[#eef8f1] disabled:cursor-not-allowed disabled:opacity-60 dark:border-dark-3 dark:bg-dark-2 dark:text-white"
-                  disabled={isGeneratingSku}
-                  onClick={() => void onGenerateSku()}
-                  type="button"
-                >
-                  {isGeneratingSku ? "..." : "สร้างรหัส PNT-XXX"}
-                </button>
-              </div>
-            </div>
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">รูปภาพ</label>
@@ -302,7 +277,7 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<RewardProduct | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isGeneratingSku, setIsGeneratingSku] = useState(false);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [page, setPage] = useState(1);
@@ -335,24 +310,11 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
     setShowCreate(true);
   }
 
-  async function handleGenerateSku() {
-    setIsGeneratingSku(true);
-    try {
-      const sku = await generateRewardProductSku();
-      setForm((prev) => ({ ...prev, sku }));
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "ไม่สามารถสร้างรหัสสินค้าได้", "error");
-    } finally {
-      setIsGeneratingSku(false);
-    }
-  }
-
   function openEdit(item: RewardProduct) {
     setEditItem(item);
     setForm({
       name: item.name,
       description: item.description ?? "",
-      sku: (item as RewardProduct & { sku?: string }).sku ?? "",
       pointCost: String(item.pointCost),
       stock: String(item.stock),
       isActive: item.isActive,
@@ -392,7 +354,6 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
         isActive: form.isActive,
       };
       if (form.description) body.description = form.description;
-      if (form.sku.trim()) body.sku = form.sku.trim();
       if (tempFiles.length > 0) body.tempFiles = tempFiles;
 
       const res = await fetch("/api/reward-products", {
@@ -635,12 +596,10 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
           form={form}
           images={modalImages}
           isSubmitting={isSubmitting}
-          isGeneratingSku={isGeneratingSku}
           onChange={updateForm}
           onImagesChange={setModalImages}
           onClose={closeModal}
           onSubmit={handleCreate}
-          onGenerateSku={handleGenerateSku}
         />
       )}
       {editItem && (
@@ -649,12 +608,10 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
           form={form}
           images={modalImages}
           isSubmitting={isSubmitting}
-          isGeneratingSku={isGeneratingSku}
           onChange={updateForm}
           onImagesChange={setModalImages}
           onClose={closeModal}
           onSubmit={handleEdit}
-          onGenerateSku={handleGenerateSku}
         />
       )}
 
