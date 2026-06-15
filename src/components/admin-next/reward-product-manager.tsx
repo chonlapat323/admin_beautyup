@@ -392,7 +392,6 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
         stock: Number(form.stock),
         isActive: form.isActive,
         description: form.description || null,
-        sku: form.sku.trim() || null,
         orderedImages,
       };
 
