@@ -103,6 +103,7 @@ function CreateModal({
                 min={1}
                 value={form.usageLimit}
                 onChange={(e) => onChange({ usageLimit: e.target.value })}
+                onFocus={(e) => e.target.select()}
                 placeholder="เช่น 50"
               />
             </div>

@@ -468,6 +468,7 @@ function ProductFormModal({
                 className={INPUT_CLS}
                 min="0"
                 onChange={(e) => onChange({ price: e.target.value })}
+                onFocus={(e) => e.target.select()}
                 placeholder="0"
                 step="0.01"
                 type="number"
@@ -480,6 +481,7 @@ function ProductFormModal({
                 className={INPUT_CLS}
                 min="0"
                 onChange={(e) => onChange({ specialPrice: e.target.value })}
+                onFocus={(e) => e.target.select()}
                 placeholder="ไม่บังคับ"
                 step="0.01"
                 type="number"
@@ -492,6 +494,7 @@ function ProductFormModal({
                 className={INPUT_CLS}
                 min="0"
                 onChange={(e) => onChange({ stock: e.target.value })}
+                onFocus={(e) => e.target.select()}
                 placeholder="0"
                 type="number"
                 value={form.stock}

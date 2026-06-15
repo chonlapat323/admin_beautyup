@@ -258,11 +258,11 @@ function RewardProductModal({
             <div className="flex gap-3">
               <div className="flex-1">
                 <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">แต้มที่ใช้ <span className="text-red-500">*</span></label>
-                <input className={inputCls} type="number" min={1} value={form.pointCost} onChange={(e) => onChange({ pointCost: e.target.value })} placeholder="500" required />
+                <input className={inputCls} type="number" min={1} value={form.pointCost} onChange={(e) => onChange({ pointCost: e.target.value })} onFocus={(e) => e.target.select()} placeholder="500" required />
               </div>
               <div className="flex-1">
                 <label className="mb-1.5 block text-sm font-medium text-dark dark:text-white">จำนวนสต็อก <span className="text-red-500">*</span></label>
-                <input className={inputCls} type="number" min={0} value={form.stock} onChange={(e) => onChange({ stock: e.target.value })} placeholder="10" required />
+                <input className={inputCls} type="number" min={0} value={form.stock} onChange={(e) => onChange({ stock: e.target.value })} onFocus={(e) => e.target.select()} placeholder="10" required />
               </div>
             </div>
 

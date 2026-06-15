@@ -60,6 +60,7 @@ function Field({
           className={inputCls + (unit ? " pr-14" : "")}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={(e) => e.target.select()}
         />
         {unit && (
           <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-dark-5">
@@ -125,6 +126,7 @@ function TierEditor({
               className={inputCls + " pr-12"}
               value={tier.minSpend}
               onChange={(e) => updateTier(i, "minSpend", e.target.value)}
+              onFocus={(e) => e.target.select()}
             />
             <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-dark-5">บาท</span>
           </div>
@@ -135,6 +137,7 @@ function TierEditor({
               className={inputCls + " pr-14"}
               value={tier.points}
               onChange={(e) => updateTier(i, "points", e.target.value)}
+              onFocus={(e) => e.target.select()}
             />
             <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-dark-5">แต้ม</span>
           </div>

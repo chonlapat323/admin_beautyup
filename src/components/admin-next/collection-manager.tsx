@@ -196,6 +196,7 @@ function CollectionFormModal({
               className={INPUT_CLS}
               min="0"
               onChange={(e) => onChange({ sortOrder: e.target.value })}
+              onFocus={(e) => e.target.select()}
               type="number"
               value={form.sortOrder}
             />

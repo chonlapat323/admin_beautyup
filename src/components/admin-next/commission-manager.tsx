@@ -349,6 +349,7 @@ export function CommissionManager() {
                   max={100}
                   value={salesRate}
                   onChange={(e) => setSalesRate(Number(e.target.value))}
+                  onFocus={(e) => e.target.select()}
                   className="w-24 rounded-xl border border-stroke bg-white px-3 py-2 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
                 />
               </div>
@@ -360,6 +361,7 @@ export function CommissionManager() {
                   max={100}
                   value={salonRate}
                   onChange={(e) => setSalonRate(Number(e.target.value))}
+                  onFocus={(e) => e.target.select()}
                   className="w-24 rounded-xl border border-stroke bg-white px-3 py-2 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
                 />
               </div>
@@ -371,6 +373,7 @@ export function CommissionManager() {
                   max={100}
                   value={regularRate}
                   onChange={(e) => setRegularRate(Number(e.target.value))}
+                  onFocus={(e) => e.target.select()}
                   className="w-24 rounded-xl border border-stroke bg-white px-3 py-2 text-sm text-dark focus:border-[#45745a] focus:outline-none dark:border-dark-3 dark:bg-dark-2 dark:text-white"
                 />
               </div>

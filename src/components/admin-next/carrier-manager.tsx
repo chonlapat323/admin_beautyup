@@ -381,6 +381,7 @@ export function CarrierManager() {
                     min="0"
                     value={form.sortOrder}
                     onChange={e => setForm(f => ({ ...f, sortOrder: Number(e.target.value) }))}
+                    onFocus={(e) => e.target.select()}
                     className="w-full rounded-2xl border border-[#d8e6dd] bg-[#f8fbf9] px-4 py-2.5 text-sm text-dark outline-none transition-colors focus:border-[#5f8f74] dark:border-dark-3 dark:bg-dark-2 dark:text-white"
                   />
                 </div>
