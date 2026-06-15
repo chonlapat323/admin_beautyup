@@ -158,7 +158,6 @@ export type ProductRecord = {
 export type ProductFormPayload = {
   name: string;
   slug: string;
-  sku: string;
   description?: string;
   price: number;
   specialPrice?: number;

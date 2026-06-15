@@ -12,7 +12,6 @@ import {
   ProductRecord,
   createProduct,
   deleteProduct,
-  generateProductSku,
   getBrands,
   getCollections,
   updateProduct,
@@ -40,7 +39,6 @@ type FormCategory = { id: string; name: string; requiresShadeSelection: boolean;
 type ProductFormState = {
   name: string;
   slug: string;
-  sku: string;
   description: string;
   price: string;
   specialPrice: string;
@@ -58,7 +56,6 @@ type ProductFormState = {
 const INITIAL_FORM: ProductFormState = {
   name: "",
   slug: "",
-  sku: "",
   description: "",
   price: "",
   specialPrice: "",
@@ -311,7 +308,6 @@ function ProductFormModal({
   editingId,
   form,
   isSubmitting,
-  isGeneratingSku,
   categories,
   brands,
   collections,
@@ -326,7 +322,6 @@ function ProductFormModal({
   editingId: string | null;
   form: ProductFormState;
   isSubmitting: boolean;
-  isGeneratingSku: boolean;
   categories: FormCategory[];
   brands: ApiBrand[];
   collections: ApiCollection[];
@@ -396,29 +391,16 @@ function ProductFormModal({
           id="product-form"
           onSubmit={onSubmit}
         >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className={LABEL_CLS}>
-                ชื่อสินค้า <span className="text-red-500">*</span>
-              </label>
-              <input
-                className={INPUT_CLS}
-                onChange={(e) => onChange({ name: e.target.value })}
-                placeholder="เช่น Koleston Perfect"
-                value={form.name}
-              />
-            </div>
-            <div>
-              <label className={LABEL_CLS}>
-                รหัสสินค้า (SKU) <span className="text-red-500">*</span>
-              </label>
-              <input
-                className={INPUT_CLS}
-                onChange={(e) => onChange({ sku: e.target.value })}
-                placeholder={isGeneratingSku ? "กำลังสร้าง..." : "เช่น BU-CLR-001"}
-                value={form.sku}
-              />
-            </div>
+          <div>
+            <label className={LABEL_CLS}>
+              ชื่อสินค้า <span className="text-red-500">*</span>
+            </label>
+            <input
+              className={INPUT_CLS}
+              onChange={(e) => onChange({ name: e.target.value })}
+              placeholder="เช่น Koleston Perfect"
+              value={form.name}
+            />
           </div>
 
           <div>
@@ -628,7 +610,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
   const [formCollections, setFormCollections] = useState<ApiCollection[]>([]);
   const [previewImages, setPreviewImages] = useState<PreviewImage[]>([]);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
-  const [isGeneratingSku, setIsGeneratingSku] = useState(false);
 
   const tableRows = useMemo(
     () => products.map((p, i) => ({ ...p, no: (meta.page - 1) * meta.pageSize + i + 1 })),
@@ -721,7 +702,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
   function openCreateModal() {
     resetForm();
     setIsModalOpen(true);
-    void handleGenerateSku();
   }
 
   function closeModal() {
@@ -739,7 +719,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
     setForm({
       name: product.name,
       slug: product.slug,
-      sku: product.sku,
       description: product.description,
       price: String(product.price),
       specialPrice: product.specialPrice !== null ? String(product.specialPrice) : "",
@@ -836,8 +815,8 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
       const stock = parseInt(form.stock, 10);
       const specialPrice = form.specialPrice.trim() ? parseFloat(form.specialPrice) : undefined;
 
-      if (!form.name.trim() || !form.sku.trim() || !form.slug.trim() || !form.categoryId) {
-        throw new Error("กรุณากรอกชื่อสินค้า รหัสสินค้า Slug และหมวดหมู่");
+      if (!form.name.trim() || !form.slug.trim() || !form.categoryId) {
+        throw new Error("กรุณากรอกชื่อสินค้า Slug และหมวดหมู่");
       }
 
       if (isNaN(price) || price < 0) {
@@ -849,7 +828,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
       const payload: ProductFormPayload = {
         name: form.name.trim(),
         slug: form.slug.trim() ? slugify(form.slug) : slugify(form.name),
-        sku: form.sku.trim(),
         description: form.description.trim() || undefined,
         price,
         specialPrice,
@@ -885,22 +863,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
       showToast(err instanceof Error ? err.message : "ไม่สามารถบันทึกสินค้าได้", "error");
     } finally {
       setIsSubmitting(false);
-    }
-  }
-
-  async function handleGenerateSku() {
-    setIsGeneratingSku(true);
-    try {
-      const sku = await generateProductSku({
-        brandId: form.brandId || undefined,
-        categoryId: form.categoryId || undefined,
-        collectionId: form.collectionId || undefined,
-      });
-      setForm((c) => ({ ...c, sku }));
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "ไม่สามารถสร้างรหัสสินค้าได้", "error");
-    } finally {
-      setIsGeneratingSku(false);
     }
   }
 
@@ -1281,7 +1243,6 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
           editingId={editingId}
           form={form}
           isSubmitting={isSubmitting}
-          isGeneratingSku={isGeneratingSku}
           categories={formCategories}
           brands={formBrands}
           collections={formCollections}
