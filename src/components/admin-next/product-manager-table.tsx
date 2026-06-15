@@ -347,6 +347,9 @@ function ProductFormModal({
     ? collections.filter((c) => c.categoryId === form.categoryId)
     : collections;
 
+  const selectedCategory = filteredCategories.find((c) => c.id === form.categoryId);
+  const showColorFields = selectedCategory?.requiresShadeSelection ?? false;
+
   const brandOptions: SelectOption<string>[] = [
     { label: "ไม่ระบุแบรนด์", value: "" },
     ...brands.map((b) => ({ label: b.name, value: b.id })),
@@ -451,26 +454,28 @@ function ProductFormModal({
             value={form.collectionId}
           />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className={LABEL_CLS}>รหัสสี</label>
-              <input
-                className={INPUT_CLS}
-                onChange={(e) => onChange({ colorCode: e.target.value })}
-                placeholder="เช่น #FF5733, NB-03"
-                value={form.colorCode}
-              />
+          {showColorFields && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className={LABEL_CLS}>รหัสสี</label>
+                <input
+                  className={INPUT_CLS}
+                  onChange={(e) => onChange({ colorCode: e.target.value })}
+                  placeholder="เช่น #FF5733, NB-03"
+                  value={form.colorCode}
+                />
+              </div>
+              <div>
+                <label className={LABEL_CLS}>ชื่อสี</label>
+                <input
+                  className={INPUT_CLS}
+                  onChange={(e) => onChange({ colorName: e.target.value })}
+                  placeholder="เช่น Natural Brown"
+                  value={form.colorName}
+                />
+              </div>
             </div>
-            <div>
-              <label className={LABEL_CLS}>ชื่อสี</label>
-              <input
-                className={INPUT_CLS}
-                onChange={(e) => onChange({ colorName: e.target.value })}
-                placeholder="เช่น Natural Brown"
-                value={form.colorName}
-              />
-            </div>
-          </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
