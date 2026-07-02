@@ -10,6 +10,7 @@ import { ContentCard, StatusPill } from "./page-elements";
 type RewardProductImage = {
   id: string;
   url: string;
+  thumbnailUrl?: string | null;
   sortOrder: number;
 };
 
@@ -518,7 +519,7 @@ export function RewardProductManager({ initialItems }: { initialItems: RewardPro
                       <div className="flex items-center gap-3">
                         {item.images[0] ? (
                           // eslint-disable-next-line @next/next/no-img-element
-                          <img src={item.images[0].url} alt="" className="h-10 w-10 flex-shrink-0 rounded-lg border border-[#d8e6dd] object-cover" />
+                          <img src={item.images[0].thumbnailUrl ?? item.images[0].url} alt="" className="h-10 w-10 flex-shrink-0 rounded-lg border border-[#d8e6dd] object-cover" />
                         ) : (
                           <div className="h-10 w-10 flex-shrink-0 rounded-lg bg-[#f0f7f2]" />
                         )}

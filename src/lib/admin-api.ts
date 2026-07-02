@@ -30,6 +30,7 @@ export type ApiCategory = {
   eyebrow?: string | null;
   description?: string | null;
   imageUrl?: string | null;
+  thumbnailUrl?: string | null;
   requiresShadeSelection: boolean;
   sortOrder: number;
   isActive: boolean;
@@ -72,6 +73,7 @@ export type CategoryRecord = {
   eyebrow: string;
   description: string;
   imageUrl: string | null;
+  thumbnailUrl: string | null;
   requiresShadeSelection: boolean;
   sortOrder: number;
   status: "Active" | "Inactive";
@@ -101,6 +103,7 @@ export type CategoryFormPayload = {
 export type ApiProductImage = {
   id: string;
   url: string;
+  thumbnailUrl?: string | null;
   altText?: string | null;
   sortOrder: number;
 };
@@ -151,6 +154,7 @@ export type ProductRecord = {
   isFeatured: boolean;
   tag: string | null;
   thumbnail: string | null;
+  thumbnailUrl: string | null;
   updatedAt: string;
   source: "api" | "mock";
 };
@@ -207,6 +211,7 @@ export type ApiMember = {
   shopee?: string | null;
   lazada?: string | null;
   profileImageUrl?: string | null;
+  profileThumbnailUrl?: string | null;
   bannerImageUrl?: string | null;
   createdAt?: string;
   updatedAt?: string;
@@ -308,6 +313,7 @@ export async function getCategories() {
         eyebrow: category.eyebrow ?? "",
         description: category.description ?? "",
         imageUrl: category.imageUrl ?? null,
+        thumbnailUrl: category.thumbnailUrl ?? null,
         requiresShadeSelection: category.requiresShadeSelection ?? false,
         sortOrder: category.sortOrder ?? 0,
         status: category.isActive ? "Active" : "Inactive",
@@ -342,6 +348,7 @@ export async function getCategories() {
         eyebrow: "",
         description: "",
         imageUrl: null,
+        thumbnailUrl: null,
         requiresShadeSelection: false,
         sortOrder: 0,
         status: category.status === "Active" ? "Active" : "Inactive",
@@ -378,6 +385,7 @@ function mapCategoryRecord(category: ApiCategory): CategoryRecord {
     eyebrow: category.eyebrow ?? "",
     description: category.description ?? "",
     imageUrl: category.imageUrl ?? null,
+    thumbnailUrl: category.thumbnailUrl ?? null,
     requiresShadeSelection: category.requiresShadeSelection ?? false,
     sortOrder: category.sortOrder ?? 0,
     status: category.isActive ? "Active" : "Inactive",
@@ -450,6 +458,7 @@ export async function getCategoriesPageData(params: CategoryListParams = {}) {
           eyebrow: "",
           description: "",
           imageUrl: null,
+          thumbnailUrl: null,
           requiresShadeSelection: false,
           sortOrder: 0,
           status: category.status === "Active" ? "Active" : "Inactive",
@@ -566,6 +575,7 @@ function mapProductRecord(product: ApiProduct): ProductRecord {
     isFeatured: product.isFeatured ?? false,
     tag: product.tag ?? null,
     thumbnail: product.images?.[0]?.url ?? null,
+    thumbnailUrl: product.images?.[0]?.thumbnailUrl ?? null,
     updatedAt: product.updatedAt
       ? new Intl.DateTimeFormat("th-TH", { day: "2-digit", month: "short", year: "numeric" }).format(
           new Date(product.updatedAt),
@@ -844,6 +854,7 @@ export type MemberRecord = {
   shopee?: string | null;
   lazada?: string | null;
   profileImageUrl?: string | null;
+  profileThumbnailUrl?: string | null;
   bannerImageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -890,6 +901,7 @@ function mapMemberRecord(member: ApiMember): MemberRecord {
     shopee: member.shopee ?? null,
     lazada: member.lazada ?? null,
     profileImageUrl: member.profileImageUrl ?? null,
+    profileThumbnailUrl: member.profileThumbnailUrl ?? null,
     bannerImageUrl: member.bannerImageUrl ?? null,
     createdAt: fmt(member.createdAt),
     updatedAt: fmt(member.updatedAt),
@@ -1252,6 +1264,7 @@ export type ApiShadeItem = {
   shadeGroupId: string;
   name: string;
   imageUrl?: string | null;
+  thumbnailUrl?: string | null;
   sortOrder: number;
   isActive: boolean;
 };
@@ -1447,6 +1460,7 @@ export type ApiBrand = {
   isActive: boolean;
   sortOrder: number;
   imageUrl?: string | null;
+  thumbnailUrl?: string | null;
   _count?: { categories: number };
 };
 

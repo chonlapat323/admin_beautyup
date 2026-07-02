@@ -1041,7 +1041,7 @@ export function ProductManagerTable({ initialItems, initialMeta }: ProductManage
                         <img
                           alt={product.name}
                           className="h-10 w-10 cursor-zoom-in rounded-lg border border-[#d8e6dd] object-cover"
-                          src={toProxiedImageUrl(product.thumbnail)}
+                          src={toProxiedImageUrl(product.thumbnailUrl ?? product.thumbnail)}
                         />
                       </button>
                     ) : (

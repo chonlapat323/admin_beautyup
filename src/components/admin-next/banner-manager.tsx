@@ -17,6 +17,7 @@ type ApiBanner = {
   tag?: string | null;
   buttonLabel: string;
   imageUrl?: string | null;
+  thumbnailUrl?: string | null;
   linkType: string;
   linkId?: string | null;
   sortOrder: number;
@@ -828,7 +829,7 @@ export function BannerManager() {
                   <td className="hidden cursor-grab select-none px-3 py-3 text-center text-dark-5 opacity-30 transition-opacity group-hover:opacity-70 sm:table-cell">⠿</td>
                   <td className="px-3 py-2">
                     {banner.imageUrl ? (
-                      <img alt={banner.title} className="h-12 w-20 rounded-lg object-cover border border-[#d8e6dd]" src={banner.imageUrl} />
+                      <img alt={banner.title} className="h-12 w-20 rounded-lg object-cover border border-[#d8e6dd]" src={banner.thumbnailUrl ?? banner.imageUrl} />
                     ) : (
                       <div className="h-12 w-20 rounded-lg border border-dashed border-[#c8ddd1] bg-[#f8fbf9] flex items-center justify-center text-lg text-[#b8d4c1]">🖼</div>
                     )}

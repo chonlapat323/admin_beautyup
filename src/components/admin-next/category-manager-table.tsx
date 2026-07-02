@@ -777,7 +777,7 @@ export function CategoryManagerTable({
                         <img
                           alt={category.name}
                           className="h-9 w-9 rounded-lg border border-stroke object-cover"
-                          src={toProxiedImageUrl(category.imageUrl)}
+                          src={toProxiedImageUrl(category.thumbnailUrl ?? category.imageUrl)}
                         />
                       ) : (
                         <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-stroke bg-[#f0f4f2]">

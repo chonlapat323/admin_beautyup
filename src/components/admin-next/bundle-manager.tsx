@@ -17,6 +17,7 @@ type Bundle = {
   name: string;
   description: string | null;
   imageUrl: string | null;
+  thumbnailUrl: string | null;
   isActive: boolean;
   sortOrder: number;
   items: BundleItemData[];
@@ -567,7 +568,7 @@ export function BundleManager() {
                   <td className="hidden cursor-grab select-none px-3 py-3 text-center text-dark-5 opacity-30 transition-opacity group-hover:opacity-70 sm:table-cell">⠿</td>
                   <td className="px-3 py-2">
                     {bundle.imageUrl ? (
-                      <img alt={bundle.name} className="h-12 w-20 rounded-lg object-cover border border-[#d8e6dd]" src={bundle.imageUrl} />
+                      <img alt={bundle.name} className="h-12 w-20 rounded-lg object-cover border border-[#d8e6dd]" src={bundle.thumbnailUrl ?? bundle.imageUrl} />
                     ) : (
                       <div className="h-12 w-20 rounded-lg border border-dashed border-[#c8ddd1] bg-[#f8fbf9] flex items-center justify-center text-lg text-[#b8d4c1]">
                         <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><rect height="18" rx="3" width="18" x="3" y="3" /><path d="M3 9h18M9 21V9" /></svg>

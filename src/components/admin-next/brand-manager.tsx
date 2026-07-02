@@ -557,7 +557,7 @@ export function BrandManager() {
                         <img
                           alt={brand.name}
                           className="h-10 w-16 rounded-lg border border-stroke object-cover"
-                          src={toProxiedImageUrl(brand.imageUrl)}
+                          src={toProxiedImageUrl(brand.thumbnailUrl ?? brand.imageUrl)}
                         />
                       ) : (
                         <div className="flex h-10 w-16 items-center justify-center rounded-lg border border-stroke bg-[#f0f4f2]">

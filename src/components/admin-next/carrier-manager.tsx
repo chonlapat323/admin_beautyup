@@ -10,6 +10,7 @@ type Carrier = {
   color: string;
   textColor: string;
   logoUrl: string | null;
+  thumbnailUrl: string | null;
   trackingUrl: string | null;
   isActive: boolean;
   sortOrder: number;
@@ -168,7 +169,7 @@ export function CarrierManager() {
                 <td className="px-4 py-3">
                   {c.logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.logoUrl} alt={c.name} className="h-8 w-8 rounded object-contain" />
+                    <img src={c.thumbnailUrl ?? c.logoUrl} alt={c.name} className="h-8 w-8 rounded object-contain" />
                   ) : (
                     <div
                       className="flex h-8 w-8 items-center justify-center rounded text-[10px] font-bold"
