@@ -94,6 +94,7 @@ function mapCategoryRecord(category: ApiCategory): CategoryRecord {
     processedAt: formatCategoryDate(category.processedAt),
     brandId: category.brandId ?? null,
     brandName: category.brand?.name ?? null,
+    thumbnailUrl: category.thumbnailUrl ?? null,
     source: "api",
   };
 }
