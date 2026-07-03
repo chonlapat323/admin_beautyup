@@ -124,6 +124,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
           : "Just now",
         brandId: response.brandId ?? null,
         brandName: response.brand?.name ?? null,
+        thumbnailUrl: response.thumbnailUrl ?? null,
         source: "api",
       };
 

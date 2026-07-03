@@ -140,6 +140,7 @@ function mapProductRecord(product: ApiProduct): ProductRecord {
     isFeatured: product.isFeatured ?? false,
     tag: product.tag ?? null,
     thumbnail: product.images?.[0]?.url ?? null,
+    thumbnailUrl: product.images?.[0]?.thumbnailUrl ?? null,
     updatedAt: formatProductDate(product.updatedAt),
     source: "api",
   };

@@ -627,6 +627,7 @@ export async function getProductsPageData(
         isFeatured: false,
         tag: null,
         thumbnail: null,
+        thumbnailUrl: null,
         updatedAt: "-",
         source: "mock",
       }),
